@@ -1,0 +1,184 @@
+/* pages/index/index.wxss */
+
+.container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.card {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+/* 用户信息卡片 */
+.user-card {
+  display: flex;
+  align-items: center;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.user-detail {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 统计卡片网格 */
+.stats-grid {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.stat-item {
+  flex: 1;
+  margin: 0 8rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx 16rpx;
+}
+
+.stat-item:first-child {
+  margin-left: 0;
+}
+
+.stat-item:last-child {
+  margin-right: 0;
+}
+
+/* 创建合同按钮 */
+.create-btn-wrapper {
+  margin-bottom: 24rpx;
+}
+
+/* 区块头部 */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+/* 乙方签署邀请入口 */
+.invitation-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.invitation-left {
+  display: flex;
+  align-items: center;
+}
+
+/* 邀请码和扫码入口 */
+.invite-actions {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.invite-action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx 40rpx;
+}
+
+.action-text {
+  font-size: 24rpx;
+  color: #323233;
+  margin-top: 12rpx;
+}
+
+.divider {
+  width: 1rpx;
+  height: 60rpx;
+  background-color: #ebedf0;
+}
+
+/* 未登录提示 */
+.login-tip {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300rpx;
+}
+
+/* 加载状态 */
+.loading-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 100rpx 0;
+}
+
+/* 文字样式工具类 */
+.text-lg {
+  font-size: 32rpx;
+}
+
+.text-sm {
+  font-size: 24rpx;
+}
+
+.text-xl {
+  font-size: 40rpx;
+}
+
+.text-bold {
+  font-weight: bold;
+}
+
+.text-primary {
+  color: #1989fa;
+}
+
+.text-warning {
+  color: #ff976a;
+}
+
+.text-success {
+  color: #07c160;
+}
+
+.text-gray {
+  color: #969799;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mt-xs {
+  margin-top: 8rpx;
+}
+
+.mb-md {
+  margin-bottom: 16rpx;
+}
+
+.ml-md {
+  margin-left: 16rpx;
+}
+
+/* 通用间距 */
+.mb-sm {
+  margin-bottom: 12rpx;
+}
+
+.mb-lg {
+  margin-bottom: 24rpx;
+}

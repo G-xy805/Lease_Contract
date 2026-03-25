@@ -1,0 +1,89 @@
+<!-- pages/login/index.wxml -->
+<view class="container">
+  <view class="login-header">
+    <van-image
+      width="160rpx"
+      height="160rpx"
+      round
+      src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIiB2aWV3Qm94PSIwIDAgMTYwIDE2MCI+PHJlY3Qgd2lkdGg9IjE2MCIgaGVpZ2h0PSIxNjAiIGZpbGw9IiMwMDAiLz48dGV4dCB4PSIxMjAiIHk9IjEwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjQwIiBmaWxsPSIjZmZmIiBkeT0iLjNlbSI+TG9nbzwvdGV4dD48L3N2Zz4="
+    />
+    <view class="text-xl text-bold mt-md">租赁合同</view>
+    <view class="text-sm text-gray mt-xs">签署便捷 · 安全可靠</view>
+  </view>
+
+  <view class="login-form card">
+    <van-field
+      label="手机号"
+      placeholder="请输入手机号"
+      value="{{phone}}"
+      type="number"
+      maxlength="11"
+      bind:change="onPhoneChange"
+      disabled="{{codeSent}}"
+    />
+
+    <van-field
+      label="验证码"
+      placeholder="{{isRegister ? '请输入验证码' : '请输入验证码'}}"
+      value="{{code}}"
+      type="number"
+      maxlength="6"
+      bind:change="onCodeChange"
+    >
+      <van-button
+        slot="button"
+        size="small"
+        type="primary"
+        round
+        bind:click="onSendCode"
+        loading="{{sendingCode}}"
+        disabled="{{codeSent || phone.length !== 11}}"
+        class="code-btn"
+      >
+        {{codeSent ? countdown + 's' : '获取验证码'}}
+      </van-button>
+    </van-field>
+
+    <view class="role-select mt-md">
+      <view class="role-label text-sm">选择角色</view>
+      <van-radio-group value="{{selectedRole}}" bind:change="onRoleChange">
+        <van-radio name="party_a" class="role-radio">甲方（出租方）</van-radio>
+        <van-radio name="party_b" class="role-radio">乙方（承租方）</van-radio>
+      </van-radio-group>
+    </view>
+
+    <van-button
+      type="primary"
+      block
+      round
+      loading="{{loading}}"
+      bind:click="handleLogin"
+      class="mt-lg"
+      disabled="{{!(phone.length === 11 && code.length === 6)}}"
+    >
+      {{isRegister ? '注册并登录' : '登录'}}
+    </van-button>
+
+    <van-button
+      plain
+      type="primary"
+      block
+      round
+      bind:click="onWechatLogin"
+      class="mt-md"
+    >
+      微信登录
+    </van-button>
+
+    <view class="switch-mode">
+      <text class="text-sm text-gray">{{isRegister ? '已有账号？' : '没有账号？'}}</text>
+      <text class="text-sm text-primary" bindtap="switchMode">{{isRegister ? '登录' : '立即注册'}}</text>
+    </view>
+  </view>
+
+  <view class="text-center text-sm text-gray mt-lg">
+    登录即表示同意
+    <text class="text-primary">《用户协议》</text>和
+    <text class="text-primary">《隐私政策》</text>
+  </view>
+</view>

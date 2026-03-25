@@ -1,0 +1,62 @@
+# =============================================================================
+# Python 虚拟环境规则 (重要！)
+# =============================================================================
+# ⚠️  必须使用虚拟环境运行项目，禁止直接使用系统 Python！
+#
+# 正确的启动方式：
+#   1. 创建虚拟环境（如果还没有）：
+#      python -m venv venv
+#
+#   2. 激活虚拟环境：
+#      Windows: .\venv\Scripts\activate
+#      Linux/Mac: source venv/bin/activate
+#
+#   3. 安装依赖：
+#      pip install -r requirements.txt
+#
+#   4. 运行项目：
+#      python main.py
+#
+# 禁止：
+#   ✗ 直接使用 python、python3 命令（系统 Python）
+#   ✗ pip install 直接安装到系统环境
+# =============================================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>房屋租赁合同</title>
+    <style>
+        body {
+            font-family: '宋体', simsun, serif;
+            font-size: 12pt;
+            line-height: 1.8;
+            color: #000;
+            margin: 0;
+            padding: 30px 50px;
+        }
+        .contract {
+            max-width: 720px;
+            margin: 0 auto;
+            background: #fff;
+        }
+        h1 {
+            text-align: center;
+            font-size: 16pt;
+            color: #0000FF;
+            text-decoration: underline;
+            margin-bottom: 30px;
+        }
+        .party-info {
+            margin: 12px 0;
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        .party-info-cell {
+            display: table-cell;
+            vertical-align: top;
+        }
+        .party-info-cell:first-child {
+            width: 55%;
+        }
+        .party-info-cell:last-child {
+            width: 45%;
+        }
+        .party-info-cell p {
+            margin: 4px 0;
+            white-space: nowrap;
+        }
+        p {
+            margin: 6px 0;
+        }
+        .input-underline {
+            border: none;
+            border-bottom: 1px solid #000;
+            background: transparent;
+            font-family: inherit;
+            font-size: inherit;
+            padding: 0 2px;
+            outline: none;
+            display: inline-block;
+            text-align: center;
+            min-width: 80px;
+            white-space: nowrap;
+        }
+        .input-short { min-width: 80px; }
+        .input-medium { min-width: 100px; }
+        .input-long { min-width: 200px; }
+        .input-xlong { min-width: 280px; }
+        .fixed-text {
+            display: inline-block;
+            min-width: 180px;
+            border-bottom: 1px solid #000;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .article-title {
+            font-weight: bold;
+            margin: 15px 0 8px 0;
+        }
+        .content {
+            text-indent: 2em;
+            margin: 8px 0;
+        }
+        .sub-item {
+            padding-left: 2em;
+            margin: 5px 0;
+        }
+        .sub-item-bracket {
+            padding-left: 1em;
+            margin: 7px 0;
+        }
+        .sub-item-bracket2 {
+            padding-left: 2em;
+            margin: 5px 0;
+        }
+        .section-gap {
+            height: 20px;
+        }
+        .sign-line {
+            margin: 10px 0;
+            display: table;
+            width: 100%;
+        }
+        .sign-inline {
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
+        }
+        .sign-left {
+            width: 50%;
+        }
+        .sign-right {
+            width: 50%;
+        }
+        .sign-table {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        .sign-cell {
+            display: table-cell;
+            vertical-align: top;
+        }
+        .sign-cell:first-child {
+            width: 55%;
+        }
+        .sign-cell:last-child {
+            width: 45%;
+        }
+        .sign-cell p {
+            margin: 4px 0;
+            white-space: nowrap;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            font-size: 11pt;
+        }
+        .items-table th,
+        .items-table td {
+            border: 1px solid #000;
+            padding: 4px;
+            text-align: center;
+        }
+        .items-table th {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+        .table-title {
+            font-size: 14pt;
+            font-weight: bold;
+            text-align: center;
+            margin: 25px 0 15px 0;
+        }
+        .meter-row {
+            margin: 12px 0;
+        }
+        .meter-row p {
+            margin: 6px 0;
+        }
+        .final-sign {
+            margin-top: 35px;
+            text-align: left;
+        }
+        .final-sign p {
+            margin: 12px 0;
+        }
+        @media print {
+            body { padding: 20px 40px; }
+            .items-table th { background: #ddd !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="contract">
+        <h1>房屋租赁合同</h1>
+
+        <div class="party-info">
+            <div class="party-info-cell">
+                <p>甲方（出租方）：<span class="fixed-text">{{partyA_company}}</span></p>
+            </div>
+            <div class="party-info-cell">
+                <p>乙方（承租方）：<span class="input-underline input-xlong">{{partyB_name}}</span></p>
+                <p>身份证号：<span class="input-underline input-xlong">{{partyB_idCard}}</span></p>
+            </div>
+        </div>
+
+        <p class="content">为保障租赁双方的合法权益，根据《中华人民共和国民法典》及有关法律、法规，甲乙双方在平等自愿的前提下，经协商一致，签定本合同。</p>
+
+        <p class="article-title">第一条：房屋基本情况</p>
+        <p class="sub-item">1、房产位置：<span class="input-underline input-xlong">{{house_address}}</span>。</p>
+        <p class="sub-item">2、建筑面积：<span class="input-underline input-short">{{house_area}}</span>平方米。</p>
+
+        <p class="article-title">第二条：租赁期限及用途：</p>
+        <p class="sub-item">从<span class="input-underline input-short">{{lease_start_year}}</span>年<span class="input-underline input-short">{{lease_start_month}}</span>月<span class="input-underline input-short">{{lease_start_day}}</span>日起到<span class="input-underline input-short">{{lease_end_year}}</span>年<span class="input-underline input-short">{{lease_end_month}}</span>月<span class="input-underline input-short">{{lease_end_day}}</span>日止，共计<span class="input-underline input-short">{{lease_months}}</span>个月。甲乙双方应于签合同当日办理房屋交付手续，甲方应按合同约定的条件将房屋交付乙方，经甲乙双方交验签字盖章并移交房门钥匙及水卡、电卡、视为交付完成。</p>
+        <p class="sub-item">乙方租赁该房屋用途为：<span class="input-underline input-medium">{{rent_purpose}}</span></p>
+
+        <p class="article-title">第三条：租金和租金交付方式</p>
+        <p class="sub-item">1、租金交付方式为：转账，每月租金¥<span class="input-underline input-short">{{monthly_rent}}</span>元，合同总租金共计¥<span class="input-underline input-short">{{year_rent}}</span>元（共{{lease_months}}个月）；租金按每（月付/季付/半年/年付）结算，乙方应提前<span class="input-underline input-short">{{advance_notice_days}}</span>日告知甲方是否续租，<span class="input-underline input-long"></span>租期内乙方提前退租，押金不退，若甲方提前解除合同需退还乙方双倍押金。</p>
+        <p class="sub-item">2、租金分<span class="input-underline input-short">{{payment_count}}</span>次支付，第一次于签合同当日支付¥<span class="input-underline input-short">{{first_payment_amount}}</span>元；第二次支付¥<span class="input-underline input-short">{{second_payment_amount}}</span>元时间为<span class="input-underline input-medium">{{second_payment_date}}</span>，第三次支付¥<span class="input-underline input-short">{{third_payment_amount}}</span>元，第四次支付¥<span class="input-underline input-short"></span>元，以此类推每<span class="input-underline input-short">{{payment_cycle}}</span>月支付一次房租，若未按期支付房款甲方有权解除合同,租金及押金不予退还。</p>
+        <p class="sub-item">3、乙方以银行转账方式支付租金，甲方指定如下账户作为收款账户<span class="input-underline input-xlong">{{partyA_account}}</span></p>
+        <p class="sub-item">（房屋租金的交付与数额以收条或转账明细为准）。</p>
+        <p class="sub-item">4、若合同到期续租，没有签订新合同时则延续原合同。</p>
+
+        <p class="article-title">第四条：押金及押金的退还</p>
+        <p class="sub-item">本合同签订时，乙方向甲方交纳押金（大写）<span class="input-underline input-medium">{{deposit_chinese}}</span>（小写¥<span class="input-underline input-short">{{deposit}}</span>元）。该押金作为保证金。如乙方在租赁期间未发生损坏房屋设施，拖欠水、电、租金等费用，合同期满时，甲方应在合同到期之日三个工作日内一次性退还给乙方。如有上述情况发生，甲方有权从押金中等额扣除，不足部分乙方另行承担。</p>
+
+        <p class="article-title">第五条：费用名称及支付方式</p>
+        <p class="sub-item">1、费用名称：水费、电费、燃气费、有线电视、网络费、等，以上费用乙方应按要求及时付清。</p>
+        <p class="sub-item">2、以上费用均不包含在租金内，乙方需直接缴付给物业管理机构或另行支付给甲方代缴。</p>
+        <p class="sub-item">3、物业管理费、暖气费、由甲方承担。</p>
+        <p class="sub-item">4、本合同内签订的金额不含税费，房屋租赁期间产生的一切税费均由乙方自理。</p>
+
+        <p class="article-title">第六条：居间服务</p>
+        <p class="sub-item-bracket">（一）、丙方应为甲、乙双方订立房屋租赁合同提供机会或媒介服务</p>
+        <p class="sub-item-bracket">（二）、丙方提供的居间服务自接受甲乙双方委托时起，到甲、乙双方应于本合同成立时，向丙方支付佣金：</p>
+        <p class="sub-item-bracket2">甲方应支付佣金人民币（大写）<span class="input-underline input-medium">{{partyA_commission_chinese}}</span>元整（¥<span class="input-underline input-short">{{partyA_commission}}</span>）；</p>
+        <p class="sub-item-bracket2">乙方应支付佣金人民币（大写）<span class="input-underline input-medium">{{partyB_commission_chinese}}</span>元整（¥<span class="input-underline input-short">{{partyB_commission}}</span>）；</p>
+        <p class="sub-item-bracket">（三）、本合同签订后，甲、乙双方解除、变更或终止租赁关系的，仍应向丙方支付约定的佣金且丙方不承担任何责任。</p>
+
+        <p class="article-title">第七条：双方权利及义务</p>
+        <p class="sub-item">1、甲方保证出租房屋的产权清晰，没有纠纷。若发生与甲方有关的产权纠纷或债权债务，概由甲方负责，并承担相应的法律责任，因此给乙方造成经济损失的，甲方负责赔偿。</p>
+        <p class="sub-item">2、甲、乙双方在签订合同时，甲方有权掌握了解乙方的基本状况。</p>
+        <p class="sub-item">3、乙方如需对房屋进行改建、扩建、装修或增扩设备时，应征得甲方同意后再行处理。双方应明确约定租客在租赁期间未经房东书面许可，不得擅自饲养任何宠物，（如因养宠物造成房屋内设施损坏乙方需原价赔偿）。</p>
+        <p class="sub-item">4、租赁期间乙方为承租方，承租方为该房屋实际管理人，在租赁期间不得从事不道德或违法犯罪活动，且在承租期间房屋内发生的任何安全事故，以及人身财产安全，均由乙方自行承担全部责任，甲方概不负责。</p>
+        <p class="sub-item">5、乙方自行购置电器及设备应合格且符合安全要求，禁止使用高负荷高危型设备物品，如发生任何意外均由乙方个人承担，甲方概不负责。</p>
+        <p class="sub-item">6、甲方已确认房屋设施的安全性，要求乙方对房屋及设备的使用安全自行负责，发生任何安全事故与甲方无关。</p>
+        <p class="sub-item">7、甲方延迟交付房屋达10日，且不承担约定的维修义务，致使乙方无法使用房屋乙方有权单方面解除合同。</p>
+        <p class="sub-item">8、租赁期内乙方如发现该房屋及其附属物品、设备设施因自然属性或合理使用导致的损耗，乙方应及时通知甲方修复，甲方应在接到乙方通知后5日内予以维修，逾期不维修的，乙方可代为维修，费用由甲方承担。因乙方保管不当或不合理使用，致使该房屋以及附属物品、设备设施发生损坏或故障的，乙方应负责维修或承担赔偿责任，否则甲方有权在乙方交付的押金中抵扣相应费用，不足部分由乙方补交。</p>
+        <p class="sub-item">9、租赁期内，甲方需提前收回该房屋的，应提前30日通知乙方，扣除乙方应承担的各项费用后，将剩余租金及押金退还乙方，并按月租金的100%向乙方支付违约金</p>
+        <p class="sub-item">10、如因甲方未按约定履行修缮义务造成乙方人身、财产损失的，甲方应承担赔偿责任；甲方未按约定时间交付该房屋或乙方未按约定支付租金但未达到解除合同条件的，以及乙方未按约定时间返还房屋的，每逾期一天，由违约方按日租金额的200%支付违约金。</p>
+
+        <p class="article-title">第八条：转租、续租及转让</p>
+        <p class="sub-item-bracket">（一）、租赁期内，未经甲方同意，乙方不得将该房屋部分分租、转借、转借给他人，不得将本合同项下的权利义务转让给他人或设定担保。</p>
+        <p class="sub-item-bracket">（二）、若乙方拟续租该房屋，应于租赁期届满提前一个月向甲方发出续租申请；甲乙双方就续租事宜进行协商，重新签订租赁合同；若乙方未按上述约定向甲方发出续租申请，将视为放弃同等条件下的优先承租权；甲方有权将该房屋出租给他人，并引领他人看房。</p>
+        <p class="sub-item-bracket">（三）、租赁期内，甲方有权将该房屋出卖或抵押，为此甲方无须征得乙方同意，但应事先提前1个月通知乙方，甲方承诺该房屋的出卖或抵押，不影响乙方对该房屋的使用。</p>
+
+        <p class="article-title">第九条：房屋交还</p>
+        <p class="sub-item-bracket">（一）、乙方应于租赁期满，合同解除或终止后当日内将发放屋内的自有物品搬出，按原状返还房屋及其附属物品、设备设施。若乙方未按约定时间将自有物品搬出视为乙方放弃权利，甲方有权自行或委托第三人将乙方物品予以处理无须支付乙方赔偿和补偿。</p>
+        <p class="sub-item-bracket">（二）、甲乙双方应对房屋及附属物品、设备设施及水电等使用情况进行验收，结清各自应承担的费用。如甲方发现该房屋或原固有装修、设备设施被损坏或遗失（自然损耗除外）有权要求乙方修复或赔偿损失，并可从押金中扣除。</p>
+        <p class="sub-item-bracket">（三）、乙方如经甲方同意对该房屋进行装修、增建或改建，新增的装修及不可以动的设备设施归甲方所有。</p>
+        <p class="sub-item-bracket">（四）、乙方退房时，房屋应恢复至入住时的状态，保持整洁干净（日常保洁除外）。如退房时房屋未打扫干净或存在严重污渍，甲方有权扣除相应保洁费从押金中扣除。</p>
+
+        <p class="article-title">第十条：违约责任</p>
+        <p class="sub-item">1、租赁前甲方未及时履行修缮义务，致使乙方不能正常使用的，租赁期限依法顺延，乙方不承担此其间费用；如对乙方造成损失甲方负有赔偿责任。</p>
+        <p class="sub-item">2、如乙方未按约定支付租金及本合同第五条应由乙方承担的其他费用，甲方有权单方终止合同，乙方承担一个月房屋租金作为违约金并收回房屋且给予乙方5个工作日的时间搬出个人物品，如逾期视为乙方放弃，甲方有权直接处理。</p>
+        <p class="sub-item">3、乙方未经甲方同意不能擅自将房屋、转借、进行非法活动，若有以上行为甲方有权单方终止合同，乙方承担一个月房租的违约金，并恢复房屋原状。</p>
+
+        <p class="article-title">第十一条：合同终止</p>
+        <p class="sub-item">1、因甲、乙任何一方违约导致本合同终止，丙方不承担任何责任；因一方主观原因导致本合同终止，应赔偿对方实际损失。</p>
+        <p class="sub-item">2、因不可抗力导致本合同终止的，三方互不承担责任。</p>
+
+        <p class="article-title">第十二条：合同争议解决方式</p>
+        <p class="sub-item">1、本合同在履行中如发生争议，由当事人协商解决；</p>
+        <p class="sub-item">2、协商不成的依法向该房屋所在地人民法院起诉</p>
+
+        <p class="article-title">第十三条：合同效力</p>
+        <p class="sub-item">1.本合同一式  二份，甲、乙各执一份，自双方签字（盖章）后生效，丙方留存备案一份；</p>
+        <p class="sub-item">2.如甲乙双方所留存合同内容不一致，则甲乙双方以丙方所留存合同文本为见证标准；</p>
+        <p class="sub-item">3.甲、乙、两方各执一份，具有同等法律效力；</p>
+        <p class="sub-item">4.本合同未尽事宜，甲、乙双方可签订补充协议，与本合同具备同等法律效力，本合同补充条款与正文条款不一致的，以补充条款为准。</p>
+
+        <p class="article-title">第十四条：其他约定事项</p>
+        <p class="sub-item"><span class="input-underline input-xlong">{{remark}}</span></p>
+
+        <div class="section-gap"></div>
+
+        <div class="sign-table">
+            <div class="sign-cell">
+                <p>甲方（出租方）：<span class="fixed-text">{{partyA_company}}</span></p>
+                <p>联系电话：<span class="input-underline input-medium">{{partyA_phone}}</span></p>
+                <p>委托代理人：<span class="input-underline input-medium">{{partyA_contact}}</span></p>
+                <p>联系电话：<span class="input-underline input-medium">{{partyA_phone2}}</span></p>
+            </div>
+            <div class="sign-cell">
+                <p>乙方（承租方）：<span class="input-underline input-xlong">{{partyB_name}}</span></p>
+                <p>联系电话：<span class="input-underline input-medium">{{partyB_phone}}</span></p>
+                <p>委托代理人：<span class="input-underline input-medium">{{partyB_contact}}</span></p>
+            </div>
+        </div>
+        <p class="sign-line">
+            <span class="sign-inline sign-left">签约日期：<span class="input-underline input-medium">{{sign_date}}</span></span>
+            <span class="sign-inline sign-right"></span>
+        </p>
+
+        <div class="table-title">租赁房屋物品清单</div>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">名称</th>
+                    <th style="width: 8%;">数量</th>
+                    <th style="width: 8%;">单位</th>
+                    <th style="width: 25%;">名称</th>
+                    <th style="width: 8%;">数量</th>
+                    <th style="width: 8%;">单位</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>电视</td>
+                    <td><span class="input-underline input-short">{{item_tv_qty}}</span></td>
+                    <td>台</td>
+                    <td>衣柜</td>
+                    <td><span class="input-underline input-short">{{item_wardrobe_qty}}</span></td>
+                    <td>个</td>
+                </tr>
+                <tr>
+                    <td>电视（遥控器）</td>
+                    <td><span class="input-underline input-short">{{item_tv_remote_qty}}</span></td>
+                    <td>个</td>
+                    <td>电视柜</td>
+                    <td><span class="input-underline input-short">{{item_tv_table_qty}}</span></td>
+                    <td>个</td>
+                </tr>
+                <tr>
+                    <td>机顶盒（遥控器）</td>
+                    <td><span class="input-underline input-short">{{item_box_qty}}</span></td>
+                    <td>个</td>
+                    <td>沙发</td>
+                    <td><span class="input-underline input-short">{{item_sofa_qty}}</span></td>
+                    <td>个</td>
+                </tr>
+                <tr>
+                    <td>茶几</td>
+                    <td><span class="input-underline input-short">{{item_coffee_table_qty}}</span></td>
+                    <td>个</td>
+                    <td>餐桌</td>
+                    <td><span class="input-underline input-short">{{item_dining_table_qty}}</span></td>
+                    <td>张</td>
+                </tr>
+                <tr>
+                    <td>餐桌椅子</td>
+                    <td><span class="input-underline input-short">{{item_chair_qty}}</span></td>
+                    <td>把</td>
+                    <td>床</td>
+                    <td><span class="input-underline input-short">{{item_bed_qty}}</span></td>
+                    <td>张</td>
+                </tr>
+                <tr>
+                    <td>床头柜</td>
+                    <td><span class="input-underline input-short">{{item_nightstand_qty}}</span></td>
+                    <td>个</td>
+                    <td>窗帘</td>
+                    <td><span class="input-underline input-short">{{item_curtain_qty}}</span></td>
+                    <td>个</td>
+                </tr>
+                <tr>
+                    <td>空调</td>
+                    <td><span class="input-underline input-short">{{item_ac_qty}}</span></td>
+                    <td>台</td>
+                    <td>空调（遥控器）</td>
+                    <td><span class="input-underline input-short">{{item_ac_remote_qty}}</span></td>
+                    <td>个</td>
+                </tr>
+                <tr>
+                    <td>冰箱</td>
+                    <td><span class="input-underline input-short">{{item_fridge_qty}}</span></td>
+                    <td>台</td>
+                    <td>床垫子</td>
+                    <td><span class="input-underline input-short">{{item_mattress_qty}}</span></td>
+                    <td>个</td>
+                </tr>
+                <tr>
+                    <td>洗衣机</td>
+                    <td><span class="input-underline input-short">{{item_washer_qty}}</span></td>
+                    <td>台</td>
+                    <td>热水器</td>
+                    <td><span class="input-underline input-short">{{item_water_heater_qty}}</span></td>
+                    <td>台</td>
+                </tr>
+                <tr>
+                    <td>煤气灶</td>
+                    <td><span class="input-underline input-short">{{item_gas_stove_qty}}</span></td>
+                    <td>台</td>
+                    <td>油烟机</td>
+                    <td><span class="input-underline input-short">{{item_hood_qty}}</span></td>
+                    <td>台</td>
+                </tr>
+                <tr>
+                    <td>电磁灶</td>
+                    <td><span class="input-underline input-short">{{item_induction_qty}}</span></td>
+                    <td>台</td>
+                    <td>门禁卡</td>
+                    <td><span class="input-underline input-short">{{item_door_card_qty}}</span></td>
+                    <td>个</td>
+                </tr>
+                <tr>
+                    <td>水卡</td>
+                    <td><span class="input-underline input-short">{{item_water_card_qty}}</span></td>
+                    <td>个</td>
+                    <td>电卡</td>
+                    <td><span class="input-underline input-short">{{item_power_card_qty}}</span></td>
+                    <td>个</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="meter-row">
+            <span>电表数：<span class="input-underline input-medium">{{electricity_meter}}</span>　　水表数：<span class="input-underline input-medium">{{water_meter}}</span>　　煤气表数：<span class="input-underline input-medium">{{gas_meter}}</span></span>　　<span>备注：<span class="input-underline input-medium">{{remark}}</span></span>
+        </div>
+
+        <div class="final-sign">
+            <p style="margin-top: 40px;">签字确认</p>
+            <p style="margin-top: 30px;">甲方（出租方）：<span class="fixed-text">{{partyA_company}}</span></p>
+            <p style="margin-top: 20px;">乙方（承租方）：<img src="{{partyB_signature}}" alt="乙方签名" style="max-height: 60px; vertical-align: middle;" /></p>
+            <p style="margin-top: 20px;">签字日期：<span class="input-underline input-medium">{{sign_date}}</span></p>
+        </div>
+    </div>
+</body>
+</html>

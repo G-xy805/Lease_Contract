@@ -1,0 +1,6 @@
+<!-- components/empty-state/index.wxml -->
+<view class="empty-state">
+  <image wx:if="{{image}}" src="{{image}}" mode="aspectFit" class="empty-image" />
+  <van-icon wx:else name="empty" size="120rpx" color="#c8c9cc" class="empty-icon" />
+  <text class="empty-text">{{description}}</text>
+</view>

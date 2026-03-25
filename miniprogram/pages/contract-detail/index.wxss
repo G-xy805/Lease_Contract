@@ -1,0 +1,274 @@
+/* pages/contract-detail/index.wxss */
+
+/* 容器 */
+.container {
+  padding: 16rpx;
+  padding-bottom: 120rpx;
+}
+
+/* 加载容器 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+/* 卡片样式 */
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+/* 合同头部 */
+.contract-header {
+  background: linear-gradient(135deg, #1989fa 0%, #3995f5 100%);
+  color: #fff;
+}
+
+.contract-header .text-gray {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.contract-header .van-tag {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border: none !important;
+}
+
+/* 签署状态区域 */
+.signing-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 0;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.status-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+}
+
+.status-icon.unsigned {
+  background: #f5f5f5;
+  color: #999;
+}
+
+.status-icon.signed {
+  background: #07c160;
+  color: #fff;
+}
+
+.status-icon.party-a.signed {
+  background: #1989fa;
+}
+
+.status-content {
+  flex: 1;
+}
+
+.status-line {
+  width: 80rpx;
+  height: 4rpx;
+  background: #e5e5e5;
+  margin: 0 16rpx;
+}
+
+/* 信息行 */
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  color: #666;
+  font-size: 28rpx;
+}
+
+.info-value {
+  color: #333;
+  font-size: 28rpx;
+  text-align: right;
+  max-width: 420rpx;
+}
+
+.info-value.price {
+  color: #ee0a24;
+  font-weight: bold;
+}
+
+/* 物品清单表格 */
+.table-wrapper {
+  overflow-x: auto;
+  margin: 0 -16rpx;
+  padding: 0 16rpx;
+}
+
+.table {
+  min-width: 100%;
+  border: 1rpx solid #e5e5e5;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+}
+
+.table-header {
+  display: flex;
+  background: #f5f5f5;
+  font-weight: bold;
+}
+
+.table-th {
+  padding: 20rpx 16rpx;
+  text-align: center;
+  border-bottom: 1rpx solid #e5e5e5;
+}
+
+.table-row {
+  display: flex;
+  border-bottom: 1rpx solid #e5e5e5;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-td {
+  padding: 20rpx 16rpx;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 其他约定 */
+.agreement-item {
+  display: flex;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.agreement-item:last-child {
+  border-bottom: none;
+}
+
+.agreement-index {
+  width: 48rpx;
+  color: #1989fa;
+  font-weight: bold;
+}
+
+.agreement-content {
+  flex: 1;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* 验证区域 */
+.verify-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f5f5f5;
+  padding: 24rpx;
+  border-radius: 12rpx;
+}
+
+.verify-code {
+  flex: 1;
+}
+
+.code-value {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  letter-spacing: 4rpx;
+  margin-top: 8rpx;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  background: #fff;
+  padding: 24rpx 32rpx;
+  margin-top: 24rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.action-buttons van-button {
+  margin-top: 16rpx;
+}
+
+.btn-icon {
+  margin-right: 8rpx;
+}
+
+/* 通用工具类 */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mb-sm {
+  margin-bottom: 16rpx;
+}
+
+.mb-md {
+  margin-bottom: 24rpx;
+}
+
+.mt-sm {
+  margin-top: 16rpx;
+}
+
+.mt-md {
+  margin-top: 24rpx;
+}
+
+.mt-lg {
+  margin-top: 32rpx;
+}
+
+.text-xl {
+  font-size: 36rpx;
+}
+
+.text-lg {
+  font-size: 32rpx;
+}
+
+.text-sm {
+  font-size: 26rpx;
+}
+
+.text-bold {
+  font-weight: bold;
+}
+
+.text-gray {
+  color: #999;
+}
+
+.text-center {
+  text-align: center;
+}

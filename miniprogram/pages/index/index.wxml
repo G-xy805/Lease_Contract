@@ -1,0 +1,161 @@
+<!-- pages/index/index.wxml -->
+<view class="container">
+  <!-- 用户信息卡片 -->
+  <view class="card user-card">
+    <view class="user-info" wx:if="{{userInfo}}">
+      <van-image
+        round
+        width="120rpx"
+        height="120rpx"
+        src="{{userInfo.avatarUrl || '/assets/images/default-avatar.png'}}"
+      />
+      <view class="user-detail ml-md">
+        <view class="text-lg text-bold">{{userInfo.name || '用户'}}</view>
+        <view class="text-sm text-gray mt-xs">{{userInfo.roleName || ''}}</view>
+      </view>
+    </view>
+    <view class="user-info" wx:else>
+      <van-image
+        round
+        width="120rpx"
+        height="120rpx"
+        src=""
+      />
+      <view class="user-detail ml-md">
+        <view class="text-lg text-bold">未登录</view>
+        <view class="text-sm text-gray mt-xs">点击登录</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 甲方视图 -->
+  <block wx:if="{{userInfo && userInfo.role === 'PARTY_A'}}">
+    <!-- 统计卡片 -->
+    <view class="stats-grid">
+      <view class="stat-item card" bindtap="goToContracts" data-status="draft">
+        <view class="text-xl text-primary text-bold">{{stats.draftCount}}</view>
+        <view class="text-sm text-gray mt-xs">草稿</view>
+      </view>
+      <view class="stat-item card" bindtap="goToContracts" data-status="pending">
+        <view class="text-xl text-warning text-bold">{{stats.pendingSignCount}}</view>
+        <view class="text-sm text-gray mt-xs">待签署</view>
+      </view>
+      <view class="stat-item card" bindtap="goToContracts" data-status="signed">
+        <view class="text-xl text-success text-bold">{{stats.signedCount}}</view>
+        <view class="text-sm text-gray mt-xs">已签署</view>
+      </view>
+    </view>
+
+    <!-- 创建合同按钮 -->
+    <view class="card create-btn-wrapper">
+      <van-button type="primary" size="large" round bind:click="goToCreateContract" icon="plus">
+        创建新合同
+      </van-button>
+    </view>
+
+    <!-- 最近合同列表 -->
+    <view class="card">
+      <view class="section-header">
+        <text class="text-lg text-bold">最近合同</text>
+        <text class="text-sm text-primary" bindtap="goToContracts">查看全部</text>
+      </view>
+      <view wx:if="{{recentContracts.length > 0}}">
+        <van-cell
+          wx:for="{{recentContracts}}"
+          wx:key="id"
+          title="{{item.title}}"
+          label="{{item.createdAt}}"
+          is-link
+          bind:click="goToContractDetail"
+          data-id="{{item.id}}"
+        >
+          <van-tag slot="right-icon" type="{{item.status === 'signed' ? 'success' : item.status === 'pending' ? 'warning' : 'default'}}">
+            {{item.statusText}}
+          </van-tag>
+        </van-cell>
+      </view>
+      <van-empty wx:else description="暂无合同" />
+    </view>
+  </block>
+
+  <!-- 乙方视图 -->
+  <block wx:if="{{userInfo && userInfo.role === 'PARTY_B'}}">
+    <!-- 输入邀请码和扫码入口 -->
+    <view class="invite-actions card">
+      <view class="invite-action-item" bindtap="goToVerifyInvite">
+        <van-icon name="edit" size="48rpx" color="#1989fa" />
+        <view class="action-text">输入邀请码</view>
+      </view>
+      <view class="divider"></view>
+      <view class="invite-action-item" bindtap="scanInviteCode">
+        <van-icon name="scan" size="48rpx" color="#1989fa" />
+        <view class="action-text">扫码签署</view>
+      </view>
+    </view>
+
+    <!-- 收到的签署邀请入口 -->
+    <view class="card invitation-entry" bindtap="goToInvitations">
+      <view class="invitation-left">
+        <van-icon name="envelop-o" size="48rpx" color="#1989fa" />
+        <view class="ml-md">
+          <view class="text-lg text-bold">收到的签署邀请</view>
+          <view class="text-sm text-gray">{{pendingInvitationCount}} 待签署</view>
+        </view>
+      </view>
+      <van-icon name="arrow" color="#999" />
+    </view>
+
+    <!-- 待签署列表 -->
+    <view class="card">
+      <view class="section-header">
+        <text class="text-lg text-bold">待签署</text>
+        <text class="text-sm text-primary" bindtap="goToInvitations">查看全部</text>
+      </view>
+      <view wx:if="{{pendingList.length > 0}}">
+        <van-cell
+          wx:for="{{pendingList}}"
+          wx:key="id"
+          title="{{item.title}}"
+          label="来自: {{item.partyAName}}"
+          is-link
+          bind:click="goToInvitePreview"
+          data-id="{{item.id}}"
+        >
+          <van-tag slot="right-icon" type="warning">待签署</van-tag>
+        </van-cell>
+      </view>
+      <van-empty wx:else description="暂无待签署合同" />
+    </view>
+
+    <!-- 已签署合同列表 -->
+    <view class="card">
+      <view class="section-header">
+        <text class="text-lg text-bold">已签署</text>
+      </view>
+      <view wx:if="{{signedList.length > 0}}">
+        <van-cell
+          wx:for="{{signedList}}"
+          wx:key="id"
+          title="{{item.title}}"
+          label="签署时间: {{item.signedAt}}"
+          is-link
+          bind:click="goToContractDetail"
+          data-id="{{item.id}}"
+        >
+          <van-tag slot="right-icon" type="success">已签署</van-tag>
+        </van-cell>
+      </view>
+      <van-empty wx:else description="暂无已签署合同" />
+    </view>
+  </block>
+
+  <!-- 未登录提示 -->
+  <view wx:if="{{!userInfo}}" class="card login-tip">
+    <van-empty description="请先登录">
+      <van-button type="primary" size="small" bind:click="goToLogin">去登录</van-button>
+    </van-empty>
+  </view>
+
+  <!-- 加载状态 -->
+  <van-loading class="loading-center" wx:if="{{loading}}" />
+</view>

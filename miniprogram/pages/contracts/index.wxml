@@ -1,0 +1,121 @@
+<view class="container">
+  <view class="search-wrapper">
+    <van-search
+      value="{{searchValue}}"
+      placeholder="搜索合同名称/地址"
+      bind:search="onSearch"
+      bind:change="onSearchChange"
+      bind:clear="onSearchClear"
+      show-action="{{searchValue}}"
+    />
+  </view>
+
+  <van-tabs
+    active="{{ activeTab }}"
+    bind:change="onTabChange"
+    color="#1989fa"
+    line-width="20"
+    sticky
+  >
+    <van-tab title="全部" name="all"></van-tab>
+    <van-tab title="待签署" name="pending"></van-tab>
+    <van-tab title="待甲方签署" name="pending_lessor"></van-tab>
+    <van-tab title="待乙方签署" name="pending_lessee"></van-tab>
+    <van-tab title="已签署" name="signed"></van-tab>
+    <van-tab title="已过期" name="expired"></van-tab>
+  </van-tabs>
+
+  <view class="create-btn-wrapper">
+    <van-button
+      type="primary"
+      icon="plus"
+      round
+      size="large"
+      bind:click="goToCreateContract"
+      class="create-btn"
+    >
+      创建合同
+    </van-button>
+  </view>
+
+  <scroll-view
+    scroll-y
+    enable-back-to-top
+    bindscrolltolower="onReachBottom"
+    class="contract-scroll"
+  >
+    <van-loading-dots wx:if="{{refreshing}}" type="primary" class="refresh-loading" />
+
+    <view class="contract-list" wx:if="{{contracts.length > 0}}">
+      <view
+        wx:for="{{contracts}}"
+        wx:key="id"
+        class="contract-item"
+        bindtap="goToContractDetail"
+        data-id="{{item.id}}"
+      >
+        <view class="contract-header">
+          <view class="contract-title text-bold text-lg">{{item.title}}</view>
+          <van-tag type="{{getStatusTagType(item.status)}}" size="medium">
+            {{getStatusText(item.status)}}
+          </van-tag>
+        </view>
+
+        <view class="contract-body">
+          <view class="contract-info">
+            <van-icon name="location-o" size="32rpx" class="info-icon" />
+            <text class="text-sm text-gray">{{item.house_address || '未填写地址'}}</text>
+          </view>
+          <view class="contract-info">
+            <van-icon name="user-o" size="32rpx" class="info-icon" />
+            <text class="text-sm text-gray">乙方：{{item.lessee_name || '未知'}}</text>
+          </view>
+          <view class="contract-info">
+            <van-icon name="paid" size="32rpx" class="info-icon" />
+            <text class="text-sm text-gray">金额：¥{{item.monthly_rent || 0}}/月</text>
+          </view>
+          <view class="contract-info">
+            <van-icon name="clock-o" size="32rpx" class="info-icon" />
+            <text class="text-sm text-gray">创建时间：{{item.created_at}}</text>
+          </view>
+        </view>
+
+        <view class="contract-footer" wx:if="{{item.status === 1}}">
+          <van-button size="small" type="primary" plain hairline bindtap="onSignContract" data-id="{{item.id}}">
+            确认签署
+          </van-button>
+        </view>
+
+        <view class="contract-footer" wx:if="{{item.status === 2}}">
+          <view class="invite-code-hint">
+            <van-icon name="share" size="14px" />
+            <text>已生成邀请码，请分享给乙方</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <van-empty
+      wx:if="{{!contracts.length && !loading}}"
+      description="暂无合同"
+      image="https://img.yzcdn.cn/vant/custom-empty-image.png"
+    />
+
+    <view class="load-more" wx:if="{{contracts.length > 0}}">
+      <van-loading size="24rpx" wx:if="{{loadingMore}}">
+        加载中...
+      </van-loading>
+      <text wx:if="{{!loadingMore && !hasMore}}" class="text-gray text-sm">
+        {{contracts.length > 0 ? '没有更多了' : ''}}
+      </text>
+    </view>
+  </scroll-view>
+
+  <van-loading
+    wx:if="{{loading && !refreshing}}"
+    type="spinner"
+    class="global-loading"
+    size="50rpx"
+    color="#1989fa"
+  />
+</view>

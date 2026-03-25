@@ -1,0 +1,62 @@
+<view class="container">
+  <view class="search-bar">
+    <van-search
+      value="{{searchValue}}"
+      placeholder="搜索合同标题/编号"
+      bind:change="onSearchChange"
+      bind:search="onSearch"
+      bind:clear="onSearchClear"
+    />
+  </view>
+
+  <view class="tabs-bar">
+    <van-tabs active="{{ activeTab }}" bind:change="onTabChange">
+      <van-tab title="{{item.name}}" wx:for="{{tabs}}" wx:key="index" />
+    </van-tabs>
+  </view>
+
+  <view class="contract-list">
+    <block wx:if="{{contracts.length > 0}}">
+      <view class="contract-item" wx:for="{{contracts}}" wx:key="id" bindtap="goToContractDetail" data-id="{{item.id}}">
+        <view class="contract-header">
+          <text class="contract-title">{{item.title}}</text>
+          <van-tag type="{{getStatusTagType(item.status)}}">{{getStatusText(item.status)}}</van-tag>
+        </view>
+        <view class="contract-info">
+          <view class="info-row">
+            <text class="label">合同编号：</text>
+            <text class="value">{{item.contract_no}}</text>
+          </view>
+          <view class="info-row">
+            <text class="label">房屋地址：</text>
+            <text class="value">{{item.house_address}}</text>
+          </view>
+          <view class="info-row">
+            <text class="label">月租金：</text>
+            <text class="value price">¥{{item.monthly_rent}}</text>
+          </view>
+          <view class="info-row">
+            <text class="label">租赁期限：</text>
+            <text class="value">{{item.lease_start}} 至 {{item.lease_end}}</text>
+          </view>
+        </view>
+        <view class="contract-actions" catchtap="noop" wx:if="{{item.status === 2}}">
+          <van-button type="primary" size="small" catchtap="onSignContract" data-id="{{item.id}}">签署合同</van-button>
+          <van-button type="default" size="small" catchtap="onRejectContract" data-id="{{item.id}}">拒绝</van-button>
+        </view>
+      </view>
+
+      <view class="load-more" wx:if="{{hasMore}}">
+        <van-loading wx:if="{{loadingMore}}">加载中...</van-loading>
+        <text wx:else bindtap="onReachBottom">加载更多</text>
+      </view>
+    </block>
+
+    <view class="empty-state" wx:else>
+      <van-empty description="暂无合同" />
+    </view>
+  </view>
+
+  <van-loading wx:if="{{loading}}" class="global-loading" />
+  <van-notify id="van-notify" />
+</view>

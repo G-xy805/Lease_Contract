@@ -1,0 +1,96 @@
+<view class="container">
+  <view class="header">
+    <text class="title">输入邀请码</text>
+    <text class="subtitle">请输入甲方分享的合同邀请码</text>
+  </view>
+
+  <view class="input-section" wx:if="{{!verified}}">
+    <van-field
+      value="{{inviteCode}}"
+      placeholder="请输入邀请码"
+      border="{{ false }}"
+      bind:change="onInviteCodeInput"
+      size="large"
+    />
+    <van-button
+      type="primary"
+      block
+      loading="{{loading}}"
+      bind:click="verifyInviteCode"
+      class="verify-btn"
+    >
+      验证邀请码
+    </van-button>
+    <text class="error-text" wx:if="{{errorMessage}}">{{errorMessage}}</text>
+  </view>
+
+  <view class="contract-info" wx:if="{{verified && contractInfo}}">
+    <view class="info-card">
+      <view class="card-title">合同信息</view>
+      <view class="info-row">
+        <text class="label">合同编号</text>
+        <text class="value">{{contractInfo.contract_no}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">合同标题</text>
+        <text class="value">{{contractInfo.title}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">甲方姓名</text>
+        <text class="value">{{contractInfo.lessor_name}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">甲方电话</text>
+        <text class="value">{{contractInfo.lessor_phone}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">房屋地址</text>
+        <text class="value">{{contractInfo.house_address}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">租赁期限</text>
+        <text class="value">{{contractInfo.lease_start}} 至 {{contractInfo.lease_end}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">月租金</text>
+        <text class="value price">¥{{contractInfo.monthly_rent}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">押金</text>
+        <text class="value">¥{{contractInfo.deposit}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">合同状态</text>
+        <van-tag type="primary">{{contractInfo.status_text}}</van-tag>
+      </view>
+    </view>
+
+    <view class="action-section" wx:if="{{contractInfo.status === 2}}">
+      <van-button
+        type="primary"
+        block
+        loading="{{loading}}"
+        bind:click="acceptInvitation"
+      >
+        接受并签署
+      </van-button>
+      <van-button
+        type="default"
+        block
+        class="reject-btn"
+        bind:click="rejectInvitation"
+      >
+        拒绝签署
+      </van-button>
+    </view>
+
+    <view class="status-tip" wx:if="{{contractInfo.status !== 2}}">
+      <van-notify bar-desc="{{statusTip}}" type="warning" />
+    </view>
+  </view>
+
+  <view class="login-tip" wx:if="{{verified && !userInfo}}">
+    <text>请先登录后再操作</text>
+    <van-button type="primary" size="small" bind:click="goToLogin">去登录</van-button>
+  </view>
+</view>

@@ -1,0 +1,14 @@
+<!-- components/contract-card/index.wxml -->
+<view class="contract-card" bindtap="onClick">
+  <view class="card-header">
+    <view class="text-lg text-bold">{{contract.title}}</view>
+    <van-tag type="{{getStatusColor(contract.status)}}">
+      {{getStatusText(contract.status)}}
+    </van-tag>
+  </view>
+  <view class="card-body">
+    <view class="text-sm text-gray">{{type === 'PARTY_A' ? '乙方' : '甲方'}}：{{type === 'PARTY_A' ? contract.lessee_name : contract.lessor_name}}</view>
+    <view class="text-sm text-gray mt-xs">金额：¥{{contract.monthly_rent}}/月</view>
+    <view class="text-sm text-gray mt-xs">时间：{{contract.created_at}}</view>
+  </view>
+</view>

@@ -1,0 +1,28 @@
+{
+  "miniprogramRoot": "./",
+  "projectname": "LeaseContract",
+  "description": "租赁合同小程序项目配置文件",
+  "appid": "wxxxxxxxxxxx",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "newFeature": true,
+    "nodeModules": true,
+    "autoAudits": false,
+    "showShadowRootInWxmlPanel": true,
+    "scopeDataCheck": false,
+    "packNpmManually": true,
+    "packNpmRelationList": [
+      {
+        "packageJsonPath": "./package.json",
+        "miniprogramNpmDistDir": "./"
+      }
+    ]
+  },
+  "compileType": "miniprogram",
+  "libVersion": "3.3.5",
+  "condition": {}
+}

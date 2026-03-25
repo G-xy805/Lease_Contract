@@ -1,0 +1,133 @@
+<view class="container">
+  <!-- 合同信息卡片 -->
+  <view class="contract-info">
+    <view class="info-header">
+      <text class="contract-title">{{contractInfo.title}}</text>
+      <text class="contract-status {{contractInfo.status}}">{{statusText}}</text>
+    </view>
+    <view class="info-detail">
+      <view class="info-row">
+        <text class="label">合同编号</text>
+        <text class="value">{{contractInfo.contractNo}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">签约双方</text>
+        <text class="value">{{contractInfo.partyA}} - {{contractInfo.partyB}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">签署方</text>
+        <text class="value">{{isPartyA ? '甲方' : '乙方'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 签署区 -->
+  <view class="sign-section">
+    <view class="section-title">请在下方签名</view>
+    
+    <!-- 签名工具栏 -->
+    <view class="sign-toolbar">
+      <!-- 颜色选择 -->
+      <view class="tool-group">
+        <text class="tool-label">颜色</text>
+        <view class="color-options">
+          <view 
+            class="color-btn {{currentColor === '#000000' ? 'active' : ''}}" 
+            data-color="#000000"
+            bindtap="selectColor">
+            <view class="color-dot black"></view>
+          </view>
+          <view 
+            class="color-btn {{currentColor === '#1A73E8' ? 'active' : ''}}" 
+            data-color="#1A73E8"
+            bindtap="selectColor">
+            <view class="color-dot blue"></view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 粗细选择 -->
+      <view class="tool-group">
+        <text class="tool-label">粗细</text>
+        <view class="thickness-options">
+          <view 
+            class="thickness-btn {{currentThickness === 2 ? 'active' : ''}}" 
+            data-thickness="2"
+            bindtap="selectThickness">
+            <view class="thickness-line thin"></view>
+          </view>
+          <view 
+            class="thickness-btn {{currentThickness === 4 ? 'active' : ''}}" 
+            data-thickness="4"
+            bindtap="selectThickness">
+            <view class="thickness-line medium"></view>
+          </view>
+          <view 
+            class="thickness-btn {{currentThickness === 6 ? 'active' : ''}}" 
+            data-thickness="6"
+            bindtap="selectThickness">
+            <view class="thickness-line thick"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 签名画布 -->
+    <view class="canvas-wrapper">
+      <canvas 
+        class="sign-canvas" 
+        canvas-id="signCanvas"
+        bindtouchstart="handleTouchStart"
+        bindtouchmove="handleTouchMove"
+        bindtouchend="handleTouchEnd"
+        bindtap="handleCanvasTap">
+      </canvas>
+      <view class="canvas-placeholder" wx:if="{{!hasSigned}}">
+        <text>请在此处签名</text>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-buttons">
+      <van-button 
+        type="default" 
+        size="small" 
+        bind:click="clearSign"
+        disabled="{{!hasSigned}}">
+        清除
+      </van-button>
+      <van-button 
+        type="default" 
+        size="small" 
+        bind:click="reSign"
+        disabled="{{!hasSigned}}">
+        重签
+      </van-button>
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-section">
+    <van-button 
+      type="primary" 
+      size="large" 
+      block 
+      bind:click="submitSign"
+      loading="{{isSubmitting}}"
+      disabled="{{!hasSigned || isSubmitting}}">
+      确认签署
+    </van-button>
+  </view>
+
+  <!-- 结果弹窗 -->
+  <van-popup show="{{showResult}}" position="center" round>
+    <view class="result-popup">
+      <view class="result-icon {{resultType}}">
+        <van-icon name="{{resultType === 'success' ? 'passed' : 'close'}}" size="60"/>
+      </view>
+      <view class="result-title">{{resultTitle}}</view>
+      <view class="result-message">{{resultMessage}}</view>
+      <van-button type="primary" block bind:click="goToResult">查看详情</van-button>
+    </view>
+  </van-popup>
+</view>

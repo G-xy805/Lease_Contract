@@ -1,0 +1,147 @@
+/* pages/contracts/index.wxss */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.search-wrapper {
+  background-color: #ffffff;
+  padding: 16rpx 24rpx;
+}
+
+.create-btn-wrapper {
+  background-color: #ffffff;
+  padding: 16rpx 24rpx;
+  border-bottom: 1rpx solid #ebedf0;
+}
+
+.create-btn {
+  background: linear-gradient(135deg, #1989fa 0%, #1977fa 100%);
+}
+
+.contract-scroll {
+  flex: 1;
+  height: calc(100vh - 220rpx);
+}
+
+.refresh-loading {
+  padding: 24rpx 0;
+  text-align: center;
+}
+
+.contract-list {
+  padding: 24rpx;
+}
+
+.contract-item {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.contract-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20rpx;
+}
+
+.contract-title {
+  flex: 1;
+  margin-right: 16rpx;
+  color: #323233;
+  line-height: 1.4;
+}
+
+.contract-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.contract-info {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.info-icon {
+  color: #969799;
+  flex-shrink: 0;
+}
+
+.contract-footer {
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid #ebedf0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.load-more {
+  padding: 32rpx 0;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.global-loading {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999;
+}
+
+/* 空状态样式 */
+.van-empty {
+  margin-top: 120rpx;
+}
+
+/* 通用样式 */
+.text-bold {
+  font-weight: bold;
+}
+
+.text-lg {
+  font-size: 32rpx;
+}
+
+.text-sm {
+  font-size: 26rpx;
+}
+
+.text-gray {
+  color: #969799;
+}
+
+.text-primary {
+  color: #1989fa;
+}
+
+.text-success {
+  color: #07c160;
+}
+
+.text-warning {
+  color: #ff976a;
+}
+
+.text-danger {
+  color: #ee0a24;
+}
+
+/* 修复 van-tabs sticky 定位 */
+.van-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 99;
+  background-color: #ffffff;
+}

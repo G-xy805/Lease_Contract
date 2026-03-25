@@ -1,0 +1,229 @@
+/* 全局样式文件 */
+
+/* 主题颜色 - Vant Weapp 主题变量 */
+page {
+  --blue: #1989fa;
+  --red: #ee0a24;
+  --orange: #ff976a;
+  --yellow: #ffd21e;
+  --green: #07c160;
+  --gray: #323233;
+  --gray-darker: #646566;
+  --gray-dark: #969799;
+  --gray: #c8c9cc;
+  --gray-light: #ebedf0;
+  --white: #ffffff;
+  --black: #000000;
+
+  /* 主题相关 */
+  --text-color: #323233;
+  --text-color-light: #646566;
+  --text-color-lighter: #969799;
+  --text-color-placeholder: #c8c9cc;
+  --border-color: #ebedf0;
+  --divider-color: #ebedf0;
+  --background-color: #f5f5f5;
+  --background-color-light: #fafafa;
+  --active-color: #e6e6e6;
+
+  /* 字体大小 */
+  --font-size-xs: 20rpx;
+  --font-size-sm: 24rpx;
+  --font-size-md: 28rpx;
+  --font-size-lg: 32rpx;
+  --font-size-xl: 36rpx;
+
+  /* 间距 */
+  --padding-xs: 16rpx;
+  --padding-sm: 24rpx;
+  --padding-md: 32rpx;
+  --padding-lg: 40rpx;
+  --padding-xl: 48rpx;
+
+  /* 圆角 */
+  --border-radius-sm: 4rpx;
+  --border-radius-md: 8rpx;
+  --border-radius-lg: 16rpx;
+  --border-radius-xl: 24rpx;
+
+  /* 动画 */
+  --animation-duration-fast: 0.2s;
+  --animation-duration-normal: 0.3s;
+  --animation-duration-slow: 0.5s;
+}
+
+/* 重置样式 */
+page {
+  background-color: #f5f5f5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  font-size: 28rpx;
+  line-height: 1.5;
+  color: #323233;
+}
+
+/* 容器类 */
+.container {
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 24rpx;
+}
+
+.container-no-padding {
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+/* Flex 布局 */
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+/* 文本 */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-primary {
+  color: #1989fa;
+}
+
+.text-success {
+  color: #07c160;
+}
+
+.text-warning {
+  color: #ff976a;
+}
+
+.text-danger {
+  color: #ee0a24;
+}
+
+.text-gray {
+  color: #969799;
+}
+
+.text-bold {
+  font-weight: bold;
+}
+
+.text-lg {
+  font-size: 32rpx;
+}
+
+.text-xl {
+  font-size: 36rpx;
+}
+
+.text-sm {
+  font-size: 24rpx;
+}
+
+.text-xs {
+  font-size: 20rpx;
+}
+
+/* 间距 */
+.mt-xs { margin-top: 16rpx; }
+.mt-sm { margin-top: 24rpx; }
+.mt-md { margin-top: 32rpx; }
+.mt-lg { margin-top: 40rpx; }
+.mt-xl { margin-top: 48rpx; }
+
+.mb-xs { margin-bottom: 16rpx; }
+.mb-sm { margin-bottom: 24rpx; }
+.mb-md { margin-bottom: 32rpx; }
+.mb-lg { margin-bottom: 40rpx; }
+.mb-xl { margin-bottom: 48rpx; }
+
+.ml-xs { margin-left: 16rpx; }
+.ml-sm { margin-left: 24rpx; }
+.ml-md { margin-left: 32rpx; }
+
+.mr-xs { margin-right: 16rpx; }
+.mr-sm { margin-right: 24rpx; }
+.mr-md { margin-right: 32rpx; }
+
+.pt-xs { padding-top: 16rpx; }
+.pt-sm { padding-top: 24rpx; }
+.pt-md { padding-top: 32rpx; }
+
+.pb-xs { padding-bottom: 16rpx; }
+.pb-sm { padding-bottom: 24rpx; }
+.pb-md { padding-bottom: 32rpx; }
+
+/* 安全区域 */
+.safe-area-top {
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 按钮占位 */
+.btn-placeholder {
+  height: 96rpx;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 60rpx;
+}
+
+.empty-state image {
+  width: 240rpx;
+  height: 240rpx;
+  margin-bottom: 32rpx;
+}
+
+.empty-state text {
+  color: #969799;
+  font-size: 28rpx;
+}

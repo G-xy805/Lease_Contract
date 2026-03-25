@@ -1,0 +1,14 @@
+<!-- components/user-card/index.wxml -->
+<view class="user-card" bindtap="onClick">
+  <van-image
+    round
+    width="120rpx"
+    height="120rpx"
+    src="{{user.avatarUrl || ''}}"
+  />
+  <view class="user-info">
+    <view class="text-lg text-bold">{{user.name || '用户'}}</view>
+    <view class="text-sm text-gray mt-xs">{{user.phone || '未登录'}}</view>
+  </view>
+  <van-icon name="arrow" class="arrow-icon" color="#969799" />
+</view>

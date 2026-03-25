@@ -1,0 +1,281 @@
+<!-- pages/contract-detail/index.wxml -->
+<view class="container">
+  <block wx:if="{{loading}}">
+    <view class="loading-container">
+      <van-loading size="48px" type="spinner" vertical>加载中...</van-loading>
+    </view>
+  </block>
+  <block wx:elif="{{contractInfo}}">
+    <!-- 合同状态卡片 -->
+    <view class="card contract-header">
+      <view class="flex-between mb-sm">
+        <view class="text-xl text-bold">{{contractInfo.title}}</view>
+        <van-tag type="{{statusTagType}}">{{statusText}}</van-tag>
+      </view>
+      <view class="flex-between">
+        <view class="text-sm text-gray">合同编号：{{contractInfo.contractNo}}</view>
+        <view class="text-sm text-gray">创建时间：{{contractInfo.createTime}}</view>
+      </view>
+    </view>
+
+    <!-- 签署状态时间线 -->
+    <view class="card">
+      <view class="text-lg text-bold mb-md">签署状态</view>
+      <view class="signing-status">
+        <!-- 甲方签署状态 -->
+        <view class="status-item">
+          <view class="status-icon party-a {{partyASigned ? 'signed' : 'unsigned'}}">
+            <van-icon name="{{partyASigned ? 'passed' : 'clock-o'}}" size="20px" />
+          </view>
+          <view class="status-content">
+            <view class="text-bold">甲方签署</view>
+            <view class="text-sm text-gray">{{partyASigned ? partyASignTime : '待签署'}}</view>
+          </view>
+        </view>
+
+        <view class="status-line"></view>
+
+        <!-- 乙方签署状态 -->
+        <view class="status-item">
+          <view class="status-icon party-b {{partyBSigned ? 'signed' : 'unsigned'}}">
+            <van-icon name="{{partyBSigned ? 'passed' : 'clock-o'}}" size="20px" />
+          </view>
+          <view class="status-content">
+            <view class="text-bold">乙方签署</view>
+            <view class="text-sm text-gray">{{partyBSigned ? partyBSignTime : '待签署'}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 甲乙双方信息 -->
+    <view class="card">
+      <view class="text-lg text-bold mb-md">甲方信息</view>
+      <view class="info-row">
+        <view class="info-label">公司名称</view>
+        <view class="info-value">{{contractInfo.partyA.company || contractInfo.partyA.name}}</view>
+      </view>
+      <view class="info-row" wx:if="{{contractInfo.partyA.contact}}">
+        <view class="info-label">委托代理人</view>
+        <view class="info-value">{{contractInfo.partyA.contact}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">联系电话</view>
+        <view class="info-value">{{contractInfo.partyA.phone}}</view>
+      </view>
+      <view class="info-row" wx:if="{{contractInfo.partyA.phone2}}">
+        <view class="info-label">备用电话</view>
+        <view class="info-value">{{contractInfo.partyA.phone2}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">身份证</view>
+        <view class="info-value">{{contractInfo.partyA.idCard}}</view>
+      </view>
+      <view class="info-row" wx:if="{{contractInfo.partyA.account}}">
+        <view class="info-label">收款账户</view>
+        <view class="info-value">{{contractInfo.partyA.account}}</view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="text-lg text-bold mb-md">乙方信息</view>
+      <view class="info-row">
+        <view class="info-label">姓名</view>
+        <view class="info-value">{{contractInfo.partyB.name}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">身份证</view>
+        <view class="info-value">{{contractInfo.partyB.idCard}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">联系电话</view>
+        <view class="info-value">{{contractInfo.partyB.phone}}</view>
+      </view>
+    </view>
+
+    <!-- 房屋信息 -->
+    <view class="card">
+      <view class="text-lg text-bold mb-md">房屋信息</view>
+      <view class="info-row">
+        <view class="info-label">位置</view>
+        <view class="info-value">{{contractInfo.property.address}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">面积</view>
+        <view class="info-value">{{contractInfo.property.area}}㎡</view>
+      </view>
+    </view>
+
+    <!-- 租赁信息 -->
+    <view class="card">
+      <view class="text-lg text-bold mb-md">租赁信息</view>
+      <view class="info-row">
+        <view class="info-label">租赁期限</view>
+        <view class="info-value">{{contractInfo.lease.startDate}} 至 {{contractInfo.lease.endDate}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">租赁用途</view>
+        <view class="info-value">{{contractInfo.lease.purpose}}</view>
+      </view>
+    </view>
+
+    <!-- 租金信息 -->
+    <view class="card">
+      <view class="text-lg text-bold mb-md">租金信息</view>
+      <view class="info-row">
+        <view class="info-label">月租金</view>
+        <view class="info-value price">¥{{contractInfo.rent.monthly}}</view>
+      </view>
+      <view class="info-row" wx:if="{{contractInfo.rent.yearly}}">
+        <view class="info-label">合同总租金</view>
+        <view class="info-value price">¥{{contractInfo.rent.yearly}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">付款方式</view>
+        <view class="info-value">{{contractInfo.rent.paymentMethod}}</view>
+      </view>
+      <view class="info-row">
+        <view class="info-label">押金</view>
+        <view class="info-value price">¥{{contractInfo.rent.deposit}}</view>
+      </view>
+      <view class="info-row" wx:if="{{contractInfo.rent.depositChinese}}">
+        <view class="info-label">押金大写</view>
+        <view class="info-value">{{contractInfo.rent.depositChinese}}</view>
+      </view>
+    </view>
+
+    <!-- 签约日期 -->
+    <view class="card" wx:if="{{signedAt}}">
+      <view class="text-lg text-bold mb-md">签约日期</view>
+      <view class="info-row">
+        <view class="info-label">合同生效日期</view>
+        <view class="info-value">{{signedAt}}</view>
+      </view>
+    </view>
+
+    <!-- 居间服务信息 -->
+    <view class="card" wx:if="{{contractInfo.intermediary.name}}">
+      <view class="text-lg text-bold mb-md">居间服务</view>
+      <view class="info-row">
+        <view class="info-label">丙方名称</view>
+        <view class="info-value">{{contractInfo.intermediary.name}}</view>
+      </view>
+      <view class="info-row" wx:if="{{contractInfo.intermediary.partyACommission}}">
+        <view class="info-label">甲方佣金</view>
+        <view class="info-value">¥{{contractInfo.intermediary.partyACommission}}</view>
+      </view>
+      <view class="info-row" wx:if="{{contractInfo.intermediary.partyACommissionChinese}}">
+        <view class="info-label">甲方佣金大写</view>
+        <view class="info-value">{{contractInfo.intermediary.partyACommissionChinese}}</view>
+      </view>
+      <view class="info-row" wx:if="{{contractInfo.intermediary.partyBCommission}}">
+        <view class="info-label">乙方佣金</view>
+        <view class="info-value">¥{{contractInfo.intermediary.partyBCommission}}</view>
+      </view>
+      <view class="info-row" wx:if="{{contractInfo.intermediary.partyBCommissionChinese}}">
+        <view class="info-label">乙方佣金大写</view>
+        <view class="info-value">{{contractInfo.intermediary.partyBCommissionChinese}}</view>
+      </view>
+    </view>
+
+    <!-- 物品清单 -->
+    <view class="card" wx:if="{{contractInfo.items && contractInfo.items.length > 0}}">
+      <view class="text-lg text-bold mb-md">物品清单</view>
+      <view class="table-wrapper">
+        <view class="table">
+          <view class="table-header">
+            <view class="table-th" style="flex: 2">物品名称</view>
+            <view class="table-th" style="flex: 1">数量</view>
+            <view class="table-th" style="flex: 2">备注</view>
+          </view>
+          <view class="table-row" wx:for="{{contractInfo.items}}" wx:key="index">
+            <view class="table-td" style="flex: 2">{{item.name}}</view>
+            <view class="table-td" style="flex: 1">{{item.quantity}}</view>
+            <view class="table-td" style="flex: 2">{{item.remark}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 其他约定 -->
+    <view class="card" wx:if="{{contractInfo.agreements && contractInfo.agreements.length > 0}}">
+      <view class="text-lg text-bold mb-md">其他约定</view>
+      <view class="agreement-item" wx:for="{{contractInfo.agreements}}" wx:key="index">
+        <view class="agreement-index">{{index + 1}}.</view>
+        <view class="agreement-content">{{item}}</view>
+      </view>
+    </view>
+
+    <!-- 合同验证 -->
+    <view class="card">
+      <view class="text-lg text-bold mb-md">合同验证</view>
+      <view class="verify-box">
+        <view class="verify-code">
+          <view class="text-sm text-gray">合同验证码</view>
+          <view class="code-value">{{contractInfo.verifyCode}}</view>
+        </view>
+        <van-button size="small" type="primary" plain bind:click="onCopyCode">复制</van-button>
+      </view>
+      <view class="text-sm text-gray mt-sm">验证码用于验证合同真伪，请妥善保管</view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-buttons">
+      <!-- 甲方签署按钮 -->
+      <van-button type="primary" block round bind:click="onPartyASign" class="mt-sm" wx:if="{{isPartyA && needPartyASign}}">
+        <van-icon name="sign" class="btn-icon" />确认签署
+      </van-button>
+      <!-- 甲方生成并分享邀请码 -->
+      <van-button type="primary" block round bind:click="onGenerateShare" class="mt-sm" wx:if="{{isPartyA && needShare}}">
+        <van-icon name="share" class="btn-icon" />生成分享链接
+      </van-button>
+      <!-- 乙方签署按钮 -->
+      <van-button type="primary" block round bind:click="onPartyBSign" class="mt-sm" wx:if="{{!isPartyA && needPartyBSign}}">
+        <van-icon name="sign" class="btn-icon" />确认签署
+      </van-button>
+      <!-- 邀请码显示和复制 -->
+      <view class="invite-code-box" wx:if="{{inviteCode && partyASigned && !partyBSigned}}">
+        <view class="invite-code-label">邀请码</view>
+        <view class="invite-code-value">{{inviteCode}}</view>
+        <van-button size="small" type="primary" plain bind:click="onCopyInviteCode">复制</van-button>
+      </view>
+      <van-button type="info" block round plain bind:click="onShare" class="mt-sm" wx:if="{{inviteCode}}">
+        <van-icon name="share" class="btn-icon" />分享合同
+      </van-button>
+      <van-button type="primary" block round bind:click="onDownloadPdf" loading="{{pdfLoading}}">
+        <van-icon name="down" class="btn-icon" />下载PDF
+      </van-button>
+      <van-button type="warning" block round bind:click="onSendReminder" class="mt-sm" wx:if="{{canRemind}}">
+        <van-icon name="bell" class="btn-icon" />发送签署提醒
+      </van-button>
+      <van-button type="danger" block round plain bind:click="onDeleteContract" class="mt-sm" wx:if="{{isPartyA && canDelete}}">
+        <van-icon name="delete-o" class="btn-icon" />删除合同
+      </van-button>
+    </view>
+
+    <!-- 分享弹窗 -->
+    <van-popup show="{{showShareModal}}" position="bottom" round bind:close="onCloseShareModal">
+      <view class="share-modal">
+        <view class="share-modal-title">分享合同</view>
+        <view class="share-modal-content">
+          <view class="invite-code-display">
+            <text class="label">邀请码：</text>
+            <text class="code">{{inviteCode}}</text>
+          </view>
+          <view class="qr-code-box" wx:if="{{shareQrCode}}">
+            <image src="{{shareQrCode}}" mode="aspectFit" class="qr-code" />
+            <text class="qr-tip">扫描二维码查看合同</text>
+          </view>
+          <view class="share-tip">将邀请码或二维码发送给乙方，乙方即可查看并签署合同</view>
+        </view>
+        <view class="share-modal-actions">
+          <van-button type="default" block round bind:click="onCopyInviteCode">复制邀请码</van-button>
+          <van-button type="primary" block round bind:click="onSaveQrCode" wx:if="{{shareQrCode}}">保存二维码</van-button>
+        </view>
+      </view>
+    </van-popup>
+  </block>
+  <block wx:else>
+    <van-empty description="合同不存在" />
+  </block>
+</view>

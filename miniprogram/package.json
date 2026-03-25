@@ -1,0 +1,17 @@
+{
+  "name": "lease-contract-miniprogram",
+  "version": "1.0.0",
+  "description": "租赁合同微信小程序",
+  "main": "app.js",
+  "scripts": {
+    "dev": "npm run build -- --watch",
+    "build": "node scripts/build.js"
+  },
+  "keywords": ["miniprogram", "weapp", "contract"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@vant/weapp": "^1.10.24"
+  },
+  "devDependencies": {}
+}
