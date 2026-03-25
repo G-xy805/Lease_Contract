@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { query, insert, execute } from '../database';
 import { AuthRequest } from '../middleware/auth';
 import { htmlPdfService, ContractData, PdfResult } from '../services/htmlPdfService';
+import { contractConfig, defaultFeeConfig } from '../config/contractTemplate';
 import {
   ContractStatus,
   PaymentMethod,
@@ -17,6 +18,7 @@ import {
   getStatusText,
   getPaymentMethodText
 } from '../models/Contract';
+import { validateIdCard, validatePhone, validateAmount } from '../utils/validation';
 
 /**
  * 生成合同编号
@@ -44,15 +46,16 @@ const generateInviteCode = (): string => {
 
 /**
  * 计算合同总金额
+ * 计算公式：总金额 = 月租金 × 租期月数 + 押金
+ * 其中押金固定为1个月租金
+ * 使用整数运算（分）避免浮点数精度问题
  */
 const calculateTotalAmount = (monthlyRent: number, paymentMethod: PaymentMethod, months: number): number => {
-  const deposits = 1;
-  const paymentMonths = paymentMethod === PaymentMethod.PAY_ONE_MONTH ? 1 :
-                         paymentMethod === PaymentMethod.PAY_THREE_MONTHS ? 3 :
-                         paymentMethod === PaymentMethod.PAY_SIX_MONTHS ? 6 : 12;
-  const totalRent = monthlyRent * months;
-  const deposit = monthlyRent * deposits;
-  return totalRent + deposit;
+  const depositsCount = 1;
+  const monthlyRentFen = Math.round(monthlyRent * 100);
+  const totalRentFen = monthlyRentFen * months;
+  const depositFen = monthlyRentFen * depositsCount;
+  return (totalRentFen + depositFen) / 100;
 };
 
 /**
@@ -368,6 +371,29 @@ export const createContract = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
+    if (lessor_idcard && !validateIdCard(lessor_idcard)) {
+      res.status(400).json({ code: 400, message: '甲方身份证号格式不正确' });
+      return;
+    }
+    if (lessee_idcard && !validateIdCard(lessee_idcard)) {
+      res.status(400).json({ code: 400, message: '乙方身份证号格式不正确' });
+      return;
+    }
+
+    if (!validatePhone(lessor_phone)) {
+      res.status(400).json({ code: 400, message: '甲方手机号格式不正确' });
+      return;
+    }
+    if (!validatePhone(lessee_phone)) {
+      res.status(400).json({ code: 400, message: '乙方手机号格式不正确' });
+      return;
+    }
+
+    if (!validateAmount(monthly_rent)) {
+      res.status(400).json({ code: 400, message: '月租金金额格式不正确' });
+      return;
+    }
+
     const startDate = new Date(lease_start);
     const endDate = new Date(lease_end);
     const months = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 30));
@@ -413,7 +439,7 @@ export const createContract = async (req: AuthRequest, res: Response): Promise<v
     const insertValues = [
       contract_no, title, userId,
       lessor_name, lessor_phone, lessor_phone2 || null, lessor_idcard || null, lessor_account || null,
-      partyA_company || '内蒙古恒之寓酒店管理有限公司', lessor_contact || null,
+      partyA_company || contractConfig.partyACompany, lessor_contact || null,
       lessee_name, lessee_phone, lessee_idcard || null,
       house_address, house_area || null, rent_purpose || null,
       lease_start, lease_end, months, advance_notice_days || null,
@@ -1213,7 +1239,7 @@ export const generateContractPdf = async (req: AuthRequest, res: Response): Prom
       title: contract.title,
       partyA: {
         name: '甲方（出租方）',
-        company: contract.partyA_company || '内蒙古恒之寓酒店管理有限公司',
+        company: contract.partyA_company || contractConfig.partyACompany,
         contact: contract.lessor_name,
         phone: contract.lessor_phone,
         address: contract.house_address,

@@ -11,7 +11,11 @@
     "van-radio": "@vant/weapp/radio/index",
     "van-radio-group": "@vant/weapp/radio-group/index",
     "van-icon": "@vant/weapp/icon/index",
-    "van-divider": "@vant/weapp/divider/index"
+    "van-divider": "@vant/weapp/divider/index",
+    "van-notice-bar": "@vant/weapp/notice-bar/index",
+    "van-checkbox": "@vant/weapp/checkbox/index",
+    "van-stepper": "@vant/weapp/stepper/index",
+    "van-loading": "@vant/weapp/loading/index"
   },
   "navigationBarTitleText": "创建合同"
 }

@@ -9,6 +9,92 @@
   padding-bottom: 20rpx;
 }
 
+/* 进度指示器样式 */
+.steps-wrapper {
+  background-color: #fff;
+  padding: 24rpx 32rpx;
+  margin-bottom: 20rpx;
+}
+
+.custom-steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16rpx;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.step-icon-wrap {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: bold;
+  margin-bottom: 12rpx;
+  transition: all 0.3s ease;
+}
+
+.step-icon-wrap.pending {
+  background-color: #ebedf0;
+  color: #969799;
+  border: 2rpx solid #ebedf0;
+}
+
+.step-icon-wrap.current {
+  background-color: #1989fa;
+  color: #fff;
+  border: 2rpx solid #1989fa;
+  box-shadow: 0 4rpx 12rpx rgba(25, 137, 250, 0.3);
+  transform: scale(1.1);
+}
+
+.step-icon-wrap.completed {
+  background-color: #07c160;
+  color: #fff;
+  border: 2rpx solid #07c160;
+}
+
+.step-desc {
+  font-size: 22rpx;
+  color: #969799;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+.step-desc.current {
+  color: #1989fa;
+  font-weight: 500;
+}
+
+.step-desc.completed {
+  color: #07c160;
+}
+
+/* 连接线 */
+.step-line {
+  position: absolute;
+  top: 28rpx;
+  left: calc(50% + 28rpx);
+  width: calc(100% - 56rpx);
+  height: 4rpx;
+  background: linear-gradient(to right, #ebedf0, #ebedf0);
+  transition: background 0.3s ease;
+}
+
+.step-line.completed {
+  background: linear-gradient(to right, #07c160, #07c160);
+}
+
 .section {
   background-color: #fff;
   margin-top: 20rpx;
@@ -67,6 +153,15 @@
   padding: 28rpx 32rpx;
   background-color: #fff;
   border-bottom: 1rpx solid #ebedf0;
+  transition: background-color 0.2s ease;
+}
+
+.date-cell:active {
+  background-color: #f7f8fa;
+}
+
+.date-cell.error {
+  background-color: #fff0f0;
 }
 
 .date-label {
@@ -98,6 +193,25 @@
 .date-arrow {
   color: #969799;
   font-size: 32rpx;
+}
+
+/* 错误字段样式 */
+.van-field__error-message {
+  color: #ee0a24;
+  font-size: 24rpx;
+  margin-top: 8rpx;
+}
+
+.van-field--error {
+  border-color: #ee0a24 !important;
+}
+
+.error-tip {
+  font-size: 24rpx;
+  color: #ee0a24;
+  padding: 8rpx 32rpx;
+  background-color: #fff0f0;
+  margin-top: 8rpx;
 }
 
 /* 押金说明 */
@@ -167,79 +281,165 @@
   color: #07c160;
 }
 
-/* 物品表格 */
+/* 物品清单 - 卡片式布局 */
 .items-note {
   font-size: 24rpx;
   color: #969799;
   margin-bottom: 16rpx;
 }
 
-.items-table {
-  border: 1rpx solid #ebedf0;
-  border-radius: 8rpx;
+.items-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.item-card {
+  background-color: #fff;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  position: relative;
   overflow: hidden;
 }
 
-.table-header {
-  display: flex;
+.item-card.deleted {
+  opacity: 0.5;
   background-color: #f7f8fa;
-  padding: 16rpx 0;
-  font-size: 24rpx;
-  font-weight: 500;
-  color: #646566;
 }
 
-.table-row {
-  display: flex;
-  align-items: center;
-  padding: 12rpx 0;
-  border-top: 1rpx solid #ebedf0;
-  font-size: 26rpx;
-}
-
-.col-name {
-  flex: 2;
-  padding-left: 16rpx;
-  color: #323233;
-}
-
-.col-qty {
-  flex: 1;
-  text-align: center;
-}
-
-.col-unit {
-  flex: 1;
-  text-align: center;
-  color: #969799;
-}
-
-.col-check {
-  width: 80rpx;
-  text-align: center;
-}
-
-.table-row input {
-  border: 1rpx solid #ebedf0;
-  border-radius: 4rpx;
-  padding: 8rpx;
-  text-align: center;
-  font-size: 24rpx;
-  background-color: #fff;
-}
-
-/* 自定义物品 */
-.custom-item-row {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  margin-bottom: 16rpx;
-  padding: 16rpx;
-  background-color: #f7f8fa;
+.item-card.deleted::after {
+  content: '已删除';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #ee0a24;
+  opacity: 0.3;
+  border: 4rpx solid #ee0a24;
+  padding: 8rpx 24rpx;
   border-radius: 8rpx;
 }
 
-.custom-item-row .van-field {
+.item-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.item-card-name {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #323233;
+}
+
+.item-card-actions {
+  display: flex;
+  gap: 16rpx;
+  align-items: center;
+}
+
+.item-card-body {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.item-quantity-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.item-quantity-label {
+  font-size: 26rpx;
+  color: #646566;
+}
+
+.item-quantity-input {
+  width: 120rpx;
+  height: 60rpx;
+  border: 2rpx solid #ebedf0;
+  border-radius: 8rpx;
+  text-align: center;
+  font-size: 28rpx;
+  background-color: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.item-quantity-input:focus {
+  border-color: #1989fa;
+}
+
+.item-quantity-input.error {
+  border-color: #ee0a24;
+  background-color: #fff0f0;
+}
+
+.item-unit {
+  font-size: 26rpx;
+  color: #969799;
+  min-width: 60rpx;
+}
+
+.item-card-delete {
+  color: #969799;
+  font-size: 28rpx;
+  padding: 8rpx;
+  transition: color 0.2s ease;
+}
+
+.item-card-delete:active {
+  color: #ee0a24;
+}
+
+/* 滑动删除相关 */
+.swipe-cell {
+  position: relative;
+  overflow: hidden;
+}
+
+.swipe-cell-content {
+  transition: transform 0.3s ease;
+}
+
+.swipe-cell-action {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 160rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ee0a24;
+  color: #fff;
+  font-size: 28rpx;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+
+.swipe-cell-action.show {
+  transform: translateX(0);
+}
+
+/* 自定义物品卡片 */
+.custom-item-card {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx;
+  background-color: #f7f8fa;
+  border-radius: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.custom-item-card .van-field {
   background-color: #fff;
   border-radius: 8rpx;
 }
@@ -259,6 +459,7 @@
   align-items: center;
   justify-content: center;
   color: #969799;
+  transition: color 0.2s ease;
 }
 
 .delete-btn:active {
@@ -267,6 +468,48 @@
 
 .add-item-btn {
   margin-top: 16rpx;
+}
+
+/* 添加物品弹窗 */
+.add-item-popup {
+  padding: 32rpx;
+  background-color: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+}
+
+.add-item-popup-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 32rpx;
+  color: #323233;
+}
+
+.add-item-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.add-item-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.add-item-row .van-field {
+  flex: 1;
+  background-color: #f7f8fa;
+  border-radius: 8rpx;
+}
+
+.add-item-actions {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 32rpx;
+}
+
+.add-item-actions .van-button {
+  flex: 1;
 }
 
 /* 底部按钮 */
@@ -280,10 +523,86 @@
   padding: 16rpx 32rpx;
   background-color: #fff;
   box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+  z-index: 100;
+}
+
+.bottom-bar-preview {
+  flex: 1;
+}
+
+.bottom-bar-submit {
+  flex: 2;
 }
 
 .submit-btn {
   flex: 1;
+}
+
+/* 提交按钮状态 */
+.submit-btn .van-button {
+  transition: all 0.3s ease;
+}
+
+.submit-btn .van-button--loading {
+  opacity: 0.8;
+}
+
+.submit-btn .van-button--disabled {
+  background-color: #ebedf0 !important;
+  border-color: #ebedf0 !important;
+  color: #969799 !important;
+}
+
+/* 未保存提示 */
+.unsaved-tip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #1989fa;
+  color: #fff;
+  font-size: 24rpx;
+  padding: 12rpx 32rpx;
+  text-align: center;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}
+
+.unsaved-tip text {
+  flex: 1;
+}
+
+.unsaved-tip .save-btn {
+  color: #fff;
+  font-size: 24rpx;
+  padding: 8rpx 16rpx;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4rpx;
+}
+
+/* 自动保存提示 */
+.auto-save-indicator {
+  position: fixed;
+  top: 100rpx;
+  right: 32rpx;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 22rpx;
+  padding: 12rpx 24rpx;
+  border-radius: 8rpx;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.auto-save-indicator.show {
+  opacity: 1;
 }
 
 .bottom-space {
@@ -306,4 +625,94 @@
 /* 错误状态 */
 .van-field__error-message {
   font-size: 24rpx;
+}
+
+/* 日期选择器优化 */
+.date-picker-popup {
+  background-color: #fff;
+}
+
+/* 日期快捷操作 */
+.date-shortcuts {
+  display: flex;
+  gap: 16rpx;
+  padding: 16rpx 32rpx;
+  background-color: #f7f8fa;
+  border-bottom: 1rpx solid #ebedf0;
+}
+
+.date-shortcut-btn {
+  font-size: 24rpx;
+  color: #1989fa;
+  padding: 8rpx 16rpx;
+  background-color: #fff;
+  border: 1rpx solid #1989fa;
+  border-radius: 4rpx;
+}
+
+.date-shortcut-btn:active {
+  background-color: #f0f7ff;
+}
+
+/* 步骤进度动画 */
+@keyframes stepPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.step-icon-wrap.current {
+  animation: stepPulse 1.5s ease-in-out infinite;
+}
+
+/* 表单验证高亮 */
+.form-section.error {
+  background-color: #fff0f0;
+  animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8rpx); }
+  75% { transform: translateX(8rpx); }
+}
+
+/* 数量步进器样式优化 */
+.van-stepper {
+  display: inline-flex;
+  align-items: center;
+}
+
+.van-stepper__minus,
+.van-stepper__plus {
+  width: 48rpx !important;
+  height: 48rpx !important;
+  background-color: #f7f8fa !important;
+  border: none !important;
+}
+
+.van-stepper__minus--disabled,
+.van-stepper__plus--disabled {
+  background-color: #ebedf0 !important;
+}
+
+.van-stepper__input {
+  width: 64rpx !important;
+  height: 48rpx !important;
+  font-size: 28rpx !important;
+}
+
+/* 物品清单确认状态 */
+.item-confirmed {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.item-confirmed .van-icon {
+  color: #07c160;
+}
+
+.item-unconfirmed .van-icon {
+  color: #969799;
 }

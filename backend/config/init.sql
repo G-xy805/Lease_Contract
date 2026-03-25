@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
     idcard_back VARCHAR(255) DEFAULT NULL COMMENT '身份证背面照片路径',
     real_name_status TINYINT DEFAULT 0 COMMENT '实名认证状态（0:未认证, 1:已认证）',
     real_name_at DATETIME DEFAULT NULL COMMENT '实名认证时间',
+    role VARCHAR(20) DEFAULT 'PARTY_B' COMMENT '用户角色（PARTY_A:出租方, PARTY_B:承租方）',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_phone (phone),

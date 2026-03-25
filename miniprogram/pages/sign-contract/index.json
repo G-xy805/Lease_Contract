@@ -2,7 +2,10 @@
   "usingComponents": {
     "van-button": "@vant/weapp/button/index",
     "van-toast": "@vant/weapp/toast/index",
-    "van-loading": "@vant/weapp/loading/index"
+    "van-loading": "@vant/weapp/loading/index",
+    "van-dialog": "@vant/weapp/dialog/index",
+    "van-popup": "@vant/weapp/popup/index",
+    "van-icon": "@vant/weapp/icon/index"
   },
   "navigationBarTitleText": "合同签署"
 }

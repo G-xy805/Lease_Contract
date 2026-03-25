@@ -41,6 +41,11 @@
   color: #fa8c16;
 }
 
+.contract-status.pending_sign {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+
 .contract-status.signed {
   background: #e6f7ff;
   color: #1890ff;
@@ -49,6 +54,16 @@
 .contract-status.completed {
   background: #f6ffed;
   color: #52c41a;
+}
+
+.contract-status.expired {
+  background: #fff1f0;
+  color: #ff4d4f;
+}
+
+.contract-status.cancelled {
+  background: #f5f5f5;
+  color: #999;
 }
 
 .info-detail {
@@ -220,12 +235,38 @@
   color: #ccc;
 }
 
-/* 操作按钮 */
-.action-buttons {
+/* 右下角清除按钮 */
+.clear-btn-wrapper {
+  position: absolute;
+  right: 16rpx;
+  bottom: 16rpx;
+  z-index: 10;
+}
+
+.clear-btn {
   display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 8rpx 16rpx;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 20rpx;
+  color: #fff;
+  font-size: 24rpx;
+}
+
+.clear-btn:active {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* 签署提示 */
+.sign-hint {
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 24rpx;
-  margin-top: 24rpx;
+  gap: 8rpx;
+  margin-top: 16rpx;
+  color: #999;
+  font-size: 24rpx;
 }
 
 /* 提交区域 */
@@ -273,4 +314,15 @@
   color: #666;
   text-align: center;
   margin-bottom: 16rpx;
+  line-height: 1.5;
+}
+
+.result-buttons {
+  width: 100%;
+  display: flex;
+  gap: 16rpx;
+}
+
+.result-buttons van-button {
+  flex: 1;
 }

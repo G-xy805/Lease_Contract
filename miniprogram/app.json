@@ -6,6 +6,7 @@
     "pages/contracts/index",
     "pages/my-contracts/index",
     "pages/create-contract/index",
+    "pages/preview-contract/index",
     "pages/sign-contract/index",
     "pages/contract-detail/index",
     "pages/profile/index",

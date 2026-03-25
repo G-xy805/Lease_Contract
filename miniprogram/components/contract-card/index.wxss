@@ -3,16 +3,126 @@
   border-radius: 16rpx;
   padding: 32rpx;
   margin-bottom: 24rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contract-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 16rpx;
+  border: 2rpx solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.contract-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 1rpx 6rpx rgba(0, 0, 0, 0.06);
+}
+
+.contract-card:active::after {
+  border-color: #1989fa;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #323233;
+  flex: 1;
+  margin-right: 16rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-status {
+  flex-shrink: 0;
+}
+
+.card-status .van-tag {
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
 }
 
 .card-body {
   color: #646566;
+}
+
+.card-info-row {
+  display: flex;
+  align-items: center;
+  font-size: 28rpx;
+  line-height: 1.6;
+  margin-bottom: 12rpx;
+}
+
+.card-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  color: #969799;
+  flex-shrink: 0;
+}
+
+.info-value {
+  color: #323233;
+  margin-left: 12rpx;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.info-money {
+  color: #ee0a24;
+  font-weight: 500;
+}
+
+.info-money .money-symbol {
+  font-size: 24rpx;
+}
+
+.info-money .money-amount {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.card-divider {
+  height: 1rpx;
+  background-color: #ebedf0;
+  margin: 20rpx 0;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx dashed #ebedf0;
+}
+
+.footer-action {
+  color: #1989fa;
+  font-size: 26rpx;
+  display: flex;
+  align-items: center;
+}
+
+.footer-action .van-icon {
+  margin-right: 4rpx;
 }

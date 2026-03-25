@@ -22,15 +22,18 @@ Page({
 
     // 签名配置
     currentColor: '#000000',  // 黑色
-    currentThickness: 2,     // 细
+    currentThickness: '2',   // 细
     hasSigned: false,
 
     // 提交状态
     isSubmitting: false,
 
+    // 签署时间
+    signTime: '',
+
     // 结果弹窗
     showResult: false,
-    resultType: 'success',  // success / error
+    resultType: 'success',
     resultTitle: '',
     resultMessage: '',
 
@@ -103,7 +106,7 @@ Page({
 
   onReady() {
     // 创建签名上下文
-    this.signContext = wx.createCanvasContext('signCanvas', this)
+    this.signContext = wx.createCanvasContext('signCanvas')
   },
 
   // 通过邀请码加载合同信息
@@ -179,7 +182,21 @@ Page({
     }).exec()
   },
 
-  // 选择颜色
+  // 笔迹粗细变更
+  onThicknessChange(e) {
+    this.setData({
+      currentThickness: e.detail.value
+    })
+  },
+
+  // 签名颜色变更
+  onColorChange(e) {
+    this.setData({
+      currentColor: e.detail.value
+    })
+  },
+
+  // 点击选择颜色（wxml绑定）
   selectColor(e) {
     const color = e.currentTarget.dataset.color
     this.setData({
@@ -187,11 +204,11 @@ Page({
     })
   },
 
-  // 选择粗细
+  // 点击选择粗细（wxml绑定）
   selectThickness(e) {
     const thickness = e.currentTarget.dataset.thickness
     this.setData({
-      currentThickness: parseInt(thickness)
+      currentThickness: thickness
     })
   },
 
@@ -210,7 +227,7 @@ Page({
 
     // 设置画笔样式
     this.signContext.setStrokeStyle(this.data.currentColor)
-    this.signContext.setLineWidth(this.data.currentThickness)
+    this.signContext.setLineWidth(parseInt(this.data.currentThickness))
     this.signContext.setLineCap('round')
     this.signContext.setLineJoin('round')
 
@@ -301,8 +318,8 @@ Page({
     })
   },
 
-  // 提交签署
-  async submitSign() {
+  // 显示预览确认弹窗
+  showPreview() {
     if (!this.data.hasSigned) {
       wx.showToast({
         title: '请先签名',
@@ -311,6 +328,25 @@ Page({
       return
     }
 
+    // 生成签署时间
+    const now = new Date()
+    const signTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
+
+    this.setData({
+      showPreviewPopup: true,
+      signTime: signTime
+    })
+  },
+
+  // 关闭预览弹窗
+  closePreview() {
+    this.setData({
+      showPreviewPopup: false
+    })
+  },
+
+  // 确认签署（预览后）
+  async confirmSign() {
     this.setData({
       isSubmitting: true
     })
@@ -323,20 +359,29 @@ Page({
 
       if (isPartyA) {
         // 甲方签署
-        const res = await api.signContract(contractInfo.id, signature)
+        const res = await api.lessorSign(contractInfo.id, signature)
         if (res.code === 200) {
-          this.showResultPopup('success', '签署成功', '甲方签署已完成，请分享邀请码给乙方进行签署。')
+          this.showSuccessPage()
+        } else {
+          throw new Error(res.message || '签署失败')
         }
       } else {
         // 乙方签署
         const res = await api.tenantSign(contractInfo.id, signature)
         if (res.code === 200) {
-          this.showResultPopup('success', '签署成功', '合同双方签署已完成，合同正式生效！')
+          this.showSuccessPage()
+        } else {
+          throw new Error(res.message || '签署失败')
         }
       }
     } catch (err) {
       console.error('签署请求失败', err)
-      this.showResultPopup('error', '签署失败', err.message || '签署过程出现错误，请稍后重试。')
+      this.setData({
+        showResult: true,
+        resultType: 'error',
+        resultTitle: '签署失败',
+        resultMessage: err.message || '签署过程出现错误，请稍后重试。'
+      })
     } finally {
       this.setData({
         isSubmitting: false
@@ -344,34 +389,86 @@ Page({
     }
   },
 
-  // 显示结果弹窗
-  showResultPopup(type, title, message) {
+  // 显示成功弹窗
+  showSuccessPage() {
     this.setData({
       showResult: true,
-      resultType: type,
-      resultTitle: title,
-      resultMessage: message
+      resultType: 'success',
+      resultTitle: '签署成功',
+      resultMessage: '合同签署已完成！'
     })
   },
 
-  // 关闭弹窗并跳转
-  goToResult() {
-    this.setData({
-      showResult: false
-    })
+  // 关闭结果弹窗并退出
+  closeResultPopup() {
+    this.setData({ showResult: false })
+    wx.navigateBack()
+  },
 
-    if (this.data.resultType === 'success') {
-      // 跳转到合同详情页
-      wx.redirectTo({
-        url: `/pages/contract-detail/index?id=${this.data.contractInfo.id}`
-      })
-    } else {
-      // 留在当前页，可重试
+  // 查看详情
+  goToResult() {
+    this.setData({ showResult: false })
+    wx.navigateBack()
+  },
+
+  // 点击清除签名
+  showClearConfirmDialog() {
+    if (!this.data.hasSigned) return
+
+    wx.showModal({
+      title: '确认清除',
+      content: '确定要清除当前签名吗？',
+      confirmText: '清除',
+      confirmColor: '#ee0a24',
+      success: (res) => {
+        if (res.confirm) {
+          this.clearSign()
+        }
+      }
+    })
+  },
+
+  // 提交签名
+  submitSign() {
+    if (!this.data.hasSigned) {
       wx.showToast({
-        title: '请重试签署',
+        title: '请先完成签名',
         icon: 'none'
       })
+      return
     }
+    this.confirmSign()
+  },
+
+  // 点击清除签名
+  showClearConfirmDialog() {
+    if (!this.data.hasSigned) return
+
+    wx.showModal({
+      title: '确认清除',
+      content: '确定要清除当前签名吗？',
+      confirmText: '清除',
+      confirmColor: '#ee0a24',
+      success: (res) => {
+        if (res.confirm) {
+          this.clearSign()
+        }
+      }
+    })
+  },
+
+  // 重新签署
+  reSignFromResult() {
+    this.setData({ showResult: false })
+    this.clearSign()
+  },
+
+  // 返回首页
+  goHome() {
+    this.setData({ showResult: false })
+    wx.redirectTo({
+      url: '/pages/index/index'
+    })
   },
 
   // 计算状态文本

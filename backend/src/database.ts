@@ -114,7 +114,35 @@ function migrateMissingColumns() {
     "ALTER TABLE contracts ADD COLUMN water_meter DECIMAL(10,2)",
     "ALTER TABLE contracts ADD COLUMN gas_meter DECIMAL(10,2)",
     "ALTER TABLE contracts ADD COLUMN remark TEXT",
-    "ALTER TABLE contracts ADD COLUMN reject_reason VARCHAR(255)"
+    "ALTER TABLE contracts ADD COLUMN reject_reason VARCHAR(255)",
+    "ALTER TABLE contracts ADD COLUMN year_rent DECIMAL(10,2)",
+    "ALTER TABLE contracts ADD COLUMN partyA_company VARCHAR(200)",
+    "ALTER TABLE contracts ADD COLUMN lessor_contact VARCHAR(50)",
+    "ALTER TABLE contracts ADD COLUMN lessee_contact VARCHAR(50)",
+    "ALTER TABLE contracts ADD COLUMN item_tv_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_wardrobe_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_tv_remote_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_tv_table_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_box_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_sofa_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_coffee_table_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_dining_table_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_chair_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_bed_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_nightstand_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_curtain_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_ac_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_ac_remote_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_fridge_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_mattress_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_washer_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_water_heater_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_gas_stove_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_hood_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_induction_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_door_card_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_water_card_qty INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN item_power_card_qty INTEGER DEFAULT 0"
   ];
 
   for (const sql of alterStatements) {
@@ -200,6 +228,9 @@ function migrateMissingColumns() {
   try {
     sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_sign_invitations_receiver_phone ON sign_invitations(receiver_phone)');
     sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_sign_invitations_invitation_no ON sign_invitations(invitation_no)');
+    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_contracts_lessor_phone ON contracts(lessor_phone)');
+    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_contracts_lease_start ON contracts(lease_start)');
+    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_contracts_lease_end ON contracts(lease_end)');
   } catch (e) {
     // 索引已存在
   }

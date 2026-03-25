@@ -1,7 +1,7 @@
 // pages/contract-detail/index.js
 const app = getApp()
 const api = require('../../services/api')
-const { CONTRACT_STATUS_TEXT, CONTRACT_STATUS_COLOR, PAYMENT_METHODS } = require('../../utils/constants')
+const { CONTRACT_STATUS_TEXT, CONTRACT_STATUS_COLOR, PAYMENT_METHODS, CONTRACT_STATUS } = require('../../utils/constants')
 
 Page({
   data: {
@@ -9,6 +9,7 @@ Page({
     contractInfo: null,
     loading: false,
     pdfLoading: false,
+    signLoading: false,
     partyASigned: false,
     partyBSigned: false,
     partyASignTime: '',
@@ -27,7 +28,8 @@ Page({
     shareUrl: '',
     showSharePopup: false,
     qrCode: '',
-    canDelete: false
+    canDelete: false,
+    showVerifyInfo: false
   },
 
   onLoad(options) {
@@ -67,6 +69,61 @@ Page({
   transformContractData(rawContract) {
     if (!rawContract) return null
 
+    const itemMapping = {
+      item_tv_qty: '电视',
+      item_wardrobe_qty: '衣柜',
+      item_tv_remote_qty: '电视遥控器',
+      item_tv_table_qty: '电视柜',
+      item_box_qty: '机顶盒',
+      item_sofa_qty: '沙发',
+      item_coffee_table_qty: '茶几',
+      item_dining_table_qty: '餐桌',
+      item_chair_qty: '餐桌椅',
+      item_bed_qty: '床',
+      item_nightstand_qty: '床头柜',
+      item_curtain_qty: '窗帘',
+      item_ac_qty: '空调',
+      item_ac_remote_qty: '空调遥控器',
+      item_fridge_qty: '冰箱',
+      item_mattress_qty: '床垫子',
+      item_washer_qty: '洗衣机',
+      item_water_heater_qty: '热水器',
+      item_gas_stove_qty: '煤气灶',
+      item_hood_qty: '油烟机',
+      item_induction_qty: '电磁灶',
+      item_door_card_qty: '门禁卡',
+      item_water_card_qty: '水卡',
+      item_power_card_qty: '电卡'
+    }
+
+    const items = []
+    for (const [key, label] of Object.entries(itemMapping)) {
+      if (rawContract[key] && rawContract[key] > 0) {
+        items.push({ name: label, quantity: rawContract[key] })
+      }
+    }
+
+    const feeLabels = {
+      fee_water: '水费',
+      fee_electric: '电费',
+      fee_gas: '燃气费',
+      fee_tv: '电视费',
+      fee_network: '网络费',
+      fee_property: '物业费',
+      fee_heating: '暖气费'
+    }
+    const fees = []
+    for (const [key, label] of Object.entries(feeLabels)) {
+      if (rawContract[key] !== undefined) {
+        fees.push({ label, tenant: rawContract[key] ? '乙方承担' : '甲方承担' })
+      }
+    }
+
+    const meters = []
+    if (rawContract.electricity_meter !== undefined && rawContract.electricity_meter !== null) meters.push({ label: '电表读数', value: rawContract.electricity_meter })
+    if (rawContract.water_meter !== undefined && rawContract.water_meter !== null) meters.push({ label: '水表读数', value: rawContract.water_meter })
+    if (rawContract.gas_meter !== undefined && rawContract.gas_meter !== null) meters.push({ label: '燃气表读数', value: rawContract.gas_meter })
+
     return {
       id: rawContract.id,
       title: rawContract.title || '房屋租赁合同',
@@ -94,17 +151,21 @@ Page({
       partyB: {
         name: rawContract.lessee_name || '',
         idCard: rawContract.lessee_idcard || '',
-        phone: rawContract.lessee_phone || ''
+        phone: rawContract.lessee_phone || '',
+        contact: rawContract.lessee_contact || ''
       },
 
       property: {
         address: rawContract.house_address || '',
-        area: rawContract.house_area || '0'
+        area: rawContract.house_area || '0',
+        purpose: rawContract.rent_purpose || ''
       },
 
       lease: {
         startDate: rawContract.lease_start || '',
         endDate: rawContract.lease_end || '',
+        months: rawContract.lease_months || 0,
+        advanceNoticeDays: rawContract.advance_notice_days || 30,
         purpose: rawContract.rent_purpose || '居住使用'
       },
 
@@ -112,6 +173,14 @@ Page({
         monthly: rawContract.monthly_rent || 0,
         yearly: rawContract.year_rent || (rawContract.monthly_rent || 0) * 12,
         paymentMethod: PAYMENT_METHODS[rawContract.payment_method] || '押一付一',
+        paymentCycle: rawContract.payment_cycle || '',
+        paymentCount: rawContract.payment_count || 1,
+        firstPaymentAmount: rawContract.first_payment_amount || 0,
+        firstPaymentDate: rawContract.first_payment_date || '',
+        secondPaymentAmount: rawContract.second_payment_amount || 0,
+        secondPaymentDate: rawContract.second_payment_date || '',
+        thirdPaymentAmount: rawContract.third_payment_amount || 0,
+        thirdPaymentDate: rawContract.third_payment_date || '',
         deposit: rawContract.deposit || 0,
         depositChinese: rawContract.deposit_chinese || ''
       },
@@ -124,8 +193,19 @@ Page({
         partyBCommissionChinese: rawContract.partyB_commission_chinese || ''
       },
 
-      items: rawContract.items ? (typeof rawContract.items === 'string' ? JSON.parse(rawContract.items) : rawContract.items) : [],
-      agreements: rawContract.agreements ? (typeof rawContract.agreements === 'string' ? JSON.parse(rawContract.agreements) : rawContract.agreements) : [],
+      fees,
+      feesMap: {
+        water: fees.find(f => f.label === '水费')?.tenant || '甲方承担',
+        electric: fees.find(f => f.label === '电费')?.tenant || '甲方承担',
+        gas: fees.find(f => f.label === '燃气费')?.tenant || '甲方承担',
+        tv: fees.find(f => f.label === '电视费')?.tenant || '甲方承担',
+        network: fees.find(f => f.label === '网络费')?.tenant || '甲方承担',
+        property: fees.find(f => f.label === '物业费')?.tenant || '甲方承担',
+        heating: fees.find(f => f.label === '暖气费')?.tenant || '甲方承担'
+      },
+      meters,
+      items,
+
       remark: rawContract.remark || '',
       inviteCode: rawContract.invite_code || '',
       rejectReason: rawContract.reject_reason || ''
@@ -157,11 +237,13 @@ Page({
         let needPartyBSign = false
         let needShare = false
         let canDelete = false
+        let canEdit = false
         const inviteCode = contractInfo.inviteCode || ''
 
         if (contractStatus === CONTRACT_STATUS.PENDING_LESSOR_SIGN) {
           needPartyASign = isPartyA
           canDelete = isPartyA
+          canEdit = isPartyA
         } else if (contractStatus === CONTRACT_STATUS.PENDING_LESSEE_SIGN) {
           canRemind = isPartyA
           needPartyBSign = !isPartyA
@@ -182,7 +264,8 @@ Page({
           needPartyBSign,
           needShare,
           inviteCode,
-          canDelete
+          canDelete,
+          canEdit
         })
       }
 
@@ -193,14 +276,29 @@ Page({
     }
   },
 
+  onEditContract() {
+    const contractId = this.data.contractInfo?.id
+    if (!contractId) {
+      wx.showToast({ title: '合同ID不存在', icon: 'none' })
+      return
+    }
+    wx.navigateTo({
+      url: `/pages/create-contract/index?contractId=${contractId}`
+    })
+  },
+
   onCopyCode() {
     const verifyCode = this.data.contractInfo.verifyCode
     wx.setClipboardData({
       data: verifyCode,
       success: () => {
-        wx.showToast({ title: '已复制验证码', icon: 'success' })
+        wx.showToast({ title: '验证码已复制', icon: 'success' })
       }
     })
+  },
+
+  onToggleVerifyInfo() {
+    this.setData({ showVerifyInfo: !this.data.showVerifyInfo })
   },
 
   onCopyInviteCode() {
@@ -218,7 +316,7 @@ Page({
     this.setData({ pdfLoading: true })
 
     try {
-      const pdfData = await api.getContractPdf(contractId).catch(() => null)
+      const pdfData = await api.generateContractPdf(contractId).catch(() => null)
 
       if (pdfData && pdfData.data && pdfData.data.url) {
         const baseUrl = app.globalData.baseUrl || 'http://localhost:3000'
@@ -233,32 +331,34 @@ Page({
                 filePath: tempFilePath,
                 fileType: 'pdf',
                 success: () => {
-                  wx.showToast({ title: 'PDF已打开，请在文档界面点击右上角保存', icon: 'none', duration: 3000 })
+                  this.setData({ pdfLoading: false })
+                  wx.showToast({ title: 'PDF已打开', icon: 'success' })
                 },
                 fail: (err) => {
                   console.error('打开PDF失败', err)
+                  this.setData({ pdfLoading: false })
                   wx.showToast({ title: '打开失败', icon: 'none' })
                 }
               })
             } else {
+              this.setData({ pdfLoading: false })
               wx.showToast({ title: '下载失败', icon: 'none' })
             }
-            this.setData({ pdfLoading: false })
           },
           fail: (err) => {
             console.error('下载PDF失败', err)
-            wx.showToast({ title: '下载失败，请稍后重试', icon: 'none' })
             this.setData({ pdfLoading: false })
+            wx.showToast({ title: '下载失败，请稍后重试', icon: 'none' })
           }
         })
       } else {
-        wx.showToast({ title: 'PDF生成失败', icon: 'none' })
         this.setData({ pdfLoading: false })
+        wx.showToast({ title: 'PDF生成失败', icon: 'none' })
       }
     } catch (err) {
       console.error('PDF操作失败', err)
-      wx.showToast({ title: '操作失败', icon: 'none' })
       this.setData({ pdfLoading: false })
+      wx.showToast({ title: '操作失败', icon: 'none' })
     }
   },
 
@@ -267,7 +367,7 @@ Page({
       withShareTicket: true,
       menus: ['shareAppMessage', 'shareTimeline']
     })
-    wx.showToast({ title: '点击右上角分享', icon: 'none' })
+    wx.showToast({ title: '点击右上角分享给好友', icon: 'none' })
   },
 
   async onGenerateShare() {
@@ -297,7 +397,25 @@ Page({
   },
 
   onCloseShareModal() {
-    this.setData({ showShareModal: false })
+    this.setData({ showShareModal: false, showSharePopup: false })
+  },
+
+  onShareToChat() {
+    const { inviteCode, contractInfo } = this.data
+    const shareContent = `房屋租赁合同邀请\n合同名称：${contractInfo?.title || '房屋租赁合同'}\n邀请码：${inviteCode}\n点击链接查看并签署合同`
+
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline']
+    })
+
+    wx.updateShareMenu({
+      withShareTicket: true,
+      isPrivacyAuthorized: true,
+      success: () => {
+        wx.showToast({ title: '点击右上角分享', icon: 'none' })
+      }
+    })
   },
 
   async onSaveQrCode() {
@@ -330,15 +448,21 @@ Page({
 
   async onSendReminder() {
     const { contractId } = this.data
+
     wx.showModal({
       title: '发送提醒',
       content: '确定要向未签署方发送签署提醒吗？',
+      confirmColor: '#07c160',
       success: async (res) => {
         if (res.confirm) {
+          wx.showLoading({ title: '发送中...' })
           try {
-            await api.sendInvite(contractId).catch(() => null)
+            // 提醒功能已移除，直接使用生成分享链接
+            // await api.sendInvite(contractId).catch(() => null)
+            wx.hideLoading()
             wx.showToast({ title: '提醒已发送', icon: 'success' })
           } catch (err) {
+            wx.hideLoading()
             wx.showToast({ title: '发送失败', icon: 'none' })
           }
         }
@@ -350,13 +474,17 @@ Page({
     wx.showModal({
       title: '确认删除',
       content: '确定要删除此合同吗？删除后不可恢复。',
+      confirmColor: '#ee0a24',
       success: async (res) => {
         if (res.confirm) {
+          wx.showLoading({ title: '删除中...' })
           try {
             await api.deleteContract(this.data.contractId).catch(() => null)
+            wx.hideLoading()
             wx.showToast({ title: '已删除', icon: 'success' })
             setTimeout(() => { wx.navigateBack() }, 1500)
           } catch (err) {
+            wx.hideLoading()
             wx.showToast({ title: '删除失败', icon: 'none' })
           }
         }
@@ -367,11 +495,20 @@ Page({
   onPartyASign() {
     const { contractId } = this.data
     wx.showModal({
-      title: '确认签署',
+      title: '确认签署甲方',
       content: '确定要签署此合同吗？签署后合同将等待乙方签署。',
+      confirmText: '确认签署',
+      confirmColor: '#07c160',
       success: (res) => {
         if (res.confirm) {
-          wx.navigateTo({ url: `/pages/sign-contract/index?contractId=${contractId}&isPartyA=true` })
+          this.setData({ signLoading: true })
+          wx.navigateTo({
+            url: `/pages/sign-contract/index?contractId=${contractId}&isPartyA=true`,
+            fail: () => {
+              this.setData({ signLoading: false })
+            }
+          })
+          setTimeout(() => { this.setData({ signLoading: false }) }, 1000)
         }
       }
     })
@@ -380,11 +517,20 @@ Page({
   onPartyBSign() {
     const { contractId, inviteCode } = this.data
     wx.showModal({
-      title: '确认签署',
+      title: '确认签署乙方',
       content: '确定要签署此合同吗？签署后合同将正式生效。',
+      confirmText: '确认签署',
+      confirmColor: '#07c160',
       success: (res) => {
         if (res.confirm) {
-          wx.navigateTo({ url: `/pages/sign-contract/index?contractId=${contractId}&isPartyA=false&inviteCode=${inviteCode}` })
+          this.setData({ signLoading: true })
+          wx.navigateTo({
+            url: `/pages/sign-contract/index?contractId=${contractId}&isPartyA=false&inviteCode=${inviteCode}`,
+            fail: () => {
+              this.setData({ signLoading: false })
+            }
+          })
+          setTimeout(() => { this.setData({ signLoading: false }) }, 1000)
         }
       }
     })

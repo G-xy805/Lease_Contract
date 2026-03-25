@@ -1,274 +1,401 @@
-/* pages/contract-detail/index.wxss */
-
-/* 容器 */
 .container {
-  padding: 16rpx;
-  padding-bottom: 120rpx;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-bottom: 200rpx;
 }
 
-/* 加载容器 */
 .loading-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 60vh;
-}
-
-/* 卡片样式 */
-.card {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 32rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  height: 60vh;
 }
 
 /* 合同头部 */
 .contract-header {
-  background: linear-gradient(135deg, #1989fa 0%, #3995f5 100%);
-  color: #fff;
+  background: linear-gradient(135deg, #1989fa 0%, #0c63e4 100%);
+  color: white;
+  padding: 40rpx 32rpx;
+  text-align: center;
 }
 
-.contract-header .text-gray {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.contract-header .van-tag {
-  background: rgba(255, 255, 255, 0.25) !important;
-  border: none !important;
-}
-
-/* 签署状态区域 */
-.signing-status {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24rpx 0;
-}
-
-.status-item {
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-
-.status-icon {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 16rpx;
-}
-
-.status-icon.unsigned {
-  background: #f5f5f5;
-  color: #999;
-}
-
-.status-icon.signed {
-  background: #07c160;
-  color: #fff;
-}
-
-.status-icon.party-a.signed {
-  background: #1989fa;
-}
-
-.status-content {
-  flex: 1;
-}
-
-.status-line {
-  width: 80rpx;
-  height: 4rpx;
-  background: #e5e5e5;
-  margin: 0 16rpx;
-}
-
-/* 信息行 */
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20rpx 0;
-  border-bottom: 1rpx solid #f5f5f5;
-}
-
-.info-row:last-child {
-  border-bottom: none;
-}
-
-.info-label {
-  color: #666;
-  font-size: 28rpx;
-}
-
-.info-value {
-  color: #333;
-  font-size: 28rpx;
-  text-align: right;
-  max-width: 420rpx;
-}
-
-.info-value.price {
-  color: #ee0a24;
+.contract-title {
+  font-size: 40rpx;
   font-weight: bold;
+  margin-bottom: 12rpx;
 }
 
-/* 物品清单表格 */
-.table-wrapper {
-  overflow-x: auto;
-  margin: 0 -16rpx;
-  padding: 0 16rpx;
-}
-
-.table {
-  min-width: 100%;
-  border: 1rpx solid #e5e5e5;
-  border-radius: 8rpx;
+.contract-no {
   font-size: 26rpx;
+  opacity: 0.9;
+  margin-bottom: 16rpx;
 }
 
-.table-header {
+.contract-meta {
   display: flex;
-  background: #f5f5f5;
-  font-weight: bold;
-}
-
-.table-th {
-  padding: 20rpx 16rpx;
-  text-align: center;
-  border-bottom: 1rpx solid #e5e5e5;
-}
-
-.table-row {
-  display: flex;
-  border-bottom: 1rpx solid #e5e5e5;
-}
-
-.table-row:last-child {
-  border-bottom: none;
-}
-
-.table-td {
-  padding: 20rpx 16rpx;
-  text-align: center;
-  display: flex;
-  align-items: center;
   justify-content: center;
+  gap: 16rpx;
 }
 
-/* 其他约定 */
-.agreement-item {
+/* 合同正文 */
+.contract-body {
+  padding: 24rpx;
+}
+
+.article {
+  margin-bottom: 24rpx;
+}
+
+.preamble {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.8;
+  text-indent: 2em;
+}
+
+.article-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #1989fa;
+  margin-bottom: 16rpx;
+  padding-left: 16rpx;
+  border-left: 6rpx solid #1989fa;
+}
+
+.article-content {
+  padding-left: 16rpx;
+}
+
+.sub-item {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.8;
+  margin-bottom: 12rpx;
+  text-indent: 2em;
+}
+
+.sub-item-bracket {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.8;
+  margin-bottom: 12rpx;
+  padding-left: 16rpx;
+}
+
+.sub-item-bracket2 {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.8;
+  margin-bottom: 12rpx;
+  padding-left: 32rpx;
+}
+
+/* 费用汇总表格 */
+.fees-summary {
+  margin-top: 16rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 20rpx;
+}
+
+.fees-row {
   display: flex;
-  padding: 16rpx 0;
-  border-bottom: 1rpx solid #f5f5f5;
+  justify-content: space-between;
+  padding: 10rpx 0;
+  border-bottom: 1rpx solid #eee;
 }
 
-.agreement-item:last-child {
+.fees-row:last-child {
   border-bottom: none;
 }
 
-.agreement-index {
-  width: 48rpx;
+.fees-label {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.fees-value {
+  font-size: 28rpx;
+  color: #07c160;
+  font-weight: 500;
+}
+
+.fees-value.landlord {
+  color: #1989fa;
+}
+
+/* 签署区域 */
+.sign-section {
+  margin-top: 40rpx;
+  padding-top: 24rpx;
+  border-top: 2rpx dashed #ddd;
+}
+
+.sign-table {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.sign-cell {
+  width: 48%;
+  padding: 20rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+}
+
+.sign-label {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.sign-value {
+  font-size: 30rpx;
+  color: #1989fa;
+  font-weight: bold;
+  margin-bottom: 8rpx;
+}
+
+.sign-info {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 4rpx;
+}
+
+.sign-date {
+  text-align: center;
+  margin-top: 24rpx;
+}
+
+.sign-date-item {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.sign-date-value {
   color: #1989fa;
   font-weight: bold;
 }
 
-.agreement-content {
-  flex: 1;
-  color: #333;
-  line-height: 1.6;
+/* 物品清单表格 */
+.items-grid {
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 16rpx;
 }
 
-/* 验证区域 */
-.verify-box {
+.item-row {
+  display: flex;
+  padding: 12rpx 0;
+  border-bottom: 1rpx solid #eee;
+}
+
+.item-row.header {
+  background: #e8f4ff;
+  border-radius: 8rpx;
+  font-weight: bold;
+}
+
+.item-row:last-child {
+  border-bottom: none;
+}
+
+.item-cell {
+  flex: 1;
+  text-align: center;
+  font-size: 26rpx;
+}
+
+.item-cell.name {
+  flex: 1.5;
+}
+
+.item-cell.qty {
+  flex: 0.5;
+}
+
+.meter-info {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #666;
+  text-align: center;
+}
+
+/* 签署状态 */
+.sign-status {
+  margin-top: 24rpx;
+}
+
+.sign-record {
+  display: flex;
+  justify-content: space-around;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 24rpx;
+}
+
+.record-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: #f5f5f5;
-  padding: 24rpx;
-  border-radius: 12rpx;
+  gap: 16rpx;
 }
 
-.verify-code {
-  flex: 1;
-}
-
-.code-value {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #333;
-  letter-spacing: 4rpx;
-  margin-top: 8rpx;
-}
-
-/* 操作按钮 */
-.action-buttons {
+.record-icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
   background: #fff;
-  padding: 24rpx 32rpx;
-  margin-top: 24rpx;
-  border-radius: 16rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
 }
 
-.action-buttons van-button {
-  margin-top: 16rpx;
+.record-item.signed .record-icon {
+  background: #07c160;
+  color: #fff;
+}
+
+.record-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.record-label {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.record-time {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 4rpx;
+}
+
+/* 备注文字 */
+.remark-text {
+  color: #666;
+  font-style: italic;
+}
+
+/* 操作按钮区域 */
+.action-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 24rpx;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.08);
+  z-index: 100;
+}
+
+.action-card {
+  max-width: 700rpx;
+  margin: 0 auto;
+}
+
+.primary-actions {
+  margin-bottom: 24rpx;
+}
+
+.secondary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
 }
 
 .btn-icon {
   margin-right: 8rpx;
 }
 
-/* 通用工具类 */
-.flex-between {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.mb-sm {
-  margin-bottom: 16rpx;
-}
-
-.mb-md {
+/* 邀请码区域 */
+.invite-code-section {
   margin-bottom: 24rpx;
 }
 
-.mt-sm {
-  margin-top: 16rpx;
+.invite-code-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff7f0;
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
 }
 
-.mt-md {
-  margin-top: 24rpx;
+.invite-code-label {
+  font-size: 28rpx;
+  color: #666;
 }
 
-.mt-lg {
-  margin-top: 32rpx;
-}
-
-.text-xl {
+.invite-code-value {
   font-size: 36rpx;
-}
-
-.text-lg {
-  font-size: 32rpx;
-}
-
-.text-sm {
-  font-size: 26rpx;
-}
-
-.text-bold {
   font-weight: bold;
+  color: #ee0a24;
+  letter-spacing: 4rpx;
 }
 
-.text-gray {
+/* 分享弹窗 */
+.share-modal {
+  padding: 32rpx;
+}
+
+.share-modal-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 24rpx;
+}
+
+.share-modal-content {
+  margin-bottom: 24rpx;
+}
+
+.invite-code-display {
+  text-align: center;
+  margin-bottom: 24rpx;
+}
+
+.invite-code-display .label {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.invite-code-display .code {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #ee0a24;
+  letter-spacing: 6rpx;
+}
+
+.qr-code-box {
+  text-align: center;
+  margin-bottom: 24rpx;
+}
+
+.qr-code {
+  width: 300rpx;
+  height: 300rpx;
+  margin-bottom: 12rpx;
+}
+
+.qr-tip {
+  font-size: 24rpx;
   color: #999;
 }
 
-.text-center {
+.share-tip {
+  font-size: 26rpx;
+  color: #666;
   text-align: center;
+  line-height: 1.5;
+}
+
+.share-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
 }

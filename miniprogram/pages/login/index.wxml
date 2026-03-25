@@ -47,8 +47,8 @@
     <view class="role-select mt-md">
       <view class="role-label text-sm">选择角色</view>
       <van-radio-group value="{{selectedRole}}" bind:change="onRoleChange">
-        <van-radio name="party_a" class="role-radio">甲方（出租方）</van-radio>
-        <van-radio name="party_b" class="role-radio">乙方（承租方）</van-radio>
+        <van-radio name="PARTY_A" class="role-radio">甲方（出租方）</van-radio>
+        <van-radio name="PARTY_B" class="role-radio">乙方（承租方）</van-radio>
       </van-radio-group>
     </view>
 

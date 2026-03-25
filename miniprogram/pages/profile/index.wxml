@@ -7,133 +7,156 @@
   <block wx:else>
     <!-- 用户信息卡片 -->
     <view class="user-card">
-      <view class="user-info-header">
-        <van-image
-          round
-          width="140rpx"
-          height="140rpx"
-          src="{{userInfo.avatarUrl || ''}}"
-          class="avatar"
-        />
+      <view class="card-bg"></view>
+      <view class="user-info-content">
+        <view class="avatar-wrapper">
+          <van-image
+            round
+            width="160rpx"
+            height="160rpx"
+            src="{{userInfo.avatarUrl || '/assets/images/default-avatar.png'}}"
+            class="avatar"
+          />
+          <view class="avatar-border"></view>
+        </view>
         <view class="user-details">
-          <view class="nickname-row">
+          <view class="name-row">
             <text class="nickname">{{userInfo.name || '未设置昵称'}}</text>
-            <van-tag
-              wx:if="{{userInfo.real_name_status === 2}}"
-              type="success"
-              size="medium"
-              class="verified-tag"
-            >
-              已实名
-            </van-tag>
-            <van-tag
-              wx:elif="{{userInfo.real_name_status === 1}}"
-              type="warning"
-              size="medium"
-              class="pending-tag"
-            >
-              审核中
-            </van-tag>
+            <view class="role-tag" wx:if="{{userInfo.role === 'PARTY_A'}}">甲方</view>
+            <view class="role-tag role-tenant" wx:elif="{{userInfo.role === 'PARTY_B'}}">乙方</view>
           </view>
           <text class="phone">{{userInfo.phone || '未绑定手机'}}</text>
         </view>
       </view>
     </view>
 
-    <!-- 实名认证入口 -->
-    <view class="auth-section">
-      <!-- 未认证状态 -->
+    <!-- 实名认证状态卡片 -->
+    <view class="auth-status-card">
+      <view class="status-header">
+        <text class="status-title">实名认证状态</text>
+      </view>
+
+      <!-- 未认证 -->
       <block wx:if="{{userInfo.real_name_status === 0 || !userInfo.real_name_status}}">
-        <view class="auth-card unverified">
-          <view class="auth-icon">
-            <van-icon name="idcard" size="48rpx" color="#1989fa" />
+        <view class="status-content unverified" bindtap="goToRealNameAuth">
+          <view class="status-icon-wrap">
+            <van-icon name="warning" size="56rpx" color="#969799" />
           </view>
-          <view class="auth-content">
-            <text class="auth-title">还未进行实名认证</text>
-            <text class="auth-desc">完成实名认证后可签署合同</text>
+          <view class="status-info">
+            <text class="status-label">未认证</text>
+            <text class="status-desc">完成实名认证后可签署合同</text>
           </view>
-          <van-button
-            type="primary"
-            size="small"
-            round
-            bind:click="goToRealNameAuth"
-          >
-            立即认证
-          </van-button>
+          <van-icon name="arrow" size="32rpx" color="#c8c9cc" />
         </view>
       </block>
 
-      <!-- 认证中状态 -->
+      <!-- 认证中 -->
       <block wx:elif="{{userInfo.real_name_status === 1}}">
-        <view class="auth-card pending">
-          <view class="auth-icon">
-            <van-icon name="clock" size="48rpx" color="#ff976a" />
+        <view class="status-content pending">
+          <view class="status-icon-wrap">
+            <van-icon name="clock" size="56rpx" color="#ff976a" />
           </view>
-          <view class="auth-content">
-            <text class="auth-title">实名认证审核中</text>
-            <text class="auth-desc">预计1-3个工作日内完成审核</text>
+          <view class="status-info">
+            <text class="status-label pending-text">认证中</text>
+            <text class="status-desc">预计1-3个工作日内完成审核</text>
           </view>
-          <van-tag type="warning" size="medium">审核中</van-tag>
         </view>
       </block>
 
-      <!-- 已认证状态 -->
+      <!-- 已认证 -->
       <block wx:elif="{{userInfo.real_name_status === 2}}">
-        <view class="auth-card verified">
-          <view class="auth-icon">
-            <van-icon name="passed" size="48rpx" color="#07c160" />
+        <view class="status-content verified">
+          <view class="status-icon-wrap">
+            <van-icon name="checked" size="56rpx" color="#07c160" />
           </view>
-          <view class="auth-content">
-            <text class="auth-title">已通过实名认证</text>
-            <text class="auth-desc">您可以正常使用合同签署功能</text>
+          <view class="status-info">
+            <text class="status-label verified-text">已认证</text>
+            <text class="status-desc" wx:if="{{userInfo.real_name_time}}">认证时间：{{userInfo.real_name_time}}</text>
+            <text class="status-desc" wx:else>认证时间：{{userInfo.updated_at}}</text>
           </view>
-          <van-icon name="shield" size="48rpx" color="#07c160" />
         </view>
       </block>
     </view>
 
-    <!-- 设置列表 -->
-    <view class="settings-section">
-      <van-cell-group title="个人信息">
-        <van-cell
-          title="修改昵称"
-          is-link
-          bind:click="showEditNickname"
-        >
-          <view slot="label" class="cell-label">
-            <text>{{userInfo.name || '未设置'}}</text>
+    <!-- 功能入口分组 -->
+    <view class="menu-section">
+      <!-- 合同管理 -->
+      <view class="menu-group">
+        <view class="group-title">
+          <van-icon name="orders-o" size="32rpx" color="#1989fa" />
+          <text>合同管理</text>
+        </view>
+        <view class="menu-item" bindtap="goToMyCreatedContracts">
+          <view class="menu-item-left">
+            <van-icon name="edit" size="40rpx" color="#1989fa" />
+            <text>我创建的合同</text>
           </view>
-        </van-cell>
-
-        <van-cell
-          title="上传身份证照片"
-          is-link
-          bind:click="showUploadIdCard"
-        >
-          <view slot="label" class="cell-label idcard-label">
-            <van-image
-              wx:if="{{userInfo.idcard_front}}"
-              width="80rpx"
-              height="80rpx"
-              src="{{userInfo.idcard_front}}"
-              fit="cover"
-              class="idcard-preview"
-            />
-            <text wx:else>未上传</text>
+          <van-icon name="arrow" size="32rpx" color="#c8c9cc" />
+        </view>
+        <view class="menu-item" bindtap="goToMySignedContracts">
+          <view class="menu-item-left">
+            <van-icon name="signed" size="40rpx" color="#1989fa" />
+            <text>我签署的合同</text>
           </view>
-        </van-cell>
-      </van-cell-group>
+          <van-icon name="arrow" size="32rpx" color="#c8c9cc" />
+        </view>
+      </view>
 
-      <van-cell-group title="账户安全">
-        <van-cell
-          title="手机号"
-          value="{{userInfo.phone || '未绑定'}}"
-        />
-      </van-cell-group>
+      <!-- 身份认证 -->
+      <view class="menu-group">
+        <view class="group-title">
+          <van-icon name="idcard" size="32rpx" color="#07c160" />
+          <text>身份认证</text>
+        </view>
+        <view class="menu-item" bindtap="goToRealNameAuth">
+          <view class="menu-item-left">
+            <van-icon name="user-o" size="40rpx" color="#07c160" />
+            <text>实名认证</text>
+          </view>
+          <van-icon name="arrow" size="32rpx" color="#c8c9cc" />
+        </view>
+        <view class="menu-item" bindtap="showIdInfo">
+          <view class="menu-item-left">
+            <van-icon name="info-o" size="40rpx" color="#07c160" />
+            <text>身份信息</text>
+          </view>
+          <van-icon name="arrow" size="32rpx" color="#c8c9cc" />
+        </view>
+      </view>
+
+      <!-- 设置与帮助 -->
+      <view class="menu-group">
+        <view class="group-title">
+          <van-icon name="setting-o" size="32rpx" color="#ff976a" />
+          <text>设置与帮助</text>
+        </view>
+        <view class="menu-item" bindtap="goToSettings">
+          <view class="menu-item-left">
+            <van-icon name="setting-o" size="40rpx" color="#ff976a" />
+            <text>设置</text>
+          </view>
+          <van-icon name="arrow" size="32rpx" color="#c8c9cc" />
+        </view>
+        <view class="menu-item" bindtap="goToHelp">
+          <view class="menu-item-left">
+            <van-icon name="question-o" size="40rpx" color="#ff976a" />
+            <text>帮助与反馈</text>
+          </view>
+          <van-icon name="arrow" size="32rpx" color="#c8c9cc" />
+        </view>
+        <view class="menu-item" bindtap="goToAbout">
+          <view class="menu-item-left">
+            <van-icon name="info-o" size="40rpx" color="#ff976a" />
+            <text>关于我们</text>
+          </view>
+          <van-icon name="arrow" size="32rpx" color="#c8c9cc" />
+        </view>
+      </view>
     </view>
 
-    <!-- 退出登录按钮 -->
-    <view class="logout-section">
+    <!-- 底部信息 -->
+    <view class="footer-section">
+      <text class="version-text">版本号 {{version}}</text>
       <van-button
         type="default"
         block
@@ -147,85 +170,54 @@
     </view>
   </block>
 
-  <!-- 修改昵称弹窗 -->
+  <!-- 身份信息弹窗 -->
   <van-popup
-    show="{{ showNicknamePopup }}"
+    show="{{ showIdInfoPopup }}"
     position="bottom"
     round
-    bind:close="closeNicknamePopup"
+    bind:close="closeIdInfoPopup"
   >
     <view class="popup-content">
       <view class="popup-header">
-        <text class="popup-title">修改昵称</text>
+        <text class="popup-title">身份信息</text>
       </view>
-      <van-field
-        model:value="{{ editNickname }}"
-        placeholder="请输入昵称"
-        maxlength="20"
-        clearable
-        class="nickname-input"
-      />
-      <view class="popup-footer">
-        <van-button type="default" round size="small" bind:click="closeNicknamePopup">
-          取消
-        </van-button>
-        <van-button type="primary" round size="small" bind:click="confirmEditNickname">
-          确定
-        </van-button>
-      </view>
-    </view>
-  </van-popup>
-
-  <!-- 上传身份证弹窗 -->
-  <van-popup
-    show="{{ showIdCardPopup }}"
-    position="bottom"
-    round
-    bind:close="closeIdCardPopup"
-    class="idcard-popup"
-  >
-    <view class="popup-content">
-      <view class="popup-header">
-        <text class="popup-title">上传身份证照片</text>
-      </view>
-      <view class="idcard-upload-area">
-        <view class="idcard-item">
-          <text class="idcard-label-text">身份证正面</text>
-          <van-uploader
-            file-list="{{ idCardFrontList }}"
-            max-count="1"
-            bind:after-read="afterReadIdCardFront"
-            bind:delete="deleteIdCardFront"
-            size-type="compressed"
-          >
-            <view class="upload-btn" wx:if="{{!idCardFrontList.length}}">
-              <van-icon name="photograph" size="48rpx" color="#969799" />
-              <text>点击上传</text>
-            </view>
-          </van-uploader>
+      <view class="id-info-list">
+        <view class="id-info-item">
+          <text class="id-info-label">姓名</text>
+          <text class="id-info-value">{{userInfo.real_name || '未填写'}}</text>
         </view>
-        <view class="idcard-item">
-          <text class="idcard-label-text">身份证反面</text>
-          <van-uploader
-            file-list="{{ idCardBackList }}"
-            max-count="1"
-            bind:after-read="afterReadIdCardBack"
-            bind:delete="deleteIdCardBack"
-            size-type="{{ ['compressed'] }}"
-          >
-            <view class="upload-btn" wx:if="{{!idCardBackList.length}}">
-              <van-icon name="photograph" size="48rpx" color="#969799" />
-              <text>点击上传</text>
-            </view>
-          </van-uploader>
+        <view class="id-info-item">
+          <text class="id-info-label">身份证号</text>
+          <text class="id-info-value">{{userInfo.idcard_no || '未填写'}}</text>
+        </view>
+        <view class="id-info-item">
+          <text class="id-info-label">身份证正面</text>
+          <van-image
+            wx:if="{{userInfo.idcard_front}}"
+            width="200rpx"
+            height="130rpx"
+            src="{{userInfo.idcard_front}}"
+            fit="cover"
+            radius="8rpx"
+          />
+          <text wx:else class="id-info-value">未上传</text>
+        </view>
+        <view class="id-info-item">
+          <text class="id-info-label">身份证反面</text>
+          <van-image
+            wx:if="{{userInfo.idcard_back}}"
+            width="200rpx"
+            height="130rpx"
+            src="{{userInfo.idcard_back}}"
+            fit="cover"
+            radius="8rpx"
+          />
+          <text wx:else class="id-info-value">未上传</text>
         </view>
       </view>
       <view class="popup-footer">
-        <van-button type="default" round size="small" bind:click="closeIdCardPopup">
-          取消
-        </van-button>
-        <van-button type="primary" round size="small" bind:click="confirmUploadIdCard">
-          确定
+        <van-button type="primary" round size="small" bind:click="closeIdInfoPopup">
+          关闭
         </van-button>
       </view>
     </view>

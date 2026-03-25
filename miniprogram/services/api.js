@@ -464,7 +464,7 @@ function uploadImage(filePath) {
  * 上传文件
  * @param {string} filePath - 文件路径
  */
-function uploadFile(filePath) {
+function uploadGeneralFile(filePath) {
   return uploadFile('/upload/file', filePath, 'file')
 }
 

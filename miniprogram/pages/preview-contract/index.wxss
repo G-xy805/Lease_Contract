@@ -1,0 +1,188 @@
+.container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 24rpx;
+  padding-bottom: 120rpx;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+}
+
+.empty-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+  color: #969799;
+}
+
+.contract-header {
+  background: linear-gradient(135deg, #1989fa 0%, #0c63e4 100%);
+  color: white;
+  padding: 40rpx 32rpx;
+  border-radius: 16rpx;
+  margin-bottom: 24rpx;
+  text-align: center;
+}
+
+.contract-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  margin-bottom: 12rpx;
+}
+
+.contract-subtitle {
+  font-size: 28rpx;
+  opacity: 0.9;
+}
+
+.card {
+  background-color: white;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #323233;
+  margin-bottom: 24rpx;
+  padding-left: 16rpx;
+  border-left: 6rpx solid #1989fa;
+}
+
+.party-section {
+  margin-bottom: 24rpx;
+}
+
+.party-section:last-child {
+  margin-bottom: 0;
+}
+
+.party-label {
+  font-size: 28rpx;
+  color: #646566;
+  margin-bottom: 16rpx;
+  font-weight: 500;
+}
+
+.info-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.info-item {
+  width: 50%;
+  padding: 12rpx 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.info-item.full-width {
+  width: 100%;
+}
+
+.info-label {
+  font-size: 24rpx;
+  color: #969799;
+  margin-bottom: 6rpx;
+}
+
+.info-value {
+  font-size: 28rpx;
+  color: #323233;
+}
+
+.info-value.highlight {
+  color: #ee0a24;
+  font-weight: bold;
+  font-size: 32rpx;
+}
+
+.deposit-box {
+  background-color: #fff7f0;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  text-align: center;
+}
+
+.deposit-amount {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #ee0a24;
+}
+
+.deposit-chinese {
+  font-size: 28rpx;
+  color: #646566;
+  margin-left: 12rpx;
+}
+
+.inventory-grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -8rpx;
+}
+
+.inventory-item {
+  width: 33.33%;
+  padding: 8rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.item-name {
+  font-size: 26rpx;
+  color: #646566;
+  margin-bottom: 4rpx;
+}
+
+.item-qty {
+  font-size: 28rpx;
+  color: #323233;
+  font-weight: 500;
+}
+
+.fees-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.fee-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #ebedf0;
+}
+
+.fee-item:last-child {
+  border-bottom: none;
+}
+
+.fee-label {
+  font-size: 28rpx;
+  color: #323233;
+}
+
+.fee-value {
+  font-size: 28rpx;
+  color: #07c160;
+}
+
+.remark-text {
+  font-size: 28rpx;
+  color: #646566;
+  line-height: 1.6;
+}
+
+.bottom-space {
+  height: 40rpx;
+}

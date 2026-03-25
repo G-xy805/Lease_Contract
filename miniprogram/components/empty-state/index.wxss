@@ -3,15 +3,139 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 120rpx 60rpx;
+  padding: 100rpx 60rpx;
+  min-height: 400rpx;
+}
+
+.empty-illustration {
+  position: relative;
+  margin-bottom: 40rpx;
 }
 
 .empty-image,
 .empty-icon {
-  margin-bottom: 32rpx;
+  margin-bottom: 0;
+}
+
+.empty-image {
+  width: 240rpx;
+  height: 240rpx;
+  opacity: 0.9;
+}
+
+.empty-icon {
+  font-size: 160rpx;
+  color: #c8c9cc;
+  line-height: 1;
+}
+
+.empty-decoration {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  width: 40rpx;
+  height: 40rpx;
+  opacity: 0.4;
 }
 
 .empty-text {
   color: #969799;
   font-size: 28rpx;
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 16rpx;
+  max-width: 500rpx;
+}
+
+.empty-description {
+  color: #c8c9cc;
+  font-size: 26rpx;
+  text-align: center;
+  line-height: 1.5;
+  margin-bottom: 48rpx;
+  max-width: 500rpx;
+}
+
+.empty-action {
+  margin-top: 16rpx;
+}
+
+.empty-action .action-btn {
+  min-width: 200rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  font-size: 28rpx;
+  border-radius: 36rpx;
+  background: linear-gradient(135deg, #1989fa 0%, #3994f5 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4rpx 16rpx rgba(25, 137, 250, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.empty-action .action-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 2rpx 8rpx rgba(25, 137, 250, 0.2);
+}
+
+.empty-action .action-btn-secondary {
+  background: #ffffff;
+  color: #1989fa;
+  border: 2rpx solid #1989fa;
+  box-shadow: none;
+  margin-left: 24rpx;
+}
+
+.empty-action .action-btn-secondary:active {
+  background-color: #f7f8fa;
+}
+
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24rpx;
+  margin-top: 32rpx;
+}
+
+.quick-action-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 280rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  background-color: #f7f8fa;
+  color: #646566;
+  transition: background-color 0.2s ease;
+}
+
+.quick-action-item:active {
+  background-color: #ebedf0;
+}
+
+.quick-action-item .van-icon {
+  margin-right: 8rpx;
+}
+
+.empty-tips {
+  margin-top: 48rpx;
+  padding: 24rpx 32rpx;
+  background-color: #f7f8fa;
+  border-radius: 16rpx;
+  max-width: 560rpx;
+}
+
+.tips-title {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #323233;
+  margin-bottom: 12rpx;
+}
+
+.tips-content {
+  font-size: 24rpx;
+  color: #969799;
+  line-height: 1.6;
 }

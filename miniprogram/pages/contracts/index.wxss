@@ -27,15 +27,43 @@
   height: calc(100vh - 220rpx);
 }
 
-.refresh-loading {
-  padding: 24rpx 0;
-  text-align: center;
+/* 骨架屏样式 */
+.skeleton-container {
+  padding: 24rpx;
 }
 
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.skeleton-item {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 28rpx;
+}
+
+/* 下拉刷新样式 */
+.refresh-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24rpx 0;
+  gap: 16rpx;
+}
+
+.refresh-text {
+  font-size: 26rpx;
+  color: #969799;
+}
+
+/* 合同列表 */
 .contract-list {
   padding: 24rpx;
 }
 
+/* 滑动单元格样式 */
 .contract-item {
   background-color: #ffffff;
   border-radius: 16rpx;
@@ -44,6 +72,47 @@
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
 }
 
+.swipe-action {
+  display: flex;
+  height: 100%;
+  align-items: center;
+}
+
+.swipe-action-left {
+  background-color: #1989fa;
+}
+
+.swipe-action-right {
+  background-color: #ee0a24;
+}
+
+.swipe-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 140rpx;
+  border: none;
+  border-radius: 0;
+  font-size: 24rpx;
+  padding: 0;
+}
+
+.swipe-btn text {
+  margin-top: 8rpx;
+  color: #ffffff;
+}
+
+.swipe-edit-btn {
+  background-color: #1989fa !important;
+}
+
+.swipe-delete-btn {
+  background-color: #ee0a24 !important;
+}
+
+/* 列表项样式 */
 .contract-header {
   display: flex;
   justify-content: space-between;
@@ -83,26 +152,77 @@
   justify-content: flex-end;
 }
 
-.load-more {
-  padding: 32rpx 0;
-  text-align: center;
+.invite-code-hint {
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 12rpx;
-}
-
-.global-loading {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 999;
+  gap: 8rpx;
+  color: #969799;
+  font-size: 24rpx;
 }
 
 /* 空状态样式 */
-.van-empty {
+.empty-wrapper {
   margin-top: 120rpx;
+}
+
+.empty-sub-text {
+  color: #969799;
+  font-size: 26rpx;
+  margin-top: 16rpx;
+  margin-bottom: 32rpx;
+  text-align: center;
+}
+
+.empty-action-btn {
+  margin-top: 16rpx;
+}
+
+/* 加载更多样式 */
+.load-more {
+  padding: 32rpx 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: #969799;
+  margin-left: 12rpx;
+}
+
+.no-more-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 0 32rpx;
+}
+
+.no-more-line {
+  flex: 1;
+  height: 1rpx;
+  background-color: #ebedf0;
+}
+
+.no-more-text {
+  font-size: 24rpx;
+  color: #969799;
+  white-space: nowrap;
+}
+
+/* 全局加载遮罩 */
+.global-loading-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.9);
+  z-index: 999;
 }
 
 /* 通用样式 */

@@ -6,7 +6,11 @@
     "van-tag": "@vant/weapp/tag/index",
     "van-empty": "@vant/weapp/empty/index",
     "van-loading": "@vant/weapp/loading/index",
-    "van-icon": "@vant/weapp/icon/index"
+    "van-loading-dots": "@vant/weapp/loading/index",
+    "van-icon": "@vant/weapp/icon/index",
+    "van-button": "@vant/weapp/button/index",
+    "van-swipe-cell": "@vant/weapp/swipe-cell/index",
+    "van-skeleton": "@vant/weapp/skeleton/index"
   },
   "navigationBarTitleText": "甲方合同列表",
   "enablePullDownRefresh": true,

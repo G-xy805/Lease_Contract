@@ -16,11 +16,37 @@ module.exports = {
 
 <!-- pages/create-contract/index.wxml -->
 <view class="container">
+  <!-- 未保存提示 -->
+  <view class="unsaved-tip" wx:if="{{showUnsavedTip}}">
+    <text>有未保存的更改</text>
+    <view class="save-btn" bindtap="autoSaveToStorage">保存</view>
+  </view>
+
+  <!-- 自动保存提示 -->
+  <view class="auto-save-indicator {{autoSaveVisible ? 'show' : ''}}">
+    <van-icon name="clock-o" size="24rpx" />
+    <text>正在保存...</text>
+  </view>
+
   <van-notice-bar text="请填写完整的合同信息，带*号为必填项" />
 
   <scroll-view scroll-y class="form-scroll">
+    <!-- 进度指示器 -->
+    <view class="steps-wrapper">
+      <view class="custom-steps">
+        <view wx:for="{{steps}}" wx:key="index" class="step-item">
+          <view class="step-icon-wrap {{index < currentStep ? 'completed' : (index === currentStep ? 'current' : 'pending')}}">
+            <van-icon wx:if="{{index < currentStep}}" name="checked" size="28rpx" />
+            <text wx:else>{{index + 1}}</text>
+          </view>
+          <text class="step-desc {{index < currentStep ? 'completed' : (index === currentStep ? 'current' : '')}}">{{item.desc}}</text>
+          <view class="step-line {{index < currentStep ? 'completed' : ''}}" wx:if="{{index < steps.length - 1}}"></view>
+        </view>
+      </view>
+    </view>
+
     <!-- 第一部分：甲乙双方信息 -->
-    <view class="section">
+    <view class="section {{errors.lessee_name || errors.lessee_phone || errors.lessee_idcard ? 'error' : ''}}">
       <view class="section-title">一、甲乙双方信息</view>
 
       <view class="info-card">
@@ -53,7 +79,10 @@ module.exports = {
         value="{{formData.partyA_company}}"
         data-field="partyA_company"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
+        error="{{errors.partyA_company ? true : false}}"
+        error-message="{{errors.partyA_company}}"
       />
       <!-- 新增：甲方第二个电话 -->
       <van-field
@@ -62,9 +91,12 @@ module.exports = {
         value="{{formData.lessor_phone2}}"
         data-field="lessor_phone2"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
         type="number"
         maxlength="11"
+        error="{{errors.lessor_phone2 ? true : false}}"
+        error-message="{{errors.lessor_phone2}}"
       />
       <!-- 新增：甲方委托代理人 -->
       <van-field
@@ -73,7 +105,10 @@ module.exports = {
         value="{{formData.lessor_contact}}"
         data-field="lessor_contact"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
+        error="{{errors.lessor_contact ? true : false}}"
+        error-message="{{errors.lessor_contact}}"
       />
 
       <van-field
@@ -82,8 +117,11 @@ module.exports = {
         value="{{formData.lessee_name}}"
         data-field="lessee_name"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         required
         size="large"
+        error="{{errors.lessee_name ? true : false}}"
+        error-message="{{errors.lessee_name}}"
       />
       <van-field
         label="乙方电话 *"
@@ -91,10 +129,13 @@ module.exports = {
         value="{{formData.lessee_phone}}"
         data-field="lessee_phone"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         required
         size="large"
         type="number"
         maxlength="11"
+        error="{{errors.lessee_phone ? true : false}}"
+        error-message="{{errors.lessee_phone}}"
       />
       <van-field
         label="乙方身份证 *"
@@ -102,15 +143,18 @@ module.exports = {
         value="{{formData.lessee_idcard}}"
         data-field="lessee_idcard"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         required
         size="large"
         type="idcard"
         maxlength="18"
+        error="{{errors.lessee_idcard ? true : false}}"
+        error-message="{{errors.lessee_idcard}}"
       />
     </view>
 
     <!-- 第二部分：房屋基本情况 -->
-    <view class="section">
+    <view class="section {{errors.house_address ? 'error' : ''}}">
       <view class="section-title">二、房屋基本情况</view>
 
       <van-field
@@ -119,8 +163,11 @@ module.exports = {
         value="{{formData.house_address}}"
         data-field="house_address"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         required
         size="large"
+        error="{{errors.house_address ? true : false}}"
+        error-message="{{errors.house_address}}"
       />
       <van-field
         label="建筑面积"
@@ -128,9 +175,12 @@ module.exports = {
         value="{{formData.house_area}}"
         data-field="house_area"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
         type="digit"
         suffix="㎡"
+        error="{{errors.house_area ? true : false}}"
+        error-message="{{errors.house_area}}"
       />
       <view class="date-cell" bindtap="showPurposePicker">
         <text class="date-label">租赁用途</text>
@@ -140,16 +190,16 @@ module.exports = {
     </view>
 
     <!-- 第三部分：租赁期限 -->
-    <view class="section">
+    <view class="section {{errors.lease_start || errors.lease_end ? 'error' : ''}}">
       <view class="section-title">三、租赁期限</view>
 
-      <view class="date-cell" bindtap="showStartDatePickerModal">
+      <view class="date-cell {{errors.lease_start ? 'error' : ''}}" bindtap="showStartDatePickerModal">
         <text class="date-label {{errors.lease_start ? 'error' : 'required'}}">租赁开始日期</text>
         <text class="{{formData.lease_start ? 'date-value' : 'date-value placeholder'}}">{{formData.lease_start || '请选择'}}</text>
         <van-icon name="arrow" class="date-arrow" />
       </view>
 
-      <view class="date-cell" bindtap="showEndDatePickerModal">
+      <view class="date-cell {{errors.lease_end ? 'error' : ''}}" bindtap="showEndDatePickerModal">
         <text class="date-label {{errors.lease_end ? 'error' : 'required'}}">租赁结束日期</text>
         <text class="{{formData.lease_end ? 'date-value' : 'date-value placeholder'}}">{{formData.lease_end || '请选择'}}</text>
         <van-icon name="arrow" class="date-arrow" />
@@ -172,6 +222,7 @@ module.exports = {
         value="{{formData.advance_notice_days}}"
         data-field="advance_notice_days"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
         type="number"
         suffix="天"
@@ -180,7 +231,7 @@ module.exports = {
     </view>
 
     <!-- 第四部分：租金和交付方式 -->
-    <view class="section">
+    <view class="section {{errors.monthly_rent || errors.deposit ? 'error' : ''}}">
       <view class="section-title">四、租金和交付方式</view>
 
       <van-field
@@ -189,10 +240,13 @@ module.exports = {
         value="{{formData.monthly_rent}}"
         data-field="monthly_rent"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         required
         size="large"
         type="digit"
         suffix="元/月"
+        error="{{errors.monthly_rent ? true : false}}"
+        error-message="{{errors.monthly_rent}}"
       />
 
       <van-field
@@ -201,6 +255,7 @@ module.exports = {
         value="{{formData.year_rent}}"
         data-field="year_rent"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
         type="digit"
         suffix="元"
@@ -228,6 +283,7 @@ module.exports = {
         value="{{formData.payment_count}}"
         data-field="payment_count"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
         type="number"
       />
@@ -239,6 +295,7 @@ module.exports = {
         value="{{formData.first_payment_amount}}"
         data-field="first_payment_amount"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
         type="digit"
         suffix="元"
@@ -256,6 +313,7 @@ module.exports = {
         value="{{formData.second_payment_amount}}"
         data-field="second_payment_amount"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
         type="digit"
         suffix="元"
@@ -273,6 +331,7 @@ module.exports = {
         value="{{formData.third_payment_amount}}"
         data-field="third_payment_amount"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
         type="digit"
         suffix="元"
@@ -289,12 +348,13 @@ module.exports = {
         value="{{formData.lessor_account}}"
         data-field="lessor_account"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
       />
     </view>
 
     <!-- 第五部分：押金 -->
-    <view class="section">
+    <view class="section {{errors.deposit ? 'error' : ''}}">
       <view class="section-title">五、押金</view>
 
       <van-field
@@ -303,10 +363,13 @@ module.exports = {
         value="{{formData.deposit}}"
         data-field="deposit"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         required
         size="large"
         type="digit"
         suffix="元"
+        error="{{errors.deposit ? true : false}}"
+        error-message="{{errors.deposit}}"
       />
       <van-field
         label="押金金额（大写）"
@@ -370,6 +433,7 @@ module.exports = {
         value="{{formData.partyA_commission}}"
         data-field="partyA_commission"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
         type="digit"
         suffix="元"
@@ -387,6 +451,7 @@ module.exports = {
         value="{{formData.partyB_commission}}"
         data-field="partyB_commission"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
         type="digit"
         suffix="元"
@@ -405,45 +470,77 @@ module.exports = {
       <view class="section-title">八、租赁房屋物品清单</view>
       <view class="items-note">以下为房屋固定设施，请清点确认：</view>
 
-      <view class="items-table">
-        <view class="table-header">
-          <text class="col-name">名称</text>
-          <text class="col-qty">数量</text>
-          <text class="col-unit">单位</text>
-          <text class="col-check">确认</text>
-        </view>
-        <view wx:for="{{fixedItems}}" wx:key="index" class="table-row">
-          <text class="col-name">{{item.name}}</text>
-          <input class="col-qty" type="number" value="{{item.quantity}}" data-index="{{index}}" data-field="quantity" bind:change="onItemFieldChange" />
-          <text class="col-unit">{{item.unit}}</text>
-          <van-checkbox value="{{item.confirmed}}" data-index="{{index}}" bind:change="onItemConfirm"></van-checkbox>
+      <!-- 卡片式物品列表 -->
+      <view class="items-card-list">
+        <view wx:for="{{fixedItems}}" wx:key="index" class="item-card {{item.deleted ? 'deleted' : ''}}" wx:if="{{!item.deleted || index < 3}}">
+          <view class="item-card-header">
+            <text class="item-card-name">{{item.name}}</text>
+            <view class="item-card-actions">
+              <van-checkbox value="{{item.confirmed}}" data-index="{{index}}" bind:change="onItemConfirm" size="36rpx"></van-checkbox>
+              <view class="item-card-delete" bindtap="deleteFixedItem" data-index="{{index}}">
+                <van-icon name="delete-o" size="32rpx" />
+              </view>
+            </view>
+          </view>
+          <view class="item-card-body">
+            <view class="item-quantity-wrap">
+              <text class="item-quantity-label">数量</text>
+              <van-stepper
+                value="{{item.quantity}}"
+                data-index="{{index}}"
+                bind:change="onItemQuantityChange"
+                size="36rpx"
+                min="0"
+                max="99"
+                integer
+              />
+            </view>
+            <text class="item-unit">{{item.unit}}</text>
+          </view>
         </view>
       </view>
 
-      <!-- 自增物品 -->
+      <!-- 已删除物品恢复区 -->
+      <view wx:if="{{deletedItemsCount > 0}}" style="margin-top: 24rpx;">
+        <view class="sub-section-title">已删除物品（点击恢复）</view>
+        <view class="items-card-list">
+          <view wx:for="{{fixedItems}}" wx:key="index" class="item-card deleted" bindtap="restoreFixedItem" data-index="{{index}}" wx:if="{{item.deleted}}">
+            <view class="item-card-header">
+              <text class="item-card-name">{{item.name}}</text>
+              <view class="item-card-actions">
+                <van-icon name="replay" size="32rpx" color="#1989fa" />
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 自定义物品 -->
       <view class="sub-section-title">其他物品（如有）</view>
-      <view wx:for="{{customItems}}" wx:key="index" class="custom-item-row">
-        <van-field
-          placeholder="物品名称"
-          value="{{item.name}}"
-          data-index="{{index}}"
-          data-field="name"
-          bind:change="onCustomItemChange"
-          size="small"
-          custom-class="item-input"
-        />
-        <van-field
-          placeholder="数量"
-          value="{{item.quantity}}"
-          data-index="{{index}}"
-          data-field="quantity"
-          bind:change="onCustomItemChange"
-          size="small"
-          type="number"
-          custom-class="item-qty"
-        />
-        <view class="delete-btn" catchtap="deleteCustomItem" data-index="{{index}}">
-          <van-icon name="cross" />
+      <view class="items-card-list">
+        <view wx:for="{{customItems}}" wx:key="index" class="custom-item-card">
+          <van-field
+            placeholder="物品名称"
+            value="{{item.name}}"
+            data-index="{{index}}"
+            data-field="name"
+            bind:change="onCustomItemChange"
+            size="small"
+            custom-class="item-input"
+          />
+          <van-field
+            placeholder="数量"
+            value="{{item.quantity}}"
+            data-index="{{index}}"
+            data-field="quantity"
+            bind:change="onCustomItemChange"
+            size="small"
+            type="number"
+            custom-class="item-qty"
+          />
+          <view class="delete-btn" catchtap="deleteCustomItem" data-index="{{index}}">
+            <van-icon name="cross" />
+          </view>
         </view>
       </view>
       <van-button size="small" icon="plus" type="default" block bind:click="addCustomItem" class="add-item-btn">
@@ -461,6 +558,7 @@ module.exports = {
         value="{{formData.electricity_meter}}"
         data-field="electricity_meter"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
         type="digit"
       />
@@ -470,6 +568,7 @@ module.exports = {
         value="{{formData.water_meter}}"
         data-field="water_meter"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
         type="digit"
       />
@@ -479,6 +578,7 @@ module.exports = {
         value="{{formData.gas_meter}}"
         data-field="gas_meter"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
         size="large"
         type="digit"
       />
@@ -505,10 +605,51 @@ module.exports = {
 
   <!-- 底部按钮 -->
   <view class="bottom-bar">
-    <van-button type="primary" size="large" round bind:click="submitContract" class="submit-btn" loading="{{loading}}">
-      创建合同
+    <van-button type="default" size="large" round bind:click="previewContract" class="bottom-bar-preview" disabled="{{loading}}">
+      预览
+    </van-button>
+    <van-button type="primary" size="large" round bind:click="submitContract" class="bottom-bar-submit" loading="{{loading}}" loading-text="提交中...">
+      {{loading ? '提交中...' : '创建合同'}}
     </van-button>
   </view>
+
+  <!-- 添加物品弹窗 -->
+  <van-popup show="{{showAddItemPopup}}" position="bottom" bind:close="closeAddItemPopup" round>
+    <view class="add-item-popup">
+      <view class="add-item-popup-title">添加物品</view>
+      <view class="add-item-form">
+        <van-field
+          label="物品名称"
+          placeholder="请输入物品名称"
+          value="{{newItemName}}"
+          bind:change="onNewItemNameChange"
+          size="large"
+          required
+        />
+        <view class="add-item-row">
+          <van-field
+            label="数量"
+            placeholder="数量"
+            value="{{newItemQuantity}}"
+            bind:change="onNewItemQuantityChange"
+            size="large"
+            type="number"
+          />
+          <van-field
+            label="单位"
+            placeholder="单位"
+            value="{{newItemUnit}}"
+            bind:change="onNewItemUnitChange"
+            size="large"
+          />
+        </view>
+        <view class="add-item-actions">
+          <van-button size="large" round bind:click="closeAddItemPopup">取消</van-button>
+          <van-button type="primary" size="large" round bind:click="confirmAddItem">确定</van-button>
+        </view>
+      </view>
+    </view>
+  </van-popup>
 
   <!-- 日期选择弹窗 -->
   <van-popup show="{{showStartDatePicker}}" position="bottom" bind:close="closeStartDatePicker">

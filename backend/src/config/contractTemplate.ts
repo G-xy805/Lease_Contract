@@ -3,6 +3,23 @@
  * 包含HTML模板字段映射关系
  */
 
+// 合同配置
+export const contractConfig = {
+  partyACompany: process.env.PARTY_A_COMPANY || '内蒙古恒之寓酒店管理有限公司',
+  contractValidityDays: 30,
+  inviteValidityDays: 7,
+};
+
+export const defaultFeeConfig = {
+  feeWater: true,
+  feeElectric: true,
+  feeGas: true,
+  feeTv: true,
+  feeNetwork: true,
+  feeProperty: false,
+  feeHeating: false,
+};
+
 // 字段映射接口
 export interface TemplateFieldMapping {
   key: string;           // 字段键名

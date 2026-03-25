@@ -5,6 +5,17 @@ Page({
   data: {
     userInfo: null,
     loading: false,
+    // 加载状态细分
+    loadingStates: {
+      stats: false,
+      contracts: false
+    },
+    // 骨架屏显示
+    skeletonVisible: false,
+    // 点击反馈
+    activeType: null,
+    // 错误状态
+    errorInfo: null,
     // 甲方统计数据
     stats: {
       draftCount: 0,
@@ -30,20 +41,30 @@ Page({
   },
 
   onPullDownRefresh() {
-    this.loadData()
+    this.loadData(true)
     wx.stopPullDownRefresh()
   },
 
+  // 用户信息加载
   loadUserInfo() {
     const userInfo = app.globalData.userInfo
     this.setData({ userInfo })
     if (userInfo) {
       this.loadData()
+    } else {
+      this.setData({ skeletonVisible: false, loading: false })
     }
   },
 
-  loadData() {
-    this.setData({ loading: true })
+  // 统一数据加载入口
+  loadData(isRefresh = false) {
+    this.setData({
+      loading: true,
+      skeletonVisible: !isRefresh,
+      errorInfo: null,
+      [`loadingStates.stats`]: true,
+      [`loadingStates.contracts`]: true
+    })
     const role = this.data.userInfo?.role
 
     if (role === 'PARTY_A') {
@@ -51,15 +72,21 @@ Page({
     } else if (role === 'PARTY_B') {
       this.loadPartyBData()
     } else {
-      this.setData({ loading: false })
+      this.setData({ loading: false, skeletonVisible: false })
     }
   },
 
-  // 加载甲方数据
+  // 重新加载数据（用于错误重试）
+  reloadData() {
+    this.setData({ errorInfo: null })
+    this.loadData(true)
+  },
+
+  // 甲方数据加载
   loadPartyAData() {
     const token = app.globalData.token
     if (!token) {
-      this.setData({ loading: false })
+      this.handleLoadError('未登录，请先登录')
       return
     }
 
@@ -74,28 +101,34 @@ Page({
             pendingSignCount: contracts.filter(c => c.status === 2 || c.status === 3).length,
             signedCount: contracts.filter(c => c.status === 4).length
           }
-          // 取最近5条合同
           const recentContracts = contracts.slice(0, 5).map(c => ({
             ...c,
             statusText: this.getStatusText(c.status)
           }))
-          this.setData({ stats, recentContracts })
+          this.setData({
+            stats,
+            recentContracts,
+            [`loadingStates.stats`]: false,
+            [`loadingStates.contracts`]: false
+          }, () => {
+            this.setData({ loading: false, skeletonVisible: false })
+          })
+        } else {
+          this.handleLoadError(res.data.message || '加载失败')
         }
       },
-      fail: () => {
-        this.setData({ loading: false })
-      },
-      complete: () => {
-        this.setData({ loading: false })
+      fail: (err) => {
+        this.handleLoadError('网络请求失败，请检查网络连接')
+        console.error('甲方数据加载失败', err)
       }
     })
   },
 
-  // 加载乙方数据
+  // 乙方数据加载
   loadPartyBData() {
     const token = app.globalData.token
     if (!token) {
-      this.setData({ loading: false })
+      this.handleLoadError('未登录，请先登录')
       return
     }
 
@@ -123,16 +156,31 @@ Page({
           this.setData({
             pendingList,
             signedList,
-            pendingInvitationCount: pendingList.length
+            pendingInvitationCount: pendingList.length,
+            [`loadingStates.stats`]: false,
+            [`loadingStates.contracts`]: false
+          }, () => {
+            this.setData({ loading: false, skeletonVisible: false })
           })
+        } else {
+          this.handleLoadError(res.data.message || '加载失败')
         }
       },
-      fail: () => {
-        this.setData({ loading: false })
-      },
-      complete: () => {
-        this.setData({ loading: false })
+      fail: (err) => {
+        this.handleLoadError('网络请求失败，请检查网络连接')
+        console.error('乙方数据加载失败', err)
       }
+    })
+  },
+
+  // 处理加载错误
+  handleLoadError(message) {
+    this.setData({
+      loading: false,
+      skeletonVisible: false,
+      errorInfo: message,
+      [`loadingStates.stats`]: false,
+      [`loadingStates.contracts`]: false
     })
   },
 
@@ -150,87 +198,147 @@ Page({
     return statusMap[status] || status
   },
 
-  // 跳转到创建合同
+  // 设置点击反馈
+  setActiveFeedback(type, callback) {
+    this.setData({ activeType: type })
+    if (callback) {
+      setTimeout(() => {
+        this.setData({ activeType: null })
+        callback()
+      }, 150)
+    } else {
+      setTimeout(() => {
+        this.setData({ activeType: null })
+      }, 150)
+    }
+  },
+
+  // 跳转到创建合同（带点击反馈和loading）
   goToCreateContract() {
-    wx.navigateTo({
-      url: '/pages/create-contract/index'
+    this.setActiveFeedback('create', () => {
+      wx.navigateTo({
+        url: '/pages/create-contract/index'
+      })
     })
   },
 
-  // 跳转到合同列表
+  // 跳转到合同列表（带点击反馈和loading）
   goToContracts(e) {
     const status = e.currentTarget.dataset.status
-    wx.navigateTo({
-      url: `/pages/contracts/index?status=${status}`
+    const type = e.currentTarget.dataset.type
+    this.setActiveFeedback(`contracts-${type || status}`, () => {
+      wx.navigateTo({
+        url: `/pages/contracts/index?status=${status}`
+      })
     })
   },
 
-  // 跳转到合同详情
+  // 跳转到合同详情（带点击反馈和loading）
   goToContractDetail(e) {
     const { id } = e.currentTarget.dataset
-    wx.navigateTo({
-      url: `/pages/contract-detail/index?id=${id}`
+    this.setActiveFeedback('contract-item', () => {
+      // 显示loading提示
+      wx.showLoading({ title: '加载中...', mask: true })
+      wx.navigateTo({
+        url: `/pages/contract-detail/index?id=${id}`,
+        fail: () => {
+          wx.hideLoading()
+          wx.showToast({
+            title: '页面跳转失败',
+            icon: 'none'
+          })
+        },
+        complete: () => {
+          wx.hideLoading()
+        }
+      })
     })
   },
 
   // 跳转到签署邀请列表
   goToInvitations() {
-    wx.navigateTo({
-      url: '/pages/invitations/index'
+    this.setActiveFeedback('invitations', () => {
+      wx.navigateTo({
+        url: '/pages/invitations/index'
+      })
     })
   },
 
   // 跳转到邀请预览
   goToInvitePreview(e) {
     const { id } = e.currentTarget.dataset
-    wx.navigateTo({
-      url: `/pages/invite-preview/index?id=${id}`
+    this.setActiveFeedback('invite-item', () => {
+      wx.showLoading({ title: '加载中...', mask: true })
+      wx.navigateTo({
+        url: `/pages/invite-preview/index?id=${id}`,
+        fail: () => {
+          wx.hideLoading()
+          wx.showToast({
+            title: '页面跳转失败',
+            icon: 'none'
+          })
+        },
+        complete: () => {
+          wx.hideLoading()
+        }
+      })
     })
   },
 
   // 跳转到验证邀请码页面
   goToVerifyInvite() {
-    wx.navigateTo({
-      url: '/pages/verify-invite/index'
+    this.setActiveFeedback('verify-invite', () => {
+      wx.navigateTo({
+        url: '/pages/verify-invite/index'
+      })
     })
   },
 
   // 扫码签署
   scanInviteCode() {
+    this.setActiveFeedback('scan')
     wx.scanCode({
       onlyFromCamera: false,
       success: (res) => {
         console.log('扫码结果', res)
         const result = res.result
         if (result) {
-          // 尝试从URL中提取邀请码
           let inviteCode = result
-          // 如果是URL，尝试提取code参数
           try {
             const url = new URL(result)
             inviteCode = url.searchParams.get('code') || result
           } catch (e) {
-            // 如果不是有效URL，使用原始结果
+            // 非有效URL，使用原始结果
           }
           wx.navigateTo({
             url: `/pages/verify-invite/index?code=${inviteCode}`
+          })
+        } else {
+          wx.showToast({
+            title: '未识别到邀请码',
+            icon: 'none'
           })
         }
       },
       fail: (err) => {
         console.error('扫码失败', err)
-        wx.showToast({
-          title: '扫码失败，请重试',
-          icon: 'none'
-        })
+        // 用户取消扫码不显示错误提示
+        if (err.errMsg !== 'scanCode:fail cancel') {
+          wx.showToast({
+            title: '扫码失败，请重试',
+            icon: 'none'
+          })
+        }
       }
     })
   },
 
   // 跳转到登录
   goToLogin() {
-    wx.navigateTo({
-      url: '/pages/login/index'
+    this.setActiveFeedback('login', () => {
+      wx.navigateTo({
+        url: '/pages/login/index'
+      })
     })
   }
 })
