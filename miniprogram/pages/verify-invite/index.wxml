@@ -37,11 +37,11 @@
       </view>
       <view class="info-row">
         <text class="label">甲方姓名</text>
-        <text class="value">{{contractInfo.lessor_name}}</text>
+        <text class="value">{{contractInfo.partyA_company || contractInfo.lessor_name}}</text>
       </view>
       <view class="info-row">
         <text class="label">甲方电话</text>
-        <text class="value">{{contractInfo.lessor_phone}}</text>
+        <text class="value">{{contractInfo.partyA_phone || contractInfo.lessor_phone}}</text>
       </view>
       <view class="info-row">
         <text class="label">房屋地址</text>

@@ -46,13 +46,13 @@ module.exports = {
     </view>
 
     <!-- 第一部分：甲乙双方信息 -->
-    <view class="section {{errors.lessee_name || errors.lessee_phone || errors.lessee_idcard ? 'error' : ''}}">
+    <view class="section {{errors.partyB_name || errors.partyB_phone || errors.partyB_idCard ? 'error' : ''}}">
       <view class="section-title">一、甲乙双方信息</view>
 
       <view class="info-card">
         <view class="info-row">
           <text class="info-label">甲方（出租方）</text>
-          <text class="info-value company">{{formData.lessor_name || '内蒙古恒之寓酒店管理有限公司'}}</text>
+          <text class="info-value company">{{formData.partyA_company || userInfo.name || '内蒙古恒之寓酒店管理有限公司'}}</text>
         </view>
         <view class="info-row">
           <text class="info-label">甲方公司</text>
@@ -60,15 +60,15 @@ module.exports = {
         </view>
         <view class="info-row">
           <text class="info-label">甲方电话</text>
-          <text class="info-value">{{formData.lessor_phone || userInfo.phone}}</text>
+          <text class="info-value">{{formData.partyA_phone || userInfo.phone}}</text>
         </view>
-        <view class="info-row" wx:if="{{formData.lessor_phone2}}">
+        <view class="info-row" wx:if="{{formData.partyA_phone2}}">
           <text class="info-label">甲方电话2</text>
-          <text class="info-value">{{formData.lessor_phone2}}</text>
+          <text class="info-value">{{formData.partyA_phone2}}</text>
         </view>
-        <view class="info-row" wx:if="{{formData.lessor_contact}}">
+        <view class="info-row" wx:if="{{formData.partyA_contact}}">
           <text class="info-label">甲方代理人</text>
-          <text class="info-value">{{formData.lessor_contact}}</text>
+          <text class="info-value">{{formData.partyA_contact}}</text>
         </view>
       </view>
 
@@ -88,68 +88,68 @@ module.exports = {
       <van-field
         label="甲方电话2"
         placeholder="请输入甲方第二个联系电话"
-        value="{{formData.lessor_phone2}}"
-        data-field="lessor_phone2"
+        value="{{formData.partyA_phone2}}"
+        data-field="partyA_phone2"
         bind:change="onFieldChange"
         bind:blur="onFieldBlur"
         size="large"
         type="number"
         maxlength="11"
-        error="{{errors.lessor_phone2 ? true : false}}"
-        error-message="{{errors.lessor_phone2}}"
+        error="{{errors.partyA_phone2 ? true : false}}"
+        error-message="{{errors.partyA_phone2}}"
       />
       <!-- 新增：甲方委托代理人 -->
       <van-field
         label="甲方委托代理人"
         placeholder="请输入甲方委托代理人姓名"
-        value="{{formData.lessor_contact}}"
-        data-field="lessor_contact"
+        value="{{formData.partyA_contact}}"
+        data-field="partyA_contact"
         bind:change="onFieldChange"
         bind:blur="onFieldBlur"
         size="large"
-        error="{{errors.lessor_contact ? true : false}}"
-        error-message="{{errors.lessor_contact}}"
+        error="{{errors.partyA_contact ? true : false}}"
+        error-message="{{errors.partyA_contact}}"
       />
 
       <van-field
         label="乙方姓名 *"
         placeholder="请输入承租方姓名"
-        value="{{formData.lessee_name}}"
-        data-field="lessee_name"
+        value="{{formData.partyB_name}}"
+        data-field="partyB_name"
         bind:change="onFieldChange"
         bind:blur="onFieldBlur"
         required
         size="large"
-        error="{{errors.lessee_name ? true : false}}"
-        error-message="{{errors.lessee_name}}"
+        error="{{errors.partyB_name ? true : false}}"
+        error-message="{{errors.partyB_name}}"
       />
       <van-field
         label="乙方电话 *"
         placeholder="请输入承租方电话"
-        value="{{formData.lessee_phone}}"
-        data-field="lessee_phone"
+        value="{{formData.partyB_phone}}"
+        data-field="partyB_phone"
         bind:change="onFieldChange"
         bind:blur="onFieldBlur"
         required
         size="large"
-        type="number"
+        type="text"
         maxlength="11"
-        error="{{errors.lessee_phone ? true : false}}"
-        error-message="{{errors.lessee_phone}}"
+        error="{{errors.partyB_phone ? true : false}}"
+        error-message="{{errors.partyB_phone}}"
       />
       <van-field
         label="乙方身份证 *"
         placeholder="请输入18位身份证号"
-        value="{{formData.lessee_idcard}}"
-        data-field="lessee_idcard"
+        value="{{formData.partyB_idCard}}"
+        data-field="partyB_idCard"
         bind:change="onFieldChange"
         bind:blur="onFieldBlur"
         required
         size="large"
-        type="idcard"
+        type="text"
         maxlength="18"
-        error="{{errors.lessee_idcard ? true : false}}"
-        error-message="{{errors.lessee_idcard}}"
+        error="{{errors.partyB_idCard ? true : false}}"
+        error-message="{{errors.partyB_idCard}}"
       />
     </view>
 
@@ -206,14 +206,15 @@ module.exports = {
       </view>
 
       <van-field
-        label="租赁月数"
-        placeholder="自动计算"
+        label="租赁月数 *"
+        placeholder="请手动填写租赁月数"
         value="{{formData.lease_months}}"
         data-field="lease_months"
         bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
+        required
         size="large"
         type="number"
-        disabled
       />
 
       <van-field

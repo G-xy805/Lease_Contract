@@ -11,17 +11,17 @@ Page({
     userInfo: null,
     formData: {
       // 甲方信息（自动填充）
-      lessor_name: '',
-      lessor_phone: '',
-      lessor_phone2: '',
-      lessor_contact: '',
       partyA_company: '',
-      lessor_idcard: '',
-      lessor_account: '',
+      partyA_phone: '',
+      partyA_phone2: '',
+      partyA_contact: '',
+      partyA_idcard: '',
+      partyA_account: '',
       // 乙方信息
-      lessee_name: '',
-      lessee_phone: '',
-      lessee_idcard: '',
+      partyB_name: '',
+      partyB_phone: '',
+      partyB_idCard: '',
+      partyB_contact: '',
       // 房屋信息
       house_address: '',
       house_area: '',
@@ -67,32 +67,32 @@ Page({
       // 备注
       remark: ''
     },
-    // 固定物品清单（按模板顺序）
+    // 固定物品清单（按模板顺序，包含templateField用于API交互）
     fixedItems: [
-      { name: '电视', quantity: '', unit: '台', confirmed: false },
-      { name: '衣柜', quantity: '', unit: '个', confirmed: false },
-      { name: '电视（遥控器）', quantity: '', unit: '个', confirmed: false },
-      { name: '机顶盒（遥控器）', quantity: '', unit: '个', confirmed: false },
-      { name: '茶几', quantity: '', unit: '个', confirmed: false },
-      { name: '餐桌', quantity: '', unit: '张', confirmed: false },
-      { name: '餐桌椅', quantity: '', unit: '把', confirmed: false },
-      { name: '床', quantity: '', unit: '张', confirmed: false },
-      { name: '床头柜', quantity: '', unit: '个', confirmed: false },
-      { name: '窗帘', quantity: '', unit: '个', confirmed: false },
-      { name: '空调', quantity: '', unit: '台', confirmed: false },
-      { name: '空调（遥控器）', quantity: '', unit: '个', confirmed: false },
-      { name: '冰箱', quantity: '', unit: '台', confirmed: false },
-      { name: '床垫子', quantity: '', unit: '个', confirmed: false },
-      { name: '洗衣机', quantity: '', unit: '台', confirmed: false },
-      { name: '热水器', quantity: '', unit: '台', confirmed: false },
-      { name: '煤气灶', quantity: '', unit: '台', confirmed: false },
-      { name: '油烟机', quantity: '', unit: '台', confirmed: false },
-      { name: '门禁卡', quantity: '', unit: '个', confirmed: false },
-      { name: '水卡', quantity: '', unit: '个', confirmed: false },
-      { name: '电卡', quantity: '', unit: '个', confirmed: false },
-      { name: '电视柜', quantity: '', unit: '个', confirmed: false },
-      { name: '沙发', quantity: '', unit: '个', confirmed: false },
-      { name: '电磁灶', quantity: '', unit: '台', confirmed: false }
+      { name: '电视', quantity: '', unit: '台', confirmed: false, templateField: 'item_tv_qty' },
+      { name: '衣柜', quantity: '', unit: '个', confirmed: false, templateField: 'item_wardrobe_qty' },
+      { name: '电视（遥控器）', quantity: '', unit: '个', confirmed: false, templateField: 'item_tv_remote_qty' },
+      { name: '机顶盒（遥控器）', quantity: '', unit: '个', confirmed: false, templateField: 'item_box_qty' },
+      { name: '茶几', quantity: '', unit: '个', confirmed: false, templateField: 'item_coffee_table_qty' },
+      { name: '餐桌', quantity: '', unit: '张', confirmed: false, templateField: 'item_dining_table_qty' },
+      { name: '餐桌椅', quantity: '', unit: '把', confirmed: false, templateField: 'item_chair_qty' },
+      { name: '床', quantity: '', unit: '张', confirmed: false, templateField: 'item_bed_qty' },
+      { name: '床头柜', quantity: '', unit: '个', confirmed: false, templateField: 'item_nightstand_qty' },
+      { name: '窗帘', quantity: '', unit: '个', confirmed: false, templateField: 'item_curtain_qty' },
+      { name: '空调', quantity: '', unit: '台', confirmed: false, templateField: 'item_ac_qty' },
+      { name: '空调（遥控器）', quantity: '', unit: '个', confirmed: false, templateField: 'item_ac_remote_qty' },
+      { name: '冰箱', quantity: '', unit: '台', confirmed: false, templateField: 'item_fridge_qty' },
+      { name: '床垫子', quantity: '', unit: '个', confirmed: false, templateField: 'item_mattress_qty' },
+      { name: '洗衣机', quantity: '', unit: '台', confirmed: false, templateField: 'item_washer_qty' },
+      { name: '热水器', quantity: '', unit: '台', confirmed: false, templateField: 'item_water_heater_qty' },
+      { name: '煤气灶', quantity: '', unit: '台', confirmed: false, templateField: 'item_gas_stove_qty' },
+      { name: '油烟机', quantity: '', unit: '台', confirmed: false, templateField: 'item_hood_qty' },
+      { name: '门禁卡', quantity: '', unit: '个', confirmed: false, templateField: 'item_door_card_qty' },
+      { name: '水卡', quantity: '', unit: '个', confirmed: false, templateField: 'item_water_card_qty' },
+      { name: '电卡', quantity: '', unit: '个', confirmed: false, templateField: 'item_power_card_qty' },
+      { name: '电视柜', quantity: '', unit: '个', confirmed: false, templateField: 'item_tv_table_qty' },
+      { name: '沙发', quantity: '', unit: '个', confirmed: false, templateField: 'item_sofa_qty' },
+      { name: '电磁灶', quantity: '', unit: '台', confirmed: false, templateField: 'item_induction_qty' }
     ],
     // 自定义物品
     customItems: [],
@@ -158,10 +158,10 @@ Page({
 
     const defaultLessorName = userInfo.name || '内蒙古恒之寓酒店管理有限公司'
     this.setData({
-      'formData.lessor_name': defaultLessorName,
-      'formData.lessor_phone': userInfo.phone || '',
-      'formData.lessor_idcard': userInfo.idcard || '',
-      'formData.lessor_account': userInfo.bankAccount || ''
+      'formData.partyA_company': defaultLessorName,
+      'formData.partyA_phone': userInfo.phone || '',
+      'formData.partyA_idcard': userInfo.idcard || '',
+      'formData.partyA_account': userInfo.bankAccount || ''
     })
 
     // 从本地存储加载自动保存的草稿
@@ -323,22 +323,30 @@ Page({
   validateField(field, value) {
     const { formData } = this.data
     let error = ''
+    let strValue = value
+    if (typeof strValue === 'string') {
+      strValue = strValue.trim().replace(/\s+/g, '')
+    } else if (strValue !== null && strValue !== undefined) {
+      strValue = String(strValue).trim().replace(/\s+/g, '')
+    } else {
+      strValue = ''
+    }
 
     // 必填字段验证
-    const requiredFields = ['lessee_name', 'lessee_phone', 'lessee_idcard', 'house_address', 'lease_start', 'lease_end', 'monthly_rent', 'deposit']
+    const requiredFields = ['partyB_name', 'partyB_phone', 'partyB_idCard', 'house_address', 'lease_start', 'lease_end', 'lease_months', 'monthly_rent', 'deposit']
     if (requiredFields.includes(field)) {
-      if (!value || (typeof value === 'string' && value.trim() === '')) {
+      if (!strValue) {
         error = '必填'
       }
     }
 
     // 手机号格式验证
-    if (field === 'lessee_phone' && value && !/^1[3-9]\d{9}$/.test(value.trim())) {
+    if (field === 'partyB_phone' && strValue && !/^1[3-9]\d{9}$/.test(strValue)) {
       error = '手机号格式错误'
     }
 
     // 身份证格式验证
-    if (field === 'lessee_idcard' && value && !/^\d{17}[\dXx]$/.test(value.trim())) {
+    if (field === 'partyB_idCard' && strValue && !/^\d{17}[\dXx]$/.test(strValue)) {
       error = '身份证号格式错误'
     }
 
@@ -348,17 +356,22 @@ Page({
   // 字段失去焦点时验证
   onFieldBlur(e) {
     const { field } = e.currentTarget.dataset
-    const value = e.detail
+    let value = e.detail
+    if (typeof value === 'string') {
+      value = value.trim().replace(/\s+/g, '')
+    }
     const error = this.validateField(field, value)
 
+    const { errors } = this.data
     if (error) {
       this.setData({
-        errors: { ...this.data.errors, [field]: error }
+        errors: { ...errors, [field]: error }
       })
     } else {
-      const { errors } = this.data
-      delete errors[field]
-      this.setData({ errors })
+      if (errors[field]) {
+        delete errors[field]
+        this.setData({ errors })
+      }
     }
   },
 
@@ -460,7 +473,7 @@ Page({
     let step = 0
 
     // 根据已填写的字段判断当前步骤
-    if (formData.lessee_name && formData.lessee_phone && formData.lessee_idcard) {
+    if (formData.partyB_name && formData.partyB_phone && formData.partyB_idCard) {
       step = 1
     }
     if (step >= 1 && formData.house_address) {
@@ -488,13 +501,8 @@ Page({
     let timestamp = e.detail
     if (typeof timestamp === 'string') timestamp = new Date(timestamp).getTime()
     const date = this.formatDate(timestamp)
-    const months = this.calculateMonths(date, this.data.formData.lease_end)
-    const monthly = parseFloat(this.data.formData.monthly_rent) || 0
-    const yearRent = monthly > 0 && months > 0 ? (monthly * months).toFixed(2) : ''
     this.setData({
       'formData.lease_start': date,
-      'formData.lease_months': months,
-      'formData.year_rent': yearRent,
       'formData.first_payment_date': date,
       showStartDatePicker: false
     })
@@ -528,13 +536,8 @@ Page({
     }
 
     const date = this.formatDate(timestamp)
-    const months = this.calculateMonths(this.data.formData.lease_start, date)
-    const monthly = parseFloat(this.data.formData.monthly_rent) || 0
-    const yearRent = monthly > 0 && months > 0 ? (monthly * months).toFixed(2) : ''
     this.setData({
       'formData.lease_end': date,
-      'formData.lease_months': months,
-      'formData.year_rent': yearRent,
       showEndDatePicker: false
     })
     this.markAsUnsaved('lease_end')
@@ -750,24 +753,35 @@ Page({
   validateForm() {
     const { formData } = this.data
     const errors = {}
-    const required = ['lessee_name', 'lessee_phone', 'lessee_idcard', 'house_address', 'lease_start', 'lease_end', 'monthly_rent', 'deposit']
+    const required = ['partyB_name', 'partyB_phone', 'partyB_idCard', 'house_address', 'lease_start', 'lease_end', 'lease_months', 'monthly_rent', 'deposit']
 
     console.log('validating formData:', JSON.stringify(formData, null, 2))
 
     for (const field of required) {
-      const value = formData[field]
+      let value = formData[field]
+      let strValue = value
+      if (typeof strValue === 'string') {
+        strValue = strValue.trim().replace(/\s+/g, '')
+      } else if (strValue !== null && strValue !== undefined) {
+        strValue = String(strValue).trim().replace(/\s+/g, '')
+      } else {
+        strValue = ''
+      }
       console.log(`field ${field}:`, value, typeof value)
-      if (!value || (typeof value === 'string' && value.trim() === '')) {
+      if (!strValue) {
         errors[field] = '必填'
       }
     }
 
-    if (formData.lessee_phone && !/^1[3-9]\d{9}$/.test(formData.lessee_phone.trim())) {
-      errors.lessee_phone = '手机号格式错误'
+    const phoneValue = (typeof formData.partyB_phone === 'string' ? formData.partyB_phone : String(formData.partyB_phone || '')).trim().replace(/\s+/g, '')
+    const idcardValue = (typeof formData.partyB_idCard === 'string' ? formData.partyB_idCard : String(formData.partyB_idCard || '')).trim().replace(/\s+/g, '')
+
+    if (phoneValue && !/^1[3-9]\d{9}$/.test(phoneValue)) {
+      errors.partyB_phone = '手机号格式错误'
     }
 
-    if (formData.lessee_idcard && !/^\d{17}[\dXx]$/.test(formData.lessee_idcard.trim())) {
-      errors.lessee_idcard = '身份证号格式错误'
+    if (idcardValue && !/^\d{17}[\dXx]$/.test(idcardValue)) {
+      errors.partyB_idCard = '身份证号格式错误'
     }
 
     // 验证结束日期不早于开始日期
@@ -820,54 +834,45 @@ Page({
     })
 
     const contractData = this.prepareContractData()
+    const api = require('../../services/api')
 
     const isEditMode = !!this.editContractId
-    const requestUrl = isEditMode
-      ? `${app.globalData.baseUrl}/api/contracts/${this.editContractId}`
-      : `${app.globalData.baseUrl}/api/contracts`
-    const requestMethod = isEditMode ? 'PUT' : 'POST'
 
-    wx.request({
-      url: requestUrl,
-      method: requestMethod,
-      data: contractData,
-      header: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${app.globalData.token || ''}`
-      },
-      success: (res) => {
-        if (res.data.code === 200 || res.statusCode === 200 || res.data.code === 201) {
-          // 清除本地保存的草稿
-          wx.removeStorageSync(STORAGE_KEY)
+    const requestPromise = isEditMode
+      ? api.updateContract(this.editContractId, contractData)
+      : api.createContract(contractData)
 
-          wx.showToast({
-            title: isEditMode ? '合同更新成功' : '合同创建成功',
-            icon: 'success',
-            duration: 1500,
-            success: () => {
-              setTimeout(() => {
-                wx.navigateBack()
-              }, 1500)
-            }
-          })
-        } else {
-          wx.showToast({
-            title: res.data.message || (isEditMode ? '更新失败，请重试' : '创建失败，请重试'),
-            icon: 'none',
-            duration: 2500
-          })
-          this.setData({ loading: false })
-        }
-      },
-      fail: (err) => {
-        console.error('提交失败:', err)
+    requestPromise.then(res => {
+      if (res.code === 200 || res.code === 201) {
+        // 清除本地保存的草稿
+        wx.removeStorageSync(STORAGE_KEY)
+
         wx.showToast({
-          title: '网络错误，请检查网络连接',
+          title: isEditMode ? '合同更新成功' : '合同创建成功',
+          icon: 'success',
+          duration: 1500,
+          success: () => {
+            setTimeout(() => {
+              wx.navigateBack()
+            }, 1500)
+          }
+        })
+      } else {
+        wx.showToast({
+          title: res.message || (isEditMode ? '更新失败，请重试' : '创建失败，请重试'),
           icon: 'none',
           duration: 2500
         })
         this.setData({ loading: false })
       }
+    }).catch(err => {
+      console.error('提交失败:', err)
+      wx.showToast({
+        title: '网络错误，请检查网络连接',
+        icon: 'none',
+        duration: 2500
+      })
+      this.setData({ loading: false })
     })
   },
 
@@ -876,58 +881,46 @@ Page({
     const months = parseInt(formData.lease_months) || 0
     const monthlyRent = parseFloat(formData.monthly_rent) || 0
 
-    // 物品名称到字段名的映射
-    const itemMapping = {
-      '电视': 'item_tv_qty',
-      '衣柜': 'item_wardrobe_qty',
-      '电视（遥控器）': 'item_tv_remote_qty',
-      '电视柜': 'item_tv_table_qty',
-      '机顶盒（遥控器）': 'item_box_qty',
-      '沙发': 'item_sofa_qty',
-      '茶几': 'item_coffee_table_qty',
-      '餐桌': 'item_dining_table_qty',
-      '餐桌椅': 'item_chair_qty',
-      '床': 'item_bed_qty',
-      '床头柜': 'item_nightstand_qty',
-      '窗帘': 'item_curtain_qty',
-      '空调': 'item_ac_qty',
-      '空调（遥控器）': 'item_ac_remote_qty',
-      '冰箱': 'item_fridge_qty',
-      '床垫子': 'item_mattress_qty',
-      '洗衣机': 'item_washer_qty',
-      '热水器': 'item_water_heater_qty',
-      '煤气灶': 'item_gas_stove_qty',
-      '油烟机': 'item_hood_qty',
-      '电磁灶': 'item_induction_qty',
-      '门禁卡': 'item_door_card_qty',
-      '水卡': 'item_water_card_qty',
-      '电卡': 'item_power_card_qty'
-    }
-
-    // 构建物品清单字段（排除已删除的）
-    const itemFields = {}
+    // 构建物品清单（使用 inventory_items JSON数组格式）
+    const inventoryItems = []
     fixedItems.forEach(item => {
       if (item.deleted) return
-      const fieldName = itemMapping[item.name]
-      if (fieldName && item.quantity) {
-        itemFields[fieldName] = parseInt(item.quantity) || 0
+      if (item.quantity && parseInt(item.quantity) > 0) {
+        inventoryItems.push({
+          name: item.name,
+          quantity: parseInt(item.quantity),
+          templateField: item.templateField
+        })
       }
     })
 
-    console.log('准备发送的数据 - itemFields:', JSON.stringify(itemFields, null, 2))
+    // 添加自定义物品
+    if (this.data.customItems) {
+      this.data.customItems.forEach(item => {
+        if (item.quantity && parseInt(item.quantity) > 0) {
+          inventoryItems.push({
+            name: item.name,
+            quantity: parseInt(item.quantity),
+            unit: item.unit || '个'
+          })
+        }
+      })
+    }
+
+    console.log('准备发送的数据 - inventoryItems:', JSON.stringify(inventoryItems, null, 2))
 
     return {
       title: `房屋租赁合同 - ${formData.house_address || '未命名'}`,
-      lessor_name: formData.lessor_name,
-      lessor_phone: formData.lessor_phone,
-      lessor_phone2: formData.lessor_phone2 || null,
-      lessor_contact: formData.lessor_contact || null,
-      partyA_company: formData.partyA_company || null,
-      lessor_idcard: formData.lessor_idcard || null,
-      lessor_account: formData.lessor_account || null,
-      lessee_name: formData.lessee_name,
-      lessee_phone: formData.lessee_phone,
-      lessee_idcard: formData.lessee_idcard || null,
+      partyA_company: formData.partyA_company,
+      partyA_phone: formData.partyA_phone,
+      partyA_phone2: formData.partyA_phone2 || null,
+      partyA_contact: formData.partyA_contact || null,
+      partyA_idcard: formData.partyA_idcard || null,
+      partyA_account: formData.partyA_account || null,
+      partyB_name: formData.partyB_name,
+      partyB_phone: formData.partyB_phone,
+      partyB_idCard: formData.partyB_idCard || null,
+      partyB_contact: formData.partyB_contact || null,
       house_address: formData.house_address,
       house_area: formData.house_area ? parseFloat(formData.house_area) : null,
       rent_purpose: formData.rent_purpose || null,
@@ -963,100 +956,84 @@ Page({
       water_meter: formData.water_meter || null,
       gas_meter: formData.gas_meter || null,
       remark: formData.remark || null,
-      // 物品清单字段
-      ...itemFields
-      // 注意：不设置 status，由后端控制
+      inventory_items: inventoryItems
     }
   },
 
-  loadDraft(draftId) {
-    wx.request({
-      url: `${app.globalData.baseUrl}/api/contracts/${draftId}`,
-      method: 'GET',
-      header: { 'Authorization': `Bearer ${app.globalData.token || ''}` },
-      success: (res) => {
-        if (res.data.code === 200) {
-          const contract = res.data.data.contract
-          this.setData({ formData: { ...this.data.formData, ...contract } })
-        }
-      }
-    })
-  },
+  
 
   loadExistingContract(contractId) {
     wx.showLoading({ title: '加载中...' })
-    wx.request({
-      url: `${app.globalData.baseUrl}/api/contracts/${contractId}`,
-      method: 'GET',
-      header: { 'Authorization': `Bearer ${app.globalData.token || ''}` },
-      success: (res) => {
-        wx.hideLoading()
-        if (res.data.code === 200) {
-          const contract = res.data.data.contract
-          console.log('加载合同原始数据:', JSON.stringify(contract, null, 2))
+    const api = require('../../services/api')
 
-          const formData = { ...this.data.formData }
-          // 直接复制所有合同字段（字段名一致）
-          Object.keys(contract).forEach(key => {
-            if (key !== 'id' && key !== 'created_at' && key !== 'updated_at') {
+    api.getContractDetail(contractId).then(res => {
+      wx.hideLoading()
+      if (res.code === 200) {
+        const contract = res.data.contract
+        console.log('加载合同原始数据:', JSON.stringify(contract, null, 2))
+
+        const formData = { ...this.data.formData }
+        // 映射后端返回的旧字段到新字段
+        const fieldMapping = {
+          lessor_name: 'partyA_company',
+          lessor_phone: 'partyA_phone',
+          lessor_phone2: 'partyA_phone2',
+          lessor_contact: 'partyA_contact',
+          lessor_idcard: 'partyA_idcard',
+          lessor_account: 'partyA_account',
+          lessee_name: 'partyB_name',
+          lessee_phone: 'partyB_phone',
+          lessee_idcard: 'partyB_idCard',
+          lessee_contact: 'partyB_contact'
+        }
+
+        // 直接复制所有合同字段（字段名一致的直接用）
+        Object.keys(contract).forEach(key => {
+          if (key !== 'id' && key !== 'created_at' && key !== 'updated_at' && key !== 'inventory_items') {
+            // 如果存在旧字段映射，转换为新字段
+            if (fieldMapping[key]) {
+              formData[fieldMapping[key]] = contract[key]
+            } else {
               formData[key] = contract[key]
             }
-          })
-
-          // 恢复 payment_cycle_text
-          if (formData.payment_cycle) {
-            formData.payment_cycle_text = formData.payment_cycle
           }
+        })
 
-          // 恢复固定物品清单的数量
-          const itemFieldMapping = {
-            '电视': 'item_tv_qty',
-            '衣柜': 'item_wardrobe_qty',
-            '电视（遥控器）': 'item_tv_remote_qty',
-            '电视柜': 'item_tv_table_qty',
-            '机顶盒（遥控器）': 'item_box_qty',
-            '沙发': 'item_sofa_qty',
-            '茶几': 'item_coffee_table_qty',
-            '餐桌': 'item_dining_table_qty',
-            '餐桌椅': 'item_chair_qty',
-            '床': 'item_bed_qty',
-            '床头柜': 'item_nightstand_qty',
-            '窗帘': 'item_curtain_qty',
-            '空调': 'item_ac_qty',
-            '空调（遥控器）': 'item_ac_remote_qty',
-            '冰箱': 'item_fridge_qty',
-            '床垫子': 'item_mattress_qty',
-            '洗衣机': 'item_washer_qty',
-            '热水器': 'item_water_heater_qty',
-            '煤气灶': 'item_gas_stove_qty',
-            '油烟机': 'item_hood_qty',
-            '电磁灶': 'item_induction_qty',
-            '门禁卡': 'item_door_card_qty',
-            '水卡': 'item_water_card_qty',
-            '电卡': 'item_power_card_qty'
-          }
-
-          const fixedItems = this.data.fixedItems.map(item => {
-            const fieldName = itemFieldMapping[item.name]
-            if (fieldName && contract[fieldName] !== undefined && contract[fieldName] !== null) {
-              return { ...item, quantity: String(contract[fieldName]), confirmed: true }
-            }
-            return item
-          })
-
-          console.log('恢复后的formData:', JSON.stringify(formData, null, 2))
-          console.log('恢复后的fixedItems:', JSON.stringify(fixedItems, null, 2))
-
-          this.setData({ formData, fixedItems })
-          wx.showToast({ title: '已加载合同信息', icon: 'success' })
-        } else {
-          wx.showToast({ title: res.data.message || '加载失败', icon: 'none' })
+        // 恢复 payment_cycle_text
+        if (formData.payment_cycle) {
+          formData.payment_cycle_text = formData.payment_cycle
         }
-      },
-      fail: () => {
-        wx.hideLoading()
-        wx.showToast({ title: '网络错误', icon: 'none' })
+
+        // 恢复固定物品清单的数量（支持新的 inventory_items 格式）
+        let itemsData = []
+        if (contract.inventory_items && Array.isArray(contract.inventory_items)) {
+          itemsData = contract.inventory_items
+        }
+
+        const fixedItems = this.data.fixedItems.map(item => {
+          const matched = itemsData.find(i => i.name === item.name || i.templateField === item.templateField)
+          if (matched) {
+            return { ...item, quantity: String(matched.quantity), confirmed: true }
+          }
+          // 兼容旧的分散字段格式
+          if (contract[item.templateField] !== undefined && contract[item.templateField] !== null) {
+            return { ...item, quantity: String(contract[item.templateField]), confirmed: true }
+          }
+          return item
+        })
+
+        console.log('恢复后的formData:', JSON.stringify(formData, null, 2))
+        console.log('恢复后的fixedItems:', JSON.stringify(fixedItems, null, 2))
+
+        this.setData({ formData, fixedItems })
+        wx.showToast({ title: '已加载合同信息', icon: 'success' })
+      } else {
+        wx.showToast({ title: res.message || '加载失败', icon: 'none' })
       }
+    }).catch(err => {
+      wx.hideLoading()
+      console.error('加载合同失败', err)
+      wx.showToast({ title: '网络错误', icon: 'none' })
     })
   }
 })

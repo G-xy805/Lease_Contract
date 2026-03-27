@@ -16,8 +16,8 @@ export interface AuthRequest extends Request {
 
 export const generateToken = (payload: JwtPayload): string => {
   const secret = process.env.JWT_SECRET || 'default_secret';
-  const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
-  return jwt.sign(payload, secret, { expiresIn });
+  const expiresIn = '7d';
+  return jwt.sign(payload as object, secret, { expiresIn });
 };
 
 export const verifyToken = (token: string): JwtPayload => {

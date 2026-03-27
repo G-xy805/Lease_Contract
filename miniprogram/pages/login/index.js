@@ -1,6 +1,7 @@
 // pages/login/index.js
 const app = getApp()
 const api = require('../../services/api')
+const { USER_ROLE } = require('../../utils/constants')
 
 Page({
   data: {
@@ -8,14 +9,19 @@ Page({
     code: '',
     loading: false,
     sendingCode: false,
-    isRegister: false,
     codeSent: false,
     countdown: 0,
     timer: null,
-    selectedRole: 'PARTY_A' // 默认角色为甲方
+    USER_ROLE: USER_ROLE
   },
 
-  onLoad() {},
+  onLoad(options) {
+    const token = wx.getStorageSync('token')
+    const userInfo = wx.getStorageSync('userInfo')
+    if (token && userInfo) {
+      this.redirectBasedOnRole(userInfo.role)
+    }
+  },
 
   onUnload() {
     if (this.data.timer) {
@@ -29,25 +35,6 @@ Page({
 
   onCodeChange(e) {
     this.setData({ code: e.detail })
-  },
-
-  switchMode() {
-    this.setData({
-      isRegister: !this.data.isRegister,
-      code: '',
-      codeSent: false,
-      countdown: 0
-    })
-    if (this.data.timer) {
-      clearInterval(this.data.timer)
-      this.setData({ timer: null })
-    }
-  },
-
-  onRoleChange(e) {
-    this.setData({
-      selectedRole: e.detail
-    })
   },
 
   async onSendCode() {
@@ -96,7 +83,7 @@ Page({
   },
 
   async handleLogin() {
-    const { phone, code, isRegister } = this.data
+    const { phone, code } = this.data
 
     if (!phone || phone.length !== 11) {
       wx.showToast({ title: '请输入正确的手机号', icon: 'none' })
@@ -111,18 +98,18 @@ Page({
     this.setData({ loading: true })
 
     try {
-      const res = await api.phoneLogin({ phone, code, role: this.data.selectedRole })
+      const res = await api.phoneLogin({
+        phone,
+        code,
+        role: USER_ROLE.LESSEE
+      })
 
       if (res.code === 200) {
-        app.login(res.data.user, res.data.token)
-        wx.showToast({ title: isRegister ? '注册成功' : '登录成功', icon: 'success' })
-
+        const user = res.data.user
+        app.login(user, res.data.token)
+        wx.showToast({ title: '登录成功', icon: 'success' })
         setTimeout(() => {
-          if (this.data.selectedRole === 'PARTY_A') {
-            wx.reLaunch({ url: '/pages/contracts/index' })
-          } else {
-            wx.reLaunch({ url: '/pages/my-contracts/index' })
-          }
+          this.redirectBasedOnRole(user.role)
         }, 1500)
       } else {
         wx.showToast({ title: res.message || '登录失败', icon: 'none' })
@@ -135,33 +122,57 @@ Page({
   },
 
   onWechatLogin() {
-    wx.getUserProfile({
-      desc: '用于完善用户资料',
-      success: async (res) => {
-        console.log('微信登录', res)
+    wx.showLoading({ title: '正在获取...', mask: true })
+
+    wx.login({
+      success: async (loginRes) => {
+        if (!loginRes.code) {
+          wx.hideLoading()
+          wx.showToast({ title: '微信登录失败', icon: 'none' })
+          return
+        }
+
         try {
-          const result = await api.wechatLogin({
-            code: Date.now(),
-            openid: `wx_${Date.now()}`,
-            role: this.data.selectedRole
+          const res = await api.wechatLogin({
+            code: loginRes.code,
+            role: USER_ROLE.LESSEE
           })
 
-          if (result.code === 200) {
-            app.login(result.data.user, result.data.token)
-            wx.showToast({ title: '登录成功', icon: 'success' })
+          wx.hideLoading()
 
+          if (res.code === 200) {
+            const user = res.data.user
+            app.login(user, res.data.token)
+            wx.showToast({ title: '登录成功', icon: 'success' })
             setTimeout(() => {
-              if (this.data.selectedRole === 'PARTY_A') {
-                wx.reLaunch({ url: '/pages/contracts/index' })
-              } else {
-                wx.reLaunch({ url: '/pages/my-contracts/index' })
-              }
+              this.redirectBasedOnRole(user.role)
             }, 1500)
+          } else {
+            wx.showToast({ title: res.message || '登录失败', icon: 'none' })
           }
         } catch (error) {
+          wx.hideLoading()
           wx.showToast({ title: '微信登录失败', icon: 'none' })
         }
+      },
+      fail: () => {
+        wx.hideLoading()
+        wx.showToast({ title: '微信登录失败', icon: 'none' })
       }
     })
+  },
+
+  redirectBasedOnRole(role) {
+    switch (role) {
+      case USER_ROLE.ADMIN:
+        wx.reLaunch({ url: '/pages/admin/index' })
+        break
+      case USER_ROLE.LESSOR:
+        wx.reLaunch({ url: '/pages/contracts/index' })
+        break
+      case USER_ROLE.LESSEE:
+      default:
+        wx.reLaunch({ url: '/pages/my-contracts/index' })
+    }
   }
 })

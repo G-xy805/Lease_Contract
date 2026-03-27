@@ -10,8 +10,8 @@
           height="120rpx"
           src="{{userInfo.avatarUrl || '/assets/images/default-avatar.png'}}"
         />
-        <view class="role-badge role-{{userInfo.role === 'PARTY_A' ? 'a' : 'b'}}">
-          {{userInfo.role === 'PARTY_A' ? '甲方' : '乙方'}}
+        <view class="role-badge role-{{userInfo.role === USER_ROLE.LESSOR ? 'a' : 'b'}}">
+          {{userInfo.role === USER_ROLE.LESSOR ? '甲方' : '乙方'}}
         </view>
       </view>
       <view class="user-detail">
@@ -36,7 +36,7 @@
   </view>
 
   <!-- 甲方视图 -->
-  <block wx:if="{{userInfo && userInfo.role === 'PARTY_A'}}">
+  <block wx:if="{{userInfo && userInfo.role === USER_ROLE.LESSOR}}">
     <!-- 统计卡片 - 3列网格布局 -->
     <view class="stats-grid">
       <view class="stat-card stat-draft" bindtap="goToContracts" data-status="draft">
@@ -120,7 +120,7 @@
   </block>
 
   <!-- 乙方视图 -->
-  <block wx:if="{{userInfo && userInfo.role === 'PARTY_B'}}">
+  <block wx:if="{{userInfo && userInfo.role === USER_ROLE.LESSEE}}">
     <!-- 邀请码和扫码入口 - 醒目设计 -->
     <view class="invite-action-cards">
       <view class="invite-action-card invite-code-card" bindtap="goToVerifyInvite">
@@ -177,6 +177,8 @@
           class="contract-card pending-card"
           bindtap="goToInvitePreview"
           data-id="{{item.id}}"
+          data-contractid="{{item.contractId}}"
+          data-invitationno="{{item.invitationNo}}"
         >
           <view class="contract-card-header">
             <view class="contract-title text-bold text-md">{{item.title}}</view>

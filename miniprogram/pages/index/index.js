@@ -1,5 +1,7 @@
 // pages/index/index.js
 const app = getApp()
+const api = require('../../services/api')
+const { USER_ROLE } = require('../../utils/constants')
 
 Page({
   data: {
@@ -67,9 +69,9 @@ Page({
     })
     const role = this.data.userInfo?.role
 
-    if (role === 'PARTY_A') {
+    if (role === USER_ROLE.LESSOR) {
       this.loadPartyAData()
-    } else if (role === 'PARTY_B') {
+    } else if (role === USER_ROLE.LESSEE) {
       this.loadPartyBData()
     } else {
       this.setData({ loading: false, skeletonVisible: false })
@@ -98,8 +100,8 @@ Page({
           const contracts = res.data.data?.list || []
           const stats = {
             draftCount: contracts.filter(c => c.status === 1).length,
-            pendingSignCount: contracts.filter(c => c.status === 2 || c.status === 3).length,
-            signedCount: contracts.filter(c => c.status === 4).length
+            pendingSignCount: contracts.filter(c => c.status === 2).length,
+            signedCount: contracts.filter(c => c.status === 3).length
           }
           const recentContracts = contracts.slice(0, 5).map(c => ({
             ...c,
@@ -124,7 +126,7 @@ Page({
     })
   },
 
-  // 乙方数据加载
+  // 乙方数据加载（直接从 contracts 表查询，以 lessee_phone 匹配）
   loadPartyBData() {
     const token = app.globalData.token
     if (!token) {
@@ -133,25 +135,29 @@ Page({
     }
 
     wx.request({
-      url: `${app.globalData.baseUrl}/api/invitations`,
+      url: `${app.globalData.baseUrl}/api/contracts/tenant`,
       header: { Authorization: `Bearer ${token}` },
       success: (res) => {
-        if (res.data.code === 0) {
-          const invitations = res.data.data || []
-          const pendingList = invitations
-            .filter(i => i.status === 'pending')
-            .map(i => ({
-              id: i.id,
-              title: i.contractTitle,
-              partyAName: i.partyA,
-              status: i.status
+        if (res.data.code === 0 || res.data.code === 200) {
+          const contracts = res.data.data?.list || []
+          // 待签署：lessee_sign_status = 0 且 status = 2 (待乙方签署)
+          const pendingList = contracts
+            .filter(c => c.lessee_sign_status === 0 && c.status === 2)
+            .map(c => ({
+              id: c.id,
+              contractId: c.id,
+              title: c.title,
+              partyAName: c.lessor_name,
+              status: c.status,
+              createdAt: c.created_at
             }))
-          const signedList = invitations
-            .filter(i => i.status === 'signed')
-            .map(i => ({
-              id: i.id,
-              title: i.contractTitle,
-              signedAt: i.signedAt || i.updatedAt
+          // 已签署：lessee_sign_status = 1 或 status = 3 (已签署)
+          const signedList = contracts
+            .filter(c => c.lessee_sign_status === 1 || c.status === 3)
+            .map(c => ({
+              id: c.id,
+              title: c.title,
+              signedAt: c.lessee_signed_at || c.effective_at
             }))
           this.setData({
             pendingList,
@@ -187,12 +193,12 @@ Page({
   // 获取状态文本
   getStatusText(status) {
     const statusMap = {
-      1: '草稿',
-      2: '待甲方签署',
-      3: '待乙方签署',
-      4: '已签署',
+      1: '待甲方签署',
+      2: '待乙方签署',
+      3: '已签署',
+      4: '已拒绝',
       5: '已取消',
-      6: '已拒绝',
+      6: '已过期',
       7: '已到期'
     }
     return statusMap[status] || status
@@ -264,13 +270,31 @@ Page({
     })
   },
 
-  // 跳转到邀请预览
+  // 跳转到签署确认页（点击待签署列表）
   goToInvitePreview(e) {
-    const { id } = e.currentTarget.dataset
+    const { id, contractid, invitationno } = e.currentTarget.dataset
     this.setActiveFeedback('invite-item', () => {
       wx.showLoading({ title: '加载中...', mask: true })
+
+      // 获取用户信息
+      const userInfo = app.globalData.userInfo
+      if (!userInfo || !userInfo.phone) {
+        wx.hideLoading()
+        wx.showToast({ title: '请先登录', icon: 'none' })
+        wx.navigateTo({ url: '/pages/login/index' })
+        return
+      }
+
+      // 如果没有 contractId，需要先获取
+      if (!contractid) {
+        wx.hideLoading()
+        wx.showToast({ title: '数据加载失败', icon: 'none' })
+        return
+      }
+
+      // 直接跳转到 sign-contract 页面
       wx.navigateTo({
-        url: `/pages/invite-preview/index?id=${id}`,
+        url: `/pages/sign-contract/index?contractId=${contractid}&isPartyA=false&inviteCode=${invitationno || ''}`,
         fail: () => {
           wx.hideLoading()
           wx.showToast({
@@ -299,7 +323,7 @@ Page({
     this.setActiveFeedback('scan')
     wx.scanCode({
       onlyFromCamera: false,
-      success: (res) => {
+      success: async (res) => {
         console.log('扫码结果', res)
         const result = res.result
         if (result) {
@@ -310,9 +334,50 @@ Page({
           } catch (e) {
             // 非有效URL，使用原始结果
           }
-          wx.navigateTo({
-            url: `/pages/verify-invite/index?code=${inviteCode}`
-          })
+
+          // 获取用户信息
+          const userInfo = app.globalData.userInfo
+          if (!userInfo || !userInfo.phone) {
+            wx.showToast({ title: '请先登录', icon: 'none' })
+            wx.navigateTo({ url: '/pages/login/index' })
+            return
+          }
+
+          wx.showLoading({ title: '处理中...' })
+
+          try {
+            // 调用 acceptInvitation 接受邀请
+            const acceptRes = await new Promise((resolve, reject) => {
+              wx.request({
+                url: `${app.globalData.baseUrl}/api/invitations/${inviteCode}/accept`,
+                method: 'POST',
+                data: { receiver_phone: userInfo.phone },
+                header: { 'Content-Type': 'application/json' },
+                success: (res) => resolve(res.data),
+                fail: reject
+              })
+            })
+
+            wx.hideLoading()
+
+            if (acceptRes.code === 200) {
+              // 接受成功，直接跳转 sign-contract 页面
+              const contractId = acceptRes.data?.contract_id
+              if (contractId) {
+                wx.navigateTo({
+                  url: `/pages/sign-contract/index?contractId=${contractId}&isPartyA=false&inviteCode=${inviteCode}`
+                })
+              } else {
+                wx.showToast({ title: '获取合同信息失败', icon: 'none' })
+              }
+            } else {
+              wx.showToast({ title: acceptRes.message || '接受邀请失败', icon: 'none' })
+            }
+          } catch (err) {
+            wx.hideLoading()
+            console.error('接受邀请失败', err)
+            wx.showToast({ title: '网络错误，请重试', icon: 'none' })
+          }
         } else {
           wx.showToast({
             title: '未识别到邀请码',

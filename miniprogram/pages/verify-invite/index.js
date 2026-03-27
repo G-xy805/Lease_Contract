@@ -19,8 +19,9 @@ Page({
   },
 
   onInviteCodeInput(e) {
+    const value = e.detail || e.detail.value
     this.setData({
-      inviteCode: e.detail.value,
+      inviteCode: value || '',
       errorMessage: ''
     })
   },
@@ -28,7 +29,9 @@ Page({
   async verifyInviteCode() {
     const { inviteCode } = this.data
 
-    if (!inviteCode || inviteCode.length < 6) {
+    console.log('验证邀请码，输入值:', inviteCode, '长度:', inviteCode.length)
+
+    if (!inviteCode || inviteCode.trim().length < 6) {
       this.setData({ errorMessage: '请输入正确的邀请码' })
       return
     }
@@ -36,7 +39,8 @@ Page({
     this.setData({ loading: true, errorMessage: '' })
 
     try {
-      const res = await api.verifyInviteCode(inviteCode)
+      const res = await api.verifyInviteCode(inviteCode.trim())
+      console.log('验证结果:', res)
 
       if (res.code === 200) {
         this.setData({
@@ -71,7 +75,7 @@ Page({
     this.setData({ loading: true })
 
     try {
-      const res = await api.acceptInvitation(inviteCode, userInfo.phone)
+      const res = await api.acceptInvitation(inviteCode.trim(), userInfo.phone)
 
       if (res.code === 200) {
         wx.showToast({ title: '已接受邀请', icon: 'success' })
@@ -107,7 +111,7 @@ Page({
         if (res.confirm) {
           this.setData({ loading: true })
           try {
-            const result = await api.rejectInvitation(inviteCode, userInfo.phone)
+            const result = await api.rejectInvitation(inviteCode.trim(), userInfo.phone)
 
             if (result.code === 200) {
               wx.showToast({ title: '已拒绝', icon: 'success' })

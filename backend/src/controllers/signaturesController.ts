@@ -129,7 +129,7 @@ export const createSignature = async (req: AuthRequest, res: Response): Promise<
     }
 
     // 验证合同状态
-    if (sign_role === SignRole.LESSOR && contract.status !== 1) {
+    if (sign_role === SignRole.LESSOR && contract.status !== ContractStatus.PENDING_LESSOR_SIGN) {
       res.status(400).json({
         code: 400,
         message: '合同状态不是待甲方签署状态'
@@ -137,7 +137,7 @@ export const createSignature = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    if (sign_role === SignRole.TENANT && contract.status !== 2) {
+    if (sign_role === SignRole.TENANT && contract.status !== ContractStatus.PENDING_TENANT_SIGN) {
       res.status(400).json({
         code: 400,
         message: '合同状态不是待乙方签署状态'
@@ -187,11 +187,11 @@ export const createSignature = async (req: AuthRequest, res: Response): Promise<
     );
 
     // 更新合同状态
-    let newStatus: number;
+    let newStatus: ContractStatus;
     if (sign_role === SignRole.LESSOR) {
-      newStatus = 2;
+      newStatus = ContractStatus.PENDING_TENANT_SIGN;
     } else {
-      newStatus = 3;
+      newStatus = ContractStatus.SIGNED;
     }
 
     await execute(
@@ -267,12 +267,17 @@ export const getSignaturesByContract = async (req: Request, res: Response): Prom
     );
 
     // 转换签署记录格式
-    const list = signatures.map(sig => ({
+    const list: ISignatureResponse[] = signatures.map(sig => ({
       id: sig.id,
       contract_id: sig.contract_id,
+      user_id: sig.user_id || 0,
       sign_type: sig.sign_type,
-      sign_role: sig.sign_name === contracts[0].lessor_name ? 'lessor' : 'tenant',
+      sign_role: sig.sign_name === contracts[0].lessor_name ? SignRole.LESSOR : SignRole.TENANT,
       sign_image: sig.signature_data,
+      sign_data: sig.signature_data || null,
+      sign_ip: sig.ip_address || '',
+      sign_device: sig.device_info || '',
+      sign_location: sig.sign_location || null,
       signed_at: sig.signed_at
     }));
 
@@ -332,7 +337,7 @@ export const getSignatureById = async (req: Request, res: Response): Promise<voi
       id: signature.id,
       contract_id: signature.contract_id,
       sign_type: signature.sign_type,
-      sign_role: signature.sign_name === '甲方' ? 'lessor' : 'tenant',
+      sign_role: signature.sign_name === '甲方' ? SignRole.LESSOR : SignRole.TENANT,
       sign_image: signature.signature_data,
       signed_at: signature.signed_at
     };

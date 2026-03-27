@@ -21,10 +21,30 @@
   width: 160rpx;
 }
 
-.switch-mode {
+.logo-placeholder {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f0f9f0 0%, #e0f0e0 100%);
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin-top: 32rpx;
-  gap: 8rpx;
+  justify-content: center;
+  margin-bottom: 20rpx;
+}
+
+.tab-content {
+  min-height: 400rpx;
+}
+
+.btn-icon {
+  margin-right: 8rpx;
+}
+
+.login-tip {
+  padding: 0 40rpx;
+}
+
+.login-tip .van-icon {
+  vertical-align: middle;
+  margin-right: 4rpx;
 }

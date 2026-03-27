@@ -33,6 +33,15 @@ Page({
   },
 
   processContractData(data) {
+    const formatDateForDisplay = (dateStr) => {
+      if (!dateStr) return ''
+      if (typeof dateStr === 'string' && dateStr.includes('T')) {
+        const d = new Date(dateStr)
+        return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
+      }
+      return dateStr
+    }
+
     const lessorInfo = {
       name: data.lessor_name || '',
       phone: data.lessor_phone || '',
@@ -60,8 +69,8 @@ Page({
     const rentInfo = {
       monthlyRent: data.monthly_rent || 0,
       yearRent: data.year_rent || 0,
-      leaseStart: data.lease_start || '',
-      leaseEnd: data.lease_end || '',
+      leaseStart: formatDateForDisplay(data.lease_start),
+      leaseEnd: formatDateForDisplay(data.lease_end),
       months: months,
       advanceNoticeDays: data.advance_notice_days || 30
     }
@@ -73,15 +82,15 @@ Page({
 
     const paymentMethodMap = { 1: '月付', 3: '季付', 6: '半年付', 12: '年付' }
     const paymentInfo = {
-      method: paymentMethodMap[data.payment_method] || '月付',
-      cycle: data.payment_cycle || months,
+      method: paymentMethodMap[data.payment_method] || data.payment_cycle_text || '月付',
+      cycleText: data.payment_cycle_text || '',
       count: data.payment_count || 1,
       firstAmount: data.first_payment_amount || data.monthly_rent || 0,
-      firstDate: data.first_payment_date || data.lease_start || '',
+      firstDate: data.first_payment_date ? formatDateForDisplay(data.first_payment_date) : (data.lease_start ? formatDateForDisplay(data.lease_start) : ''),
       secondAmount: data.second_payment_amount || 0,
-      secondDate: data.second_payment_date || '',
+      secondDate: data.second_payment_date ? formatDateForDisplay(data.second_payment_date) : '',
       thirdAmount: data.third_payment_amount || 0,
-      thirdDate: data.third_payment_date || ''
+      thirdDate: data.third_payment_date ? formatDateForDisplay(data.third_payment_date) : ''
     }
 
     const inventoryFields = [
@@ -140,6 +149,22 @@ Page({
     if (data.water_meter) meters.push({ label: '水表读数', value: data.water_meter })
     if (data.gas_meter) meters.push({ label: '燃气表读数', value: data.gas_meter })
 
+    const commissions = []
+    if (data.partyA_commission) {
+      commissions.push({
+        party: '甲方',
+        amount: data.partyA_commission,
+        chinese: data.partyA_commission_chinese || ''
+      })
+    }
+    if (data.partyB_commission) {
+      commissions.push({
+        party: '乙方',
+        amount: data.partyB_commission,
+        chinese: data.partyB_commission_chinese || ''
+      })
+    }
+
     this.setData({
       loading: false,
       contractData: data,
@@ -152,16 +177,8 @@ Page({
       inventoryItems,
       fees,
       meters,
+      commissions,
       remark: data.remark || ''
     })
-  },
-
-  formatDate(dateStr) {
-    if (!dateStr) return ''
-    if (typeof dateStr === 'string' && dateStr.includes('T')) {
-      const d = new Date(dateStr)
-      return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
-    }
-    return dateStr
   }
 })

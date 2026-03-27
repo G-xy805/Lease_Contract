@@ -1,7 +1,7 @@
 // pages/contract-detail/index.js
 const app = getApp()
 const api = require('../../services/api')
-const { CONTRACT_STATUS_TEXT, CONTRACT_STATUS_COLOR, PAYMENT_METHODS, CONTRACT_STATUS } = require('../../utils/constants')
+const { CONTRACT_STATUS_TEXT, CONTRACT_STATUS_COLOR, PAYMENT_METHODS, CONTRACT_STATUS, USER_ROLE } = require('../../utils/constants')
 
 Page({
   data: {
@@ -96,10 +96,19 @@ Page({
       item_power_card_qty: '电卡'
     }
 
-    const items = []
-    for (const [key, label] of Object.entries(itemMapping)) {
-      if (rawContract[key] && rawContract[key] > 0) {
-        items.push({ name: label, quantity: rawContract[key] })
+    let items = []
+    // 支持新的 inventory_items JSON数组格式
+    if (rawContract.inventory_items && Array.isArray(rawContract.inventory_items)) {
+      items = rawContract.inventory_items.map(item => ({
+        name: item.name || itemMapping[item.templateField] || item.templateField,
+        quantity: item.quantity
+      }))
+    } else {
+      // 兼容旧的分散字段格式
+      for (const [key, label] of Object.entries(itemMapping)) {
+        if (rawContract[key] && rawContract[key] > 0) {
+          items.push({ name: label, quantity: rawContract[key] })
+        }
       }
     }
 
@@ -124,6 +133,11 @@ Page({
     if (rawContract.water_meter !== undefined && rawContract.water_meter !== null) meters.push({ label: '水表读数', value: rawContract.water_meter })
     if (rawContract.gas_meter !== undefined && rawContract.gas_meter !== null) meters.push({ label: '燃气表读数', value: rawContract.gas_meter })
 
+    // 字段映射：兼容旧字段（lessor_*/lessee_*）和新字段（partyA_*/partyB_*）
+    const getField = (newField, oldField) => {
+      return rawContract[newField] || rawContract[oldField] || ''
+    }
+
     return {
       id: rawContract.id,
       title: rawContract.title || '房屋租赁合同',
@@ -139,20 +153,20 @@ Page({
       lesseeSignedAt: rawContract.lessee_signed_at || '',
 
       partyA: {
-        name: rawContract.lessor_name || '',
-        company: rawContract.partyA_company || '',
-        phone: rawContract.lessor_phone || '',
-        phone2: rawContract.lessor_phone2 || '',
-        contact: rawContract.lessor_contact || '',
-        idCard: rawContract.lessor_idcard || '',
-        account: rawContract.lessor_account || ''
+        name: getField('partyA_company', 'lessor_name') || getField('partyA_company', 'partyA_company'),
+        company: getField('partyA_company', 'lessor_name'),
+        phone: getField('partyA_phone', 'lessor_phone'),
+        phone2: getField('partyA_phone2', 'lessor_phone2'),
+        contact: getField('partyA_contact', 'lessor_contact'),
+        idCard: getField('partyA_idcard', 'lessor_idcard'),
+        account: getField('partyA_account', 'lessor_account')
       },
 
       partyB: {
-        name: rawContract.lessee_name || '',
-        idCard: rawContract.lessee_idcard || '',
-        phone: rawContract.lessee_phone || '',
-        contact: rawContract.lessee_contact || ''
+        name: getField('partyB_name', 'lessee_name'),
+        idCard: getField('partyB_idCard', 'lessee_idcard'),
+        phone: getField('partyB_phone', 'lessee_phone'),
+        contact: getField('partyB_contact', 'lessee_contact')
       },
 
       property: {
@@ -217,7 +231,7 @@ Page({
 
     const userInfo = app.globalData.userInfo
     const userRole = userInfo?.role
-    const isPartyA = userRole === 'PARTY_A'
+    const isPartyA = userRole === USER_ROLE.LESSOR
 
     try {
       const contractRes = await api.getContractDetail(id).catch(() => null)
@@ -297,6 +311,39 @@ Page({
     })
   },
 
+  async onDownloadPdf() {
+    const contractId = this.data.contractInfo?.id
+    if (!contractId) {
+      wx.showToast({ title: '合同ID不存在', icon: 'none' })
+      return
+    }
+
+    wx.showLoading({ title: '正在生成PDF...' })
+
+    try {
+      const tempFilePath = await api.downloadContractPdf(contractId)
+
+      wx.hideLoading()
+
+      // 打开PDF文档
+      wx.openDocument({
+        filePath: tempFilePath,
+        fileType: 'pdf',
+        success: () => {
+          console.log('打开PDF成功')
+        },
+        fail: (err) => {
+          console.error('打开PDF失败:', err)
+          wx.showToast({ title: '打开失败，请重试', icon: 'none' })
+        }
+      })
+    } catch (err) {
+      wx.hideLoading()
+      console.error('下载PDF失败:', err)
+      wx.showToast({ title: err.message || '下载失败', icon: 'none' })
+    }
+  },
+
   onToggleVerifyInfo() {
     this.setData({ showVerifyInfo: !this.data.showVerifyInfo })
   },
@@ -311,70 +358,11 @@ Page({
     })
   },
 
-  async onDownloadPdf() {
-    const { contractId } = this.data
-    this.setData({ pdfLoading: true })
-
-    try {
-      const pdfData = await api.generateContractPdf(contractId).catch(() => null)
-
-      if (pdfData && pdfData.data && pdfData.data.url) {
-        const baseUrl = app.globalData.baseUrl || 'http://localhost:3000'
-        const fullUrl = baseUrl + pdfData.data.url
-
-        wx.downloadFile({
-          url: fullUrl,
-          success: (res) => {
-            if (res.statusCode === 200) {
-              const tempFilePath = res.tempFilePath
-              wx.openDocument({
-                filePath: tempFilePath,
-                fileType: 'pdf',
-                success: () => {
-                  this.setData({ pdfLoading: false })
-                  wx.showToast({ title: 'PDF已打开', icon: 'success' })
-                },
-                fail: (err) => {
-                  console.error('打开PDF失败', err)
-                  this.setData({ pdfLoading: false })
-                  wx.showToast({ title: '打开失败', icon: 'none' })
-                }
-              })
-            } else {
-              this.setData({ pdfLoading: false })
-              wx.showToast({ title: '下载失败', icon: 'none' })
-            }
-          },
-          fail: (err) => {
-            console.error('下载PDF失败', err)
-            this.setData({ pdfLoading: false })
-            wx.showToast({ title: '下载失败，请稍后重试', icon: 'none' })
-          }
-        })
-      } else {
-        this.setData({ pdfLoading: false })
-        wx.showToast({ title: 'PDF生成失败', icon: 'none' })
-      }
-    } catch (err) {
-      console.error('PDF操作失败', err)
-      this.setData({ pdfLoading: false })
-      wx.showToast({ title: '操作失败', icon: 'none' })
-    }
-  },
-
-  onShare() {
-    wx.showShareMenu({
-      withShareTicket: true,
-      menus: ['shareAppMessage', 'shareTimeline']
-    })
-    wx.showToast({ title: '点击右上角分享给好友', icon: 'none' })
-  },
-
   async onGenerateShare() {
     const { contractId } = this.data
     wx.showLoading({ title: '生成中...' })
     try {
-      const res = await api.generateShareLink(contractId)
+      const res = await api.shareContract(contractId)
       wx.hideLoading()
 
       if (res.code === 200 || res.data) {
@@ -416,6 +404,40 @@ Page({
         wx.showToast({ title: '点击右上角分享', icon: 'none' })
       }
     })
+  },
+
+  onShare() {
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline']
+    })
+    wx.showToast({ title: '点击右上角分享给好友', icon: 'none' })
+  },
+
+  async onGenerateShare() {
+    const { contractId } = this.data
+    wx.showLoading({ title: '生成中...' })
+    try {
+      const res = await api.shareContract(contractId)
+      wx.hideLoading()
+
+      if (res.code === 200 || res.data) {
+        this.setData({
+          showSharePopup: true,
+          showShareModal: true,
+          inviteCode: res.data?.invite_code || res.invite_code || '',
+          shareUrl: res.data?.share_url || res.share_url || '',
+          qrCode: res.data?.qr_code || res.qr_code || '',
+          shareQrCode: res.data?.qr_code || res.qr_code || ''
+        })
+      } else {
+        wx.showToast({ title: '生成分享链接失败', icon: 'none' })
+      }
+    } catch (err) {
+      wx.hideLoading()
+      console.error('生成分享链接失败', err)
+      wx.showToast({ title: '生成分享链接失败', icon: 'none' })
+    }
   },
 
   async onSaveQrCode() {
@@ -543,26 +565,19 @@ Page({
       content: '确定要发送签署邀请吗？发送后乙方可以通过邀请码访问合同。',
       success: (res) => {
         if (res.confirm) {
-          wx.request({
-            url: `${app.globalData.baseUrl}/api/contracts/${contractId}/lessor-sign`,
-            method: 'POST',
-            header: {
-              'Authorization': `Bearer ${wx.getStorageSync('token') || ''}`,
-              'Content-Type': 'application/json'
-            },
-            data: { action: 'generate_invite' },
-            success: (res) => {
-              if (res.data.code === 200) {
-                wx.showToast({ title: '生成成功', icon: 'success' })
-                this.setData({ inviteCode: res.data.invite_code })
-                this.loadContractInfo(contractId)
-              } else {
-                wx.showToast({ title: res.data.message || '生成失败', icon: 'none' })
-              }
-            },
-            fail: () => {
-              wx.showToast({ title: '网络错误', icon: 'none' })
+          wx.showLoading({ title: '生成中...' })
+          api.shareContract(contractId).then(res => {
+            wx.hideLoading()
+            if (res.code === 200) {
+              wx.showToast({ title: '生成成功', icon: 'success' })
+              this.setData({ inviteCode: res.data?.invite_code })
+              this.loadContractInfo(contractId)
+            } else {
+              wx.showToast({ title: res.message || '生成失败', icon: 'none' })
             }
+          }).catch(err => {
+            wx.hideLoading()
+            wx.showToast({ title: '网络错误', icon: 'none' })
           })
         }
       }

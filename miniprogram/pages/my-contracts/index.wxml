@@ -21,6 +21,7 @@
         <view class="contract-header">
           <text class="contract-title">{{item.title}}</text>
           <van-tag type="{{getStatusTagType(item.status)}}">{{getStatusText(item.status)}}</van-tag>
+          <van-icon wx:if="{{item.status === 3}}" name="description" class="download-icon" catchtap="onDownloadPdf" data-id="{{item.id}}" />
         </view>
         <view class="contract-info">
           <view class="info-row">
@@ -40,7 +41,7 @@
             <text class="value">{{item.lease_start}} 至 {{item.lease_end}}</text>
           </view>
         </view>
-        <view class="contract-actions" catchtap="noop" wx:if="{{item.status === 2}}">
+        <view class="contract-actions" catchtap="noop" wx:if="{{item.status === 2 && userRole === USER_ROLE.LESSEE}}">
           <van-button type="primary" size="small" catchtap="onSignContract" data-id="{{item.id}}">签署合同</van-button>
           <van-button type="default" size="small" catchtap="onRejectContract" data-id="{{item.id}}">拒绝</van-button>
         </view>

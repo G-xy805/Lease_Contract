@@ -2,6 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import puppeteer from 'puppeteer';
+import { inventoryJsonToTemplateData, INVENTORY_MAPPINGS } from '../config/inventoryMapping';
+
+const CHROMIUM_PATH = path.join(__dirname, '..', '..', 'node_modules', 'html-pdf-node', 'node_modules', 'puppeteer', '.local-chromium', 'win64-901912', 'chrome-win', 'chrome.exe');
 
 export interface PartyInfo {
   name: string;
@@ -105,36 +108,15 @@ class HtmlPdfService {
     const startDate = new Date(data.duration.startDate);
     const endDate = new Date(data.duration.endDate);
 
-    const itemsMap: Record<string, string> = {};
-    if (data.items && data.items.length > 0) {
-      data.items.forEach(item => {
-        const key = item.name;
-        if (key.includes('电视') && !key.includes('遥控') && !key.includes('柜')) itemsMap['电视'] = item.quantity || '';
-        if (key.includes('衣柜')) itemsMap['衣柜'] = item.quantity || '';
-        if (key.includes('电视遥控')) itemsMap['电视遥控器'] = item.quantity || '';
-        if (key.includes('电视柜')) itemsMap['电视柜'] = item.quantity || '';
-        if (key.includes('机顶盒')) itemsMap['机顶盒'] = item.quantity || '';
-        if (key.includes('沙发')) itemsMap['沙发'] = item.quantity || '';
-        if (key.includes('茶几')) itemsMap['茶几'] = item.quantity || '';
-        if (key.includes('餐桌') && !key.includes('椅')) itemsMap['餐桌'] = item.quantity || '';
-        if (key.includes('餐桌椅') || key.includes('椅子')) itemsMap['椅子'] = item.quantity || '';
-        if (key.includes('床') && !key.includes('头')) itemsMap['床'] = item.quantity || '';
-        if (key.includes('床头柜')) itemsMap['床头柜'] = item.quantity || '';
-        if (key.includes('窗帘')) itemsMap['窗帘'] = item.quantity || '';
-        if (key.includes('空调') && !key.includes('遥控')) itemsMap['空调'] = item.quantity || '';
-        if (key.includes('空调遥控')) itemsMap['空调遥控器'] = item.quantity || '';
-        if (key.includes('冰箱')) itemsMap['冰箱'] = item.quantity || '';
-        if (key.includes('床垫')) itemsMap['床垫'] = item.quantity || '';
-        if (key.includes('洗衣机')) itemsMap['洗衣机'] = item.quantity || '';
-        if (key.includes('热水器')) itemsMap['热水器'] = item.quantity || '';
-        if (key.includes('燃气灶')) itemsMap['燃气灶'] = item.quantity || '';
-        if (key.includes('油烟机')) itemsMap['抽油烟机'] = item.quantity || '';
-        if (key.includes('电磁灶') || key.includes('电磁炉')) itemsMap['电磁炉'] = item.quantity || '';
-        if (key.includes('门禁卡') || key.includes('门卡')) itemsMap['门卡'] = item.quantity || '';
-        if (key.includes('水卡')) itemsMap['水卡'] = item.quantity || '';
-        if (key.includes('电卡')) itemsMap['电卡'] = item.quantity || '';
-      });
-    }
+    // 使用 inventoryJsonToTemplateData 将 inventory_items JSON 转为模板数据
+    const inventoryTemplateData = inventoryJsonToTemplateData(
+      data.items && data.items.length > 0
+        ? JSON.stringify(data.items.map(item => ({
+            name: item.name,
+            quantity: typeof item.quantity === 'string' ? parseInt(item.quantity) : (item.quantity || 0)
+          })))
+        : null
+    );
 
     const placeholders: Record<string, string> = {
       '{{partyA_company}}': data.partyA.company || data.partyA.name || '',
@@ -194,30 +176,30 @@ class HtmlPdfService {
       '{{contract_no}}': data.contractNumber || '',
       '{{partyB_signature}}': data.partyBSignature || '',
 
-      '{{item_tv_qty}}': itemsMap['电视'] || '',
-      '{{item_wardrobe_qty}}': itemsMap['衣柜'] || '',
-      '{{item_tv_remote_qty}}': itemsMap['电视遥控器'] || '',
-      '{{item_tv_table_qty}}': itemsMap['电视柜'] || '',
-      '{{item_box_qty}}': itemsMap['箱子'] || '',
-      '{{item_sofa_qty}}': itemsMap['沙发'] || '',
-      '{{item_coffee_table_qty}}': itemsMap['茶几'] || '',
-      '{{item_dining_table_qty}}': itemsMap['餐桌'] || '',
-      '{{item_chair_qty}}': itemsMap['椅子'] || '',
-      '{{item_bed_qty}}': itemsMap['床'] || '',
-      '{{item_nightstand_qty}}': itemsMap['床头柜'] || '',
-      '{{item_curtain_qty}}': itemsMap['窗帘'] || '',
-      '{{item_ac_qty}}': itemsMap['空调'] || '',
-      '{{item_ac_remote_qty}}': itemsMap['空调遥控器'] || '',
-      '{{item_fridge_qty}}': itemsMap['冰箱'] || '',
-      '{{item_mattress_qty}}': itemsMap['床垫'] || '',
-      '{{item_washer_qty}}': itemsMap['洗衣机'] || '',
-      '{{item_water_heater_qty}}': itemsMap['热水器'] || '',
-      '{{item_gas_stove_qty}}': itemsMap['燃气灶'] || '',
-      '{{item_hood_qty}}': itemsMap['抽油烟机'] || '',
-      '{{item_induction_qty}}': itemsMap['电磁炉'] || '',
-      '{{item_door_card_qty}}': itemsMap['门卡'] || '',
-      '{{item_water_card_qty}}': itemsMap['水卡'] || '',
-      '{{item_power_card_qty}}': itemsMap['电卡'] || '',
+      '{{item_tv_qty}}': inventoryTemplateData['item_tv_qty'] || '0',
+      '{{item_wardrobe_qty}}': inventoryTemplateData['item_wardrobe_qty'] || '0',
+      '{{item_tv_remote_qty}}': inventoryTemplateData['item_tv_remote_qty'] || '0',
+      '{{item_tv_table_qty}}': inventoryTemplateData['item_tv_table_qty'] || '0',
+      '{{item_box_qty}}': inventoryTemplateData['item_box_qty'] || '0',
+      '{{item_sofa_qty}}': inventoryTemplateData['item_sofa_qty'] || '0',
+      '{{item_coffee_table_qty}}': inventoryTemplateData['item_coffee_table_qty'] || '0',
+      '{{item_dining_table_qty}}': inventoryTemplateData['item_dining_table_qty'] || '0',
+      '{{item_chair_qty}}': inventoryTemplateData['item_chair_qty'] || '0',
+      '{{item_bed_qty}}': inventoryTemplateData['item_bed_qty'] || '0',
+      '{{item_nightstand_qty}}': inventoryTemplateData['item_nightstand_qty'] || '0',
+      '{{item_curtain_qty}}': inventoryTemplateData['item_curtain_qty'] || '0',
+      '{{item_ac_qty}}': inventoryTemplateData['item_ac_qty'] || '0',
+      '{{item_ac_remote_qty}}': inventoryTemplateData['item_ac_remote_qty'] || '0',
+      '{{item_fridge_qty}}': inventoryTemplateData['item_fridge_qty'] || '0',
+      '{{item_mattress_qty}}': inventoryTemplateData['item_mattress_qty'] || '0',
+      '{{item_washer_qty}}': inventoryTemplateData['item_washer_qty'] || '0',
+      '{{item_water_heater_qty}}': inventoryTemplateData['item_water_heater_qty'] || '0',
+      '{{item_gas_stove_qty}}': inventoryTemplateData['item_gas_stove_qty'] || '0',
+      '{{item_hood_qty}}': inventoryTemplateData['item_hood_qty'] || '0',
+      '{{item_induction_qty}}': inventoryTemplateData['item_induction_qty'] || '0',
+      '{{item_door_card_qty}}': inventoryTemplateData['item_door_card_qty'] || '0',
+      '{{item_water_card_qty}}': inventoryTemplateData['item_water_card_qty'] || '0',
+      '{{item_power_card_qty}}': inventoryTemplateData['item_power_card_qty'] || '0',
     };
 
     let result = template;
@@ -293,7 +275,7 @@ class HtmlPdfService {
 
       const browser = await puppeteer.launch({
         headless: true,
-        executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        executablePath: CHROMIUM_PATH,
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']
       });
 

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { query, insert, execute } from '../database';
+import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { AuthRequest } from '../middleware/auth';
 import { htmlPdfService, ContractData, PdfResult } from '../services/htmlPdfService';
 import { contractConfig, defaultFeeConfig } from '../config/contractTemplate';
@@ -92,7 +93,7 @@ export const getLandlordContracts = async (req: AuthRequest, res: Response): Pro
     }
 
     if (keyword) {
-      whereClause += ' AND (title LIKE ? OR contract_no LIKE ? OR lessee_name LIKE ? OR house_address LIKE ?)';
+      whereClause += ' AND (title LIKE ? OR contract_no LIKE ? OR partyB_name LIKE ? OR house_address LIKE ?)';
       const searchKeyword = `%${keyword}%`;
       params.push(searchKeyword, searchKeyword, searchKeyword, searchKeyword);
     }
@@ -119,9 +120,7 @@ export const getLandlordContracts = async (req: AuthRequest, res: Response): Pro
     );
 
     const list = listResult.map(contract => ({
-      ...contract,
-      status_text: getStatusText(contract.status),
-      payment_method_text: getPaymentMethodText(contract.payment_method)
+      ...contract
     }));
 
     const response: IContractListResponse = {
@@ -168,7 +167,7 @@ export const getTenantContracts = async (req: AuthRequest, res: Response): Promi
     const pageSize = parseInt(page_size as string, 10) || 10;
     const offset = (pageNum - 1) * pageSize;
 
-    let whereClause = 'WHERE lessee_phone = ?';
+    let whereClause = 'WHERE partyB_phone = ?';
     const params: any[] = [userPhone];
 
     if (status) {
@@ -177,7 +176,7 @@ export const getTenantContracts = async (req: AuthRequest, res: Response): Promi
     }
 
     if (keyword) {
-      whereClause += ' AND (title LIKE ? OR contract_no LIKE ? OR lessor_name LIKE ? OR house_address LIKE ?)';
+      whereClause += ' AND (title LIKE ? OR contract_no LIKE ? OR partyA_company LIKE ? OR house_address LIKE ?)';
       const searchKeyword = `%${keyword}%`;
       params.push(searchKeyword, searchKeyword, searchKeyword, searchKeyword);
     }
@@ -204,9 +203,7 @@ export const getTenantContracts = async (req: AuthRequest, res: Response): Promi
     );
 
     const list = listResult.map(contract => ({
-      ...contract,
-      status_text: getStatusText(contract.status),
-      payment_method_text: getPaymentMethodText(contract.payment_method)
+      ...contract
     }));
 
     const response: IContractListResponse = {
@@ -254,16 +251,14 @@ export const getContractById = async (req: AuthRequest, res: Response): Promise<
 
     const contract = contracts[0];
 
-    if (contract.created_by !== userId && contract.lessee_phone !== userPhone) {
+    if (contract.created_by !== userId && contract.partyB_phone !== userPhone) {
       res.status(403).json({ code: 403, message: '无权查看此合同' });
       return;
     }
 
     const response: IContractDetailResponse = {
       contract: {
-        ...contract,
-        status_text: getStatusText(contract.status),
-        payment_method_text: getPaymentMethodText(contract.payment_method)
+        ...contract
       }
     };
 
@@ -293,16 +288,16 @@ export const createContract = async (req: AuthRequest, res: Response): Promise<v
 
     const {
       title,
-      lessor_name,
-      lessor_phone,
-      lessor_phone2,
-      lessor_idcard,
-      lessor_account,
       partyA_company,
-      lessor_contact,
-      lessee_name,
-      lessee_phone,
-      lessee_idcard,
+      partyA_contact,
+      partyA_phone,
+      partyA_phone2,
+      partyA_idcard,
+      partyA_account,
+      partyB_name,
+      partyB_phone,
+      partyB_idCard,
+      partyB_contact,
       house_address,
       house_area,
       rent_purpose,
@@ -311,7 +306,6 @@ export const createContract = async (req: AuthRequest, res: Response): Promise<v
       lease_months,
       advance_notice_days,
       monthly_rent,
-      year_rent,
       payment_method,
       payment_cycle,
       payment_count,
@@ -320,14 +314,11 @@ export const createContract = async (req: AuthRequest, res: Response): Promise<v
       second_payment_amount,
       second_payment_date,
       third_payment_amount,
-      third_payment_date,
       deposit,
       deposit_chinese,
       fee_water,
       fee_electric,
       fee_gas,
-      fee_tv,
-      fee_network,
       fee_property,
       fee_heating,
       partyA_commission,
@@ -338,53 +329,30 @@ export const createContract = async (req: AuthRequest, res: Response): Promise<v
       water_meter,
       gas_meter,
       remark,
-      // 26项物品清单
-      item_tv_qty,
-      item_wardrobe_qty,
-      item_tv_remote_qty,
-      item_tv_table_qty,
-      item_box_qty,
-      item_sofa_qty,
-      item_coffee_table_qty,
-      item_dining_table_qty,
-      item_chair_qty,
-      item_bed_qty,
-      item_nightstand_qty,
-      item_curtain_qty,
-      item_ac_qty,
-      item_ac_remote_qty,
-      item_fridge_qty,
-      item_mattress_qty,
-      item_washer_qty,
-      item_water_heater_qty,
-      item_gas_stove_qty,
-      item_hood_qty,
-      item_induction_qty,
-      item_door_card_qty,
-      item_water_card_qty,
-      item_power_card_qty
+      intermediary_name,
+      inventory_items
     } = req.body as IContractCreate;
 
-    if (!title || !lessor_name || !lessor_phone || !lessee_name || !lessee_phone ||
+    if (!title || !partyA_company || !partyA_phone || !partyB_name || !partyB_phone ||
         !house_address || !lease_start || !lease_end || !monthly_rent) {
       res.status(400).json({ code: 400, message: '缺少必填参数' });
       return;
     }
 
-    if (lessor_idcard && !validateIdCard(lessor_idcard)) {
+    if (partyA_idcard && !validateIdCard(partyA_idcard)) {
       res.status(400).json({ code: 400, message: '甲方身份证号格式不正确' });
       return;
     }
-    if (lessee_idcard && !validateIdCard(lessee_idcard)) {
+    if (partyB_idCard && !validateIdCard(partyB_idCard)) {
       res.status(400).json({ code: 400, message: '乙方身份证号格式不正确' });
       return;
     }
 
-    if (!validatePhone(lessor_phone)) {
+    if (!validatePhone(partyA_phone)) {
       res.status(400).json({ code: 400, message: '甲方手机号格式不正确' });
       return;
     }
-    if (!validatePhone(lessee_phone)) {
+    if (!validatePhone(partyB_phone)) {
       res.status(400).json({ code: 400, message: '乙方手机号格式不正确' });
       return;
     }
@@ -396,76 +364,72 @@ export const createContract = async (req: AuthRequest, res: Response): Promise<v
 
     const startDate = new Date(lease_start);
     const endDate = new Date(lease_end);
-    const months = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 30));
+    const calculatedMonths = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 30));
 
-    if (months <= 0) {
+    if (calculatedMonths <= 0) {
       res.status(400).json({ code: 400, message: '租赁结束日期必须晚于开始日期' });
       return;
     }
 
+    const months = lease_months && lease_months > 0 ? lease_months : calculatedMonths;
+
+    // 自动计算 year_rent
+    const calculatedYearRent = monthly_rent * 12;
+
+    // 计算 total_amount
     const total_amount = calculateTotalAmount(monthly_rent, payment_method || PaymentMethod.PAY_ONE_MONTH, months);
     const contract_no = generateContractNo();
     const now = new Date().toISOString();
+
+    // 处理物品清单：如果前端传来 inventory_items 数组，序列化为 JSON 存入 inventory_items
+    let inventoryItemsJson = null;
+    if (inventory_items && Array.isArray(inventory_items)) {
+      inventoryItemsJson = JSON.stringify(inventory_items);
+    }
 
     // 状态默认为 PENDING_LESSOR_SIGN (1)
     const status = ContractStatus.PENDING_LESSOR_SIGN;
 
     const insertColumns = [
       'contract_no', 'title', 'lessor_user_id',
-      'lessor_name', 'lessor_phone', 'lessor_phone2', 'lessor_idcard', 'lessor_account',
-      'partyA_company', 'lessor_contact',
-      'lessee_name', 'lessee_phone', 'lessee_idcard',
+      'partyA_company', 'partyA_contact', 'partyA_phone', 'partyA_phone2', 'partyA_idcard', 'partyA_account',
+      'partyB_name', 'partyB_phone', 'partyB_idCard', 'partyB_contact',
       'house_address', 'house_area', 'rent_purpose',
       'lease_start', 'lease_end', 'lease_months', 'advance_notice_days',
-      'monthly_rent', 'year_rent',
+      'monthly_rent', 'year_rent', 'total_amount',
       'payment_method', 'payment_cycle', 'payment_count',
       'first_payment_amount', 'first_payment_date', 'second_payment_amount', 'second_payment_date',
-      'third_payment_amount', 'third_payment_date',
+      'third_payment_amount',
       'deposit', 'deposit_chinese',
-      'fee_water', 'fee_electric', 'fee_gas', 'fee_tv', 'fee_network', 'fee_property', 'fee_heating',
+      'fee_water', 'fee_electric', 'fee_gas', 'fee_property', 'fee_heating',
       'partyA_commission', 'partyA_commission_chinese', 'partyB_commission', 'partyB_commission_chinese',
       'electricity_meter', 'water_meter', 'gas_meter',
-      'remark',
+      'remark', 'intermediary_name', 'inventory_items',
       'status', 'created_by', 'created_at', 'updated_at',
-      'lessor_sign_status', 'lessee_sign_status',
-      'item_tv_qty', 'item_wardrobe_qty', 'item_tv_remote_qty', 'item_tv_table_qty',
-      'item_box_qty', 'item_sofa_qty', 'item_coffee_table_qty', 'item_dining_table_qty',
-      'item_chair_qty', 'item_bed_qty', 'item_nightstand_qty', 'item_curtain_qty',
-      'item_ac_qty', 'item_ac_remote_qty', 'item_fridge_qty', 'item_mattress_qty',
-      'item_washer_qty', 'item_water_heater_qty', 'item_gas_stove_qty', 'item_hood_qty',
-      'item_induction_qty', 'item_door_card_qty', 'item_water_card_qty', 'item_power_card_qty'
+      'partyA_sign_status', 'partyB_sign_status'
     ];
 
     const insertValues = [
       contract_no, title, userId,
-      lessor_name, lessor_phone, lessor_phone2 || null, lessor_idcard || null, lessor_account || null,
-      partyA_company || contractConfig.partyACompany, lessor_contact || null,
-      lessee_name, lessee_phone, lessee_idcard || null,
+      partyA_company, partyA_contact || null, partyA_phone, partyA_phone2 || null, partyA_idcard || null, partyA_account || null,
+      partyB_name, partyB_phone, partyB_idCard || null, partyB_contact || null,
       house_address, house_area || null, rent_purpose || null,
       lease_start, lease_end, months, advance_notice_days || null,
-      monthly_rent, year_rent || null,
+      monthly_rent, calculatedYearRent, total_amount,
       payment_method || PaymentMethod.PAY_ONE_MONTH, payment_cycle || null, payment_count || 1,
       first_payment_amount || null, first_payment_date || null, second_payment_amount || null, second_payment_date || null,
-      third_payment_amount || null, third_payment_date || null,
+      third_payment_amount || null,
       deposit || monthly_rent, deposit_chinese || null,
       fee_water !== undefined ? (fee_water ? 1 : 0) : 1,
       fee_electric !== undefined ? (fee_electric ? 1 : 0) : 1,
       fee_gas !== undefined ? (fee_gas ? 1 : 0) : 1,
-      fee_tv !== undefined ? (fee_tv ? 1 : 0) : 1,
-      fee_network !== undefined ? (fee_network ? 1 : 0) : 1,
       fee_property !== undefined ? (fee_property ? 1 : 0) : 0,
       fee_heating !== undefined ? (fee_heating ? 1 : 0) : 0,
       partyA_commission || null, partyA_commission_chinese || null, partyB_commission || null, partyB_commission_chinese || null,
       electricity_meter || null, water_meter || null, gas_meter || null,
-      remark || null,
+      remark || null, intermediary_name || null, inventoryItemsJson,
       status, userId, now, now,
-      0, 0,
-      item_tv_qty || 0, item_wardrobe_qty || 0, item_tv_remote_qty || 0, item_tv_table_qty || 0,
-      item_box_qty || 0, item_sofa_qty || 0, item_coffee_table_qty || 0, item_dining_table_qty || 0,
-      item_chair_qty || 0, item_bed_qty || 0, item_nightstand_qty || 0, item_curtain_qty || 0,
-      item_ac_qty || 0, item_ac_remote_qty || 0, item_fridge_qty || 0, item_mattress_qty || 0,
-      item_washer_qty || 0, item_water_heater_qty || 0, item_gas_stove_qty || 0, item_hood_qty || 0,
-      item_induction_qty || 0, item_door_card_qty || 0, item_water_card_qty || 0, item_power_card_qty || 0
+      0, 0
     ];
 
     const placeholders = insertColumns.map(() => '?').join(', ');
@@ -484,9 +448,7 @@ export const createContract = async (req: AuthRequest, res: Response): Promise<v
 
     const response: IContractDetailResponse = {
       contract: {
-        ...contract,
-        status_text: getStatusText(contract.status),
-        payment_method_text: getPaymentMethodText(contract.payment_method)
+        ...contract
       }
     };
 
@@ -543,27 +505,19 @@ export const updateContract = async (req: AuthRequest, res: Response): Promise<v
 
     const allowedFields: (keyof IContractUpdate)[] = [
       'title',
-      'lessor_name', 'lessor_phone', 'lessor_phone2', 'lessor_idcard', 'lessor_account',
-      'partyA_company', 'lessor_contact',
-      'lessee_name', 'lessee_phone', 'lessee_idcard',
+      'partyA_company', 'partyA_contact', 'partyA_phone', 'partyA_phone2', 'partyA_idcard', 'partyA_account',
+      'partyB_name', 'partyB_phone', 'partyB_idCard', 'partyB_contact',
       'house_address', 'house_area', 'rent_purpose',
       'lease_start', 'lease_end', 'lease_months', 'advance_notice_days',
       'monthly_rent', 'year_rent',
       'payment_method', 'payment_cycle', 'payment_count',
       'first_payment_amount', 'first_payment_date', 'second_payment_amount', 'second_payment_date',
-      'third_payment_amount', 'third_payment_date',
+      'third_payment_amount',
       'deposit', 'deposit_chinese',
-      'fee_water', 'fee_electric', 'fee_gas', 'fee_tv', 'fee_network', 'fee_property', 'fee_heating',
+      'fee_water', 'fee_electric', 'fee_gas', 'fee_property', 'fee_heating',
       'partyA_commission', 'partyA_commission_chinese', 'partyB_commission', 'partyB_commission_chinese',
       'electricity_meter', 'water_meter', 'gas_meter',
-      'remark',
-      // 26项物品清单
-      'item_tv_qty', 'item_wardrobe_qty', 'item_tv_remote_qty', 'item_tv_table_qty',
-      'item_box_qty', 'item_sofa_qty', 'item_coffee_table_qty', 'item_dining_table_qty',
-      'item_chair_qty', 'item_bed_qty', 'item_nightstand_qty', 'item_curtain_qty',
-      'item_ac_qty', 'item_ac_remote_qty', 'item_fridge_qty', 'item_mattress_qty',
-      'item_washer_qty', 'item_water_heater_qty', 'item_gas_stove_qty', 'item_hood_qty',
-      'item_induction_qty', 'item_door_card_qty', 'item_water_card_qty', 'item_power_card_qty'
+      'remark', 'intermediary_name', 'inventory_items'
     ];
 
     for (const field of allowedFields) {
@@ -596,9 +550,7 @@ export const updateContract = async (req: AuthRequest, res: Response): Promise<v
 
     const response: IContractDetailResponse = {
       contract: {
-        ...updatedContract,
-        status_text: getStatusText(updatedContract.status),
-        payment_method_text: getPaymentMethodText(updatedContract.payment_method)
+        ...updatedContract
       }
     };
 
@@ -666,7 +618,7 @@ export const deleteContract = async (req: AuthRequest, res: Response): Promise<v
  * 甲方签署合同
  * - 验证合同状态为 PENDING_LESSOR_SIGN (1)
  * - 接收 signature (Base64图片) 参数
- * - 更新 lessor_sign_status = 1, lessor_signed_at, lessor_signature
+ * - 更新 partyA_sign_status = 1, partyA_signed_at, partyA_signature
  * - 生成 invite_code 和 invite_expires_at (签署后7天)
  * - 状态改为 PENDING_LESSEE_SIGN (2)
  */
@@ -717,9 +669,9 @@ export const lessorSign = async (req: AuthRequest, res: Response): Promise<void>
 
     await execute(
       `UPDATE contracts SET
-        lessor_sign_status = ?,
-        lessor_signed_at = ?,
-        lessor_signature = ?,
+        partyA_sign_status = ?,
+        partyA_signed_at = ?,
+        partyA_signature = ?,
         invite_code = ?,
         invite_expires_at = ?,
         status = ?,
@@ -737,6 +689,8 @@ export const lessorSign = async (req: AuthRequest, res: Response): Promise<void>
       ]
     );
 
+    // 不再插入 sign_invitations 表（简化版）
+
     const updatedContracts = await query<ContractRow[]>(
       'SELECT * FROM contracts WHERE id = ?',
       [contractId]
@@ -746,9 +700,7 @@ export const lessorSign = async (req: AuthRequest, res: Response): Promise<void>
 
     const response: IContractDetailResponse = {
       contract: {
-        ...updatedContract,
-        status_text: getStatusText(updatedContract.status),
-        payment_method_text: getPaymentMethodText(updatedContract.payment_method)
+        ...updatedContract
       }
     };
 
@@ -890,17 +842,16 @@ export const verifyInviteCode = async (req: Request, res: Response): Promise<voi
         contract_id: contract.id,
         contract_no: contract.contract_no,
         title: contract.title,
-        lessor_name: contract.lessor_name,
-        lessor_phone: contract.lessor_phone,
-        lessee_name: contract.lessee_name,
-        lessee_phone: contract.lessee_phone,
+        partyA_company: contract.partyA_company,
+        partyA_phone: contract.partyA_phone,
+        partyB_name: contract.partyB_name,
+        partyB_phone: contract.partyB_phone,
         house_address: contract.house_address,
         lease_start: contract.lease_start,
         lease_end: contract.lease_end,
         monthly_rent: contract.monthly_rent,
         deposit: contract.deposit,
         status: contract.status,
-        status_text: getStatusText(contract.status),
         expires_at: contract.invite_expires_at
       }
     });
@@ -916,7 +867,7 @@ export const verifyInviteCode = async (req: Request, res: Response): Promise<voi
  * - 验证 invite_code 有效且未过期
  * - 验证合同状态为 PENDING_LESSEE_SIGN (2)
  * - 接收 signature (Base64图片) 参数
- * - 更新 lessee_sign_status = 1, lessee_signed_at, lessee_signature, sign_date
+ * - 更新 partyB_sign_status = 1, partyB_signed_at, partyB_signature, sign_date
  * - 状态改为 SIGNED (3)
  * - 设置 effective_at
  */
@@ -949,8 +900,8 @@ export const tenantSign = async (req: AuthRequest, res: Response): Promise<void>
 
     const contract = contracts[0];
 
-    // 验证是否为乙方本人（通过手机号匹配）
-    if (contract.lessee_phone !== userPhone) {
+    // 验证是否为乙方本人（通过手机号匹配 partyB_phone）
+    if (contract.partyB_phone !== userPhone) {
       res.status(403).json({ code: 403, message: '您不是此合同的乙方签署人' });
       return;
     }
@@ -977,9 +928,9 @@ export const tenantSign = async (req: AuthRequest, res: Response): Promise<void>
 
     await execute(
       `UPDATE contracts SET
-        lessee_sign_status = ?,
-        lessee_signed_at = ?,
-        lessee_signature = ?,
+        partyB_sign_status = ?,
+        partyB_signed_at = ?,
+        partyB_signature = ?,
         sign_date = ?,
         status = ?,
         effective_at = ?,
@@ -1006,9 +957,7 @@ export const tenantSign = async (req: AuthRequest, res: Response): Promise<void>
 
     const response: IContractDetailResponse = {
       contract: {
-        ...updatedContract,
-        status_text: getStatusText(updatedContract.status),
-        payment_method_text: getPaymentMethodText(updatedContract.payment_method)
+        ...updatedContract
       }
     };
 
@@ -1051,7 +1000,7 @@ export const rejectContract = async (req: AuthRequest, res: Response): Promise<v
 
     const contract = contracts[0];
 
-    if (contract.lessee_phone !== userPhone) {
+    if (contract.partyB_phone !== userPhone) {
       res.status(403).json({ code: 403, message: '您不是此合同的乙方签署人' });
       return;
     }
@@ -1079,9 +1028,7 @@ export const rejectContract = async (req: AuthRequest, res: Response): Promise<v
 
     const response: IContractDetailResponse = {
       contract: {
-        ...updatedContract,
-        status_text: getStatusText(updatedContract.status),
-        payment_method_text: getPaymentMethodText(updatedContract.payment_method)
+        ...updatedContract
       }
     };
 
@@ -1123,7 +1070,7 @@ export const cancelContract = async (req: AuthRequest, res: Response): Promise<v
 
     const contract = contracts[0];
 
-    if (contract.created_by !== userId && contract.lessee_phone !== userPhone) {
+    if (contract.created_by !== userId && contract.partyB_phone !== userPhone) {
       res.status(403).json({ code: 403, message: '无权操作此合同' });
       return;
     }
@@ -1151,9 +1098,7 @@ export const cancelContract = async (req: AuthRequest, res: Response): Promise<v
 
     const response: IContractDetailResponse = {
       contract: {
-        ...updatedContract,
-        status_text: getStatusText(updatedContract.status),
-        payment_method_text: getPaymentMethodText(updatedContract.payment_method)
+        ...updatedContract
       }
     };
 
@@ -1196,42 +1141,33 @@ export const generateContractPdf = async (req: AuthRequest, res: Response): Prom
 
     const contract = contracts[0];
 
-    if (contract.created_by !== userId && contract.lessee_phone !== userPhone) {
+    if (contract.created_by !== userId && contract.partyB_phone !== userPhone) {
       res.status(403).json({ code: 403, message: '无权查看此合同' });
       return;
     }
 
     // 从 contracts 表直接获取签名图片
-    const lessorSignature = contract.lessor_signature || '';
-    const lesseeSignature = contract.lessee_signature || '';
+    const partyASignature = contract.partyA_signature || '';
+    const partyBSignature = contract.partyB_signature || '';
 
-    // 从 contracts 表直接获取物品清单（26项）
-    const items = [
-      { name: '电视', quantity: contract.item_tv_qty?.toString() || '0' },
-      { name: '衣柜', quantity: contract.item_wardrobe_qty?.toString() || '0' },
-      { name: '电视遥控器', quantity: contract.item_tv_remote_qty?.toString() || '0' },
-      { name: '电视柜', quantity: contract.item_tv_table_qty?.toString() || '0' },
-      { name: '箱子', quantity: contract.item_box_qty?.toString() || '0' },
-      { name: '沙发', quantity: contract.item_sofa_qty?.toString() || '0' },
-      { name: '茶几', quantity: contract.item_coffee_table_qty?.toString() || '0' },
-      { name: '餐桌', quantity: contract.item_dining_table_qty?.toString() || '0' },
-      { name: '椅子', quantity: contract.item_chair_qty?.toString() || '0' },
-      { name: '床', quantity: contract.item_bed_qty?.toString() || '0' },
-      { name: '床头柜', quantity: contract.item_nightstand_qty?.toString() || '0' },
-      { name: '窗帘', quantity: contract.item_curtain_qty?.toString() || '0' },
-      { name: '空调', quantity: contract.item_ac_qty?.toString() || '0' },
-      { name: '空调遥控器', quantity: contract.item_ac_remote_qty?.toString() || '0' },
-      { name: '冰箱', quantity: contract.item_fridge_qty?.toString() || '0' },
-      { name: '床垫', quantity: contract.item_mattress_qty?.toString() || '0' },
-      { name: '洗衣机', quantity: contract.item_washer_qty?.toString() || '0' },
-      { name: '热水器', quantity: contract.item_water_heater_qty?.toString() || '0' },
-      { name: '燃气灶', quantity: contract.item_gas_stove_qty?.toString() || '0' },
-      { name: '抽油烟机', quantity: contract.item_hood_qty?.toString() || '0' },
-      { name: '电磁炉', quantity: contract.item_induction_qty?.toString() || '0' },
-      { name: '门卡', quantity: contract.item_door_card_qty?.toString() || '0' },
-      { name: '水卡', quantity: contract.item_water_card_qty?.toString() || '0' },
-      { name: '电卡', quantity: contract.item_power_card_qty?.toString() || '0' }
-    ];
+    // 从 inventory_items JSON 解析物品清单
+    let itemsArray: Array<{ name: string; quantity?: string; unit?: string }> = [];
+    if (contract.inventory_items) {
+      try {
+        const parsed = typeof contract.inventory_items === 'string' 
+          ? JSON.parse(contract.inventory_items) 
+          : contract.inventory_items;
+        if (Array.isArray(parsed)) {
+          itemsArray = parsed.map((item: any) => ({
+            name: item.name || '',
+            quantity: item.quantity?.toString() || '0',
+            unit: item.unit || ''
+          }));
+        }
+      } catch (e) {
+        console.error('解析 inventory_items 失败:', e);
+      }
+    }
 
     const contractData: ContractData = {
       id: contract.id.toString(),
@@ -1240,22 +1176,22 @@ export const generateContractPdf = async (req: AuthRequest, res: Response): Prom
       partyA: {
         name: '甲方（出租方）',
         company: contract.partyA_company || contractConfig.partyACompany,
-        contact: contract.lessor_name,
-        phone: contract.lessor_phone,
+        contact: contract.partyA_contact || '',
+        phone: contract.partyA_phone || '',
         address: contract.house_address,
-        idCard: contract.lessor_idcard || '',
-        account: contract.lessor_account || ''
+        idCard: contract.partyA_idcard || '',
+        account: contract.partyA_account || ''
       },
       partyB: {
-        name: contract.lessee_name || '',
-        contact: contract.lessee_name || '',
-        phone: contract.lessee_phone || '',
+        name: contract.partyB_name || '',
+        contact: contract.partyB_contact || '',
+        phone: contract.partyB_phone || '',
         address: '-',
-        idCard: contract.lessee_idcard || ''
+        idCard: contract.partyB_idCard || ''
       },
       property: {
         address: contract.house_address,
-        area: (contract.house_area || '0').toString(),
+        area: (contract.house_area || 0).toString(),
         roomType: '-'
       },
       rent: {
@@ -1266,9 +1202,9 @@ export const generateContractPdf = async (req: AuthRequest, res: Response): Prom
         purpose: contract.rent_purpose || '居住使用'
       },
       duration: {
-        startDate: contract.lease_start,
-        endDate: contract.lease_end,
-        totalMonths: contract.lease_months
+        startDate: contract.lease_start ? new Date(contract.lease_start).toISOString().split('T')[0] : '',
+        endDate: contract.lease_end ? new Date(contract.lease_end).toISOString().split('T')[0] : '',
+        totalMonths: contract.lease_months || 0
       },
       terms: [
         '甲方将位于上述地址的房屋出租给乙方使用。',
@@ -1283,21 +1219,20 @@ export const generateContractPdf = async (req: AuthRequest, res: Response): Prom
       firstPaymentAmount: contract.first_payment_amount || contract.monthly_rent,
       firstPaymentDate: contract.first_payment_date || '',
       secondPaymentAmount: contract.second_payment_amount || contract.monthly_rent,
-      secondPaymentDate: contract.second_payment_date || '',
+      secondPaymentDate: contract.second_payment_date ? new Date(contract.second_payment_date).toISOString().split('T')[0] : '',
       thirdPaymentAmount: contract.third_payment_amount || 0,
-      thirdPaymentDate: contract.third_payment_date || '',
-      electricityMeter: contract.electricity_meter !== undefined ? contract.electricity_meter : '',
-      waterMeter: contract.water_meter !== undefined ? contract.water_meter : '',
-      gasMeter: contract.gas_meter !== undefined ? contract.gas_meter : '',
+      thirdPaymentDate: '',
+      electricityMeter: contract.electricity_meter ?? '',
+      waterMeter: contract.water_meter ?? '',
+      gasMeter: contract.gas_meter ?? '',
       remark: contract.remark || '',
-      lessorAccount: contract.lessor_account || '',
+      lessorAccount: contract.partyA_account || '',
       intermediaryName: contract.intermediary_name || '',
       partyACommission: contract.partyA_commission || 0,
       partyBCommission: contract.partyB_commission || 0,
       depositChinese: contract.deposit_chinese || '',
-      partyBSignature: lesseeSignature,
-      partyASignature: lessorSignature,
-      items: items
+      partyBSignature: partyBSignature,
+      items: itemsArray
     };
 
     const pdfResult: PdfResult = await htmlPdfService.generateContractPdf(contractData);
@@ -1328,6 +1263,7 @@ export const generateContractPdf = async (req: AuthRequest, res: Response): Prom
         url: `/uploads/pdfs/${pdfResult.filename}`
       }
     });
+    console.log(`[PDF] 生成成功, URL: /uploads/pdfs/${pdfResult.filename}`);
   } catch (error) {
     console.error('生成PDF错误:', error);
     res.status(500).json({ code: 500, message: '服务器内部错误' });
@@ -1370,9 +1306,7 @@ export const verifyContract = async (req: Request, res: Response): Promise<void>
     const response: IContractVerifyResponse = {
       valid: true,
       contract: {
-        ...contract,
-        status_text: getStatusText(contract.status),
-        payment_method_text: getPaymentMethodText(contract.payment_method)
+        ...contract
       },
       message: '合同真实有效'
     };

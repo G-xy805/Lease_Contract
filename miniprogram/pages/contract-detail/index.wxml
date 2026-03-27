@@ -309,6 +309,9 @@
           <van-button type="info" block round plain size="large" bind:click="onShare" wx:if="{{inviteCode}}">
             <van-icon name="share" class="btn-icon" />分享合同
           </van-button>
+          <van-button type="success" block round plain size="large" bind:click="onDownloadPdf" wx:if="{{contractInfo.status === 3}}">
+            <van-icon name="description" class="btn-icon" />下载合同PDF
+          </van-button>
           <van-button type="warning" block round size="large" bind:click="onSendReminder" wx:if="{{canRemind}}">
             <van-icon name="bell" class="btn-icon" />发送签署提醒
           </van-button>

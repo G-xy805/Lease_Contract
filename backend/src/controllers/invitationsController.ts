@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import { RowDataPacket } from 'mysql2';
 import { query, insert, execute } from '../database';
 import { AuthRequest } from '../middleware/auth';
 import {
@@ -14,6 +15,7 @@ import {
   InvitationStatus,
   SignerType
 } from '../models/SignInvitation';
+import { ContractRow } from '../models/Contract';
 
 // 生成8位邀请码
 const generateInviteCode = (): string => {
@@ -33,7 +35,7 @@ const generateInvitationNo = (): string => {
 };
 
 // 转换为邀请响应格式
-const toInvitationResponse = (invitation: ISignInvitation): IInvitationResponse => {
+const toInvitationResponse = (invitation: ISignInvitation & { contract_title?: string; house_address?: string }): IInvitationResponse => {
   return {
     id: invitation.id,
     contract_id: invitation.contract_id,
@@ -49,7 +51,9 @@ const toInvitationResponse = (invitation: ISignInvitation): IInvitationResponse 
     status: invitation.status,
     expires_at: invitation.expires_at,
     accepted_at: invitation.accepted_at,
-    created_at: invitation.created_at
+    created_at: invitation.created_at,
+    contract_title: invitation.contract_title,
+    house_address: invitation.house_address
   };
 };
 
@@ -260,11 +264,25 @@ export const getContractByInviteCode = async (req: Request, res: Response): Prom
       return;
     }
 
-    // 通过邀请编号查询邀请记录
-    const invitations = await query<SignInvitationRow[]>(
+    // 通过邀请编号查询邀请记录（支持两种方式：invitation_no 或 contracts.invite_code）
+    let invitations = await query<SignInvitationRow[]>(
       'SELECT * FROM sign_invitations WHERE invitation_no = ?',
       [code]
     );
+
+    // 如果没找到，尝试通过 contracts.invite_code 查找
+    if (invitations.length === 0) {
+      const contracts = await query<ContractRow[]>(
+        'SELECT * FROM contracts WHERE invite_code = ?',
+        [code]
+      );
+      if (contracts.length > 0) {
+        invitations = await query<SignInvitationRow[]>(
+          'SELECT * FROM sign_invitations WHERE contract_id = ? ORDER BY created_at DESC LIMIT 1',
+          [contracts[0].id]
+        );
+      }
+    }
 
     if (invitations.length === 0) {
       res.status(404).json({
@@ -291,8 +309,8 @@ export const getContractByInviteCode = async (req: Request, res: Response): Prom
       return;
     }
 
-    // 检查邀请状态
-    if (invitation.status !== InvitationStatus.PENDING) {
+    // 检查邀请状态（允许 PENDING 和 ACCEPTED，因为扫码签署流程中接受后会变为 ACCEPTED）
+    if (invitation.status !== InvitationStatus.PENDING && invitation.status !== InvitationStatus.ACCEPTED) {
       const statusMessages: Record<number, string> = {
         [InvitationStatus.ACCEPTED]: '签署邀请已被接受',
         [InvitationStatus.REJECTED]: '签署邀请已被拒绝',
@@ -377,11 +395,25 @@ export const acceptInvitation = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    // 查询邀请记录
-    const invitations = await query<SignInvitationRow[]>(
+    // 查询邀请记录（支持两种方式：invitation_no 或 contracts.invite_code）
+    let invitations = await query<SignInvitationRow[]>(
       'SELECT * FROM sign_invitations WHERE invitation_no = ?',
       [code]
     );
+
+    // 如果没找到，尝试通过 contracts.invite_code 查找
+    if (invitations.length === 0) {
+      const contracts = await query<ContractRow[]>(
+        'SELECT * FROM contracts WHERE invite_code = ?',
+        [code]
+      );
+      if (contracts.length > 0) {
+        invitations = await query<SignInvitationRow[]>(
+          'SELECT * FROM sign_invitations WHERE contract_id = ? ORDER BY created_at DESC LIMIT 1',
+          [contracts[0].id]
+        );
+      }
+    }
 
     if (invitations.length === 0) {
       res.status(404).json({
@@ -468,11 +500,25 @@ export const rejectInvitation = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    // 查询邀请记录
-    const invitations = await query<SignInvitationRow[]>(
+    // 查询邀请记录（支持两种方式：invitation_no 或 contracts.invite_code）
+    let invitations = await query<SignInvitationRow[]>(
       'SELECT * FROM sign_invitations WHERE invitation_no = ?',
       [code]
     );
+
+    // 如果没找到，尝试通过 contracts.invite_code 查找
+    if (invitations.length === 0) {
+      const contracts = await query<ContractRow[]>(
+        'SELECT * FROM contracts WHERE invite_code = ?',
+        [code]
+      );
+      if (contracts.length > 0) {
+        invitations = await query<SignInvitationRow[]>(
+          'SELECT * FROM sign_invitations WHERE contract_id = ? ORDER BY created_at DESC LIMIT 1',
+          [contracts[0].id]
+        );
+      }
+    }
 
     if (invitations.length === 0) {
       res.status(404).json({

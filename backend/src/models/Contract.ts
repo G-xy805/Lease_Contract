@@ -18,140 +18,112 @@ export enum PaymentMethod {
   PAY_YEARLY = 4             // 年付
 }
 
-// 物品清单接口
-export interface IContractItems {
-  item_tv_qty: number;
-  item_wardrobe_qty: number;
-  item_tv_remote_qty: number;
-  item_tv_table_qty: number;
-  item_box_qty: number;
-  item_sofa_qty: number;
-  item_coffee_table_qty: number;
-  item_dining_table_qty: number;
-  item_chair_qty: number;
-  item_bed_qty: number;
-  item_nightstand_qty: number;
-  item_curtain_qty: number;
-  item_ac_qty: number;
-  item_ac_remote_qty: number;
-  item_fridge_qty: number;
-  item_mattress_qty: number;
-  item_washer_qty: number;
-  item_water_heater_qty: number;
-  item_gas_stove_qty: number;
-  item_hood_qty: number;
-  item_induction_qty: number;
-  item_door_card_qty: number;
-  item_water_card_qty: number;
-  item_power_card_qty: number;
+// 物品清单项接口
+export interface IInventoryItem {
+  name: string;           // 物品名称
+  quantity: number;       // 数量
+  templateField?: string;  // 对应的模板字段名
 }
+
+// 物品清单JSON格式
+export type InventoryItems = IInventoryItem[];
 
 // 合同数据接口
 export interface IContract {
   id: number;
   contract_no: string;
   title: string;
-  // 甲方信息
+  status: ContractStatus;
+  created_by: number;
   lessor_user_id: number;
-  lessor_name: string;
-  lessor_phone: string;
-  lessor_phone2: string | null;
-  lessor_idcard: string | null;
-  lessor_account: string | null;
-  partyA_company: string | null;
-  lessor_contact: string | null;
+
+  // 甲方信息
+  partyA_company: string | null;    // 甲方公司/姓名
+  partyA_phone: string | null;      // 甲方电话
+  partyA_contact: string | null;    // 甲方代理人
+  partyA_phone2: string | null;     // 甲方备用电话
+  partyA_account: string | null;    // 甲方收款账户
+  partyA_idcard: string | null;     // 甲方身份证
+
   // 乙方信息
-  lessee_name: string;
-  lessee_phone: string;
-  lessee_idcard: string | null;
+  partyB_name: string | null;       // 乙方姓名
+  partyB_phone: string | null;      // 乙方电话
+  partyB_idCard: string | null;     // 乙方身份证
+  partyB_contact: string | null;    // 乙方代理人
+
   // 房屋信息
   house_address: string;
   house_area: number | null;
   rent_purpose: string | null;
+
   // 租赁期限
-  lease_start: Date;
-  lease_end: Date;
+  lease_start: Date | null;
+  lease_end: Date | null;
   lease_months: number | null;
   advance_notice_days: number | null;
+
   // 租金和支付
   monthly_rent: number;
   year_rent: number | null;
   payment_method: PaymentMethod;
-  payment_cycle: string | null;
-  payment_count: number;
+  payment_cycle: number | null;      // 支付周期（月数）
+  payment_count: number | null;      // 支付次数
   first_payment_amount: number | null;
-  first_payment_date: Date | null;
   second_payment_amount: number | null;
   second_payment_date: Date | null;
   third_payment_amount: number | null;
-  third_payment_date: Date | null;
   total_amount: number;
+
   // 押金
   deposit: number;
   deposit_chinese: string | null;
+
   // 费用约定
   fee_water: boolean;
   fee_electric: boolean;
   fee_gas: boolean;
-  fee_tv: boolean;
-  fee_network: boolean;
   fee_property: boolean;
   fee_heating: boolean;
+
   // 居间服务
+  intermediary_name: string | null;
   partyA_commission: number | null;
   partyA_commission_chinese: string | null;
   partyB_commission: number | null;
   partyB_commission_chinese: string | null;
+
   // 水电表读数
-  electricity_meter: number | null;
-  water_meter: number | null;
-  gas_meter: number | null;
+  electricity_meter: string | null;
+  water_meter: string | null;
+  gas_meter: string | null;
+
   // 备注
   remark: string | null;
+
   // 签署状态
-  lessor_sign_status: number;
-  lessee_sign_status: number;
-  lessor_signed_at: Date | null;
-  lessee_signed_at: Date | null;
-  lessor_signature: string | null;
-  lessee_signature: string | null;
+  partyA_sign_status: number;
+  partyB_sign_status: number;
+  partyA_signed_at: Date | null;
+  partyB_signed_at: Date | null;
+  partyA_signature: string | null;
+  partyB_signature: string | null;
   sign_date: Date | null;
+
   // 签署邀请
   invite_code: string | null;
   invite_expires_at: Date | null;
+
   // 合同文档
   contract_pdf_path: string | null;
-  // 物品清单
-  item_tv_qty: number;
-  item_wardrobe_qty: number;
-  item_tv_remote_qty: number;
-  item_tv_table_qty: number;
-  item_box_qty: number;
-  item_sofa_qty: number;
-  item_coffee_table_qty: number;
-  item_dining_table_qty: number;
-  item_chair_qty: number;
-  item_bed_qty: number;
-  item_nightstand_qty: number;
-  item_curtain_qty: number;
-  item_ac_qty: number;
-  item_ac_remote_qty: number;
-  item_fridge_qty: number;
-  item_mattress_qty: number;
-  item_washer_qty: number;
-  item_water_heater_qty: number;
-  item_gas_stove_qty: number;
-  item_hood_qty: number;
-  item_induction_qty: number;
-  item_door_card_qty: number;
-  item_water_card_qty: number;
-  item_power_card_qty: number;
-  // 状态
-  status: ContractStatus;
+
+  // 物品清单（JSON格式）
+  inventory_items: InventoryItems;
+
+  // 状态时间
   effective_at: Date | null;
   expires_at: Date | null;
   reject_reason: string | null;
-  created_by: number;
+
   created_at: Date;
   updated_at: Date;
 }
@@ -163,179 +135,142 @@ export interface ContractRow extends RowDataPacket, IContract {}
 export interface IContractCreate {
   title: string;
   lessor_user_id: number;
-  lessor_name: string;
-  lessor_phone: string;
-  lessor_phone2?: string;
-  lessor_idcard?: string;
-  lessor_account?: string;
+
+  // 甲方信息
   partyA_company?: string;
-  lessor_contact?: string;
-  lessee_name: string;
-  lessee_phone: string;
-  lessee_idcard?: string;
+  partyA_phone?: string;
+  partyA_contact?: string;
+  partyA_phone2?: string;
+  partyA_account?: string;
+  partyA_idcard?: string;
+
+  // 乙方信息
+  partyB_name: string;
+  partyB_phone: string;
+  partyB_idCard?: string;
+  partyB_contact?: string;
+
+  // 房屋信息
   house_address: string;
   house_area?: number;
   rent_purpose?: string;
+
+  // 租赁期限
   lease_start: string;
   lease_end: string;
   lease_months?: number;
   advance_notice_days?: number;
+
+  // 租金和支付
   monthly_rent: number;
   year_rent?: number;
   payment_method: PaymentMethod;
-  payment_cycle?: string;
+  payment_cycle?: number;
   payment_count?: number;
   first_payment_amount?: number;
   first_payment_date?: string;
   second_payment_amount?: number;
   second_payment_date?: string;
   third_payment_amount?: number;
-  third_payment_date?: string;
   deposit?: number;
   deposit_chinese?: string;
+  total_amount?: number;
+
+  // 费用约定
   fee_water?: boolean;
   fee_electric?: boolean;
   fee_gas?: boolean;
-  fee_tv?: boolean;
-  fee_network?: boolean;
   fee_property?: boolean;
   fee_heating?: boolean;
+
+  // 居间服务
+  intermediary_name?: string;
   partyA_commission?: number;
   partyA_commission_chinese?: string;
   partyB_commission?: number;
   partyB_commission_chinese?: string;
-  electricity_meter?: number;
-  water_meter?: number;
-  gas_meter?: number;
+
+  // 水电表读数
+  electricity_meter?: string;
+  water_meter?: string;
+  gas_meter?: string;
+
+  // 备注
   remark?: string;
-  // 签署状态
-  lessor_sign_status?: number;
-  lessee_sign_status?: number;
-  lessor_signed_at?: string;
-  lessee_signed_at?: string;
-  lessor_signature?: string;
-  lessee_signature?: string;
-  sign_date?: string;
-  // 签署邀请
-  invite_code?: string;
-  invite_expires_at?: string;
-  // 合同文档
-  contract_pdf_path?: string;
-  // 物品清单
-  item_tv_qty?: number;
-  item_wardrobe_qty?: number;
-  item_tv_remote_qty?: number;
-  item_tv_table_qty?: number;
-  item_box_qty?: number;
-  item_sofa_qty?: number;
-  item_coffee_table_qty?: number;
-  item_dining_table_qty?: number;
-  item_chair_qty?: number;
-  item_bed_qty?: number;
-  item_nightstand_qty?: number;
-  item_curtain_qty?: number;
-  item_ac_qty?: number;
-  item_ac_remote_qty?: number;
-  item_fridge_qty?: number;
-  item_mattress_qty?: number;
-  item_washer_qty?: number;
-  item_water_heater_qty?: number;
-  item_gas_stove_qty?: number;
-  item_hood_qty?: number;
-  item_induction_qty?: number;
-  item_door_card_qty?: number;
-  item_water_card_qty?: number;
-  item_power_card_qty?: number;
-  items?: Array<{ name: string; quantity: string; unit: string }>;
+
+  // 物品清单（JSON格式）
+  inventory_items?: InventoryItems;
 }
 
 // 更新合同数据
 export interface IContractUpdate {
   title?: string;
   lessor_user_id?: number;
-  lessor_name?: string;
-  lessor_phone?: string;
-  lessor_phone2?: string;
-  lessor_idcard?: string;
-  lessor_account?: string;
+
+  // 甲方信息
   partyA_company?: string;
-  lessor_contact?: string;
-  lessee_name?: string;
-  lessee_phone?: string;
-  lessee_idcard?: string;
+  partyA_phone?: string;
+  partyA_contact?: string;
+  partyA_phone2?: string;
+  partyA_account?: string;
+  partyA_idcard?: string;
+
+  // 乙方信息
+  partyB_name?: string;
+  partyB_phone?: string;
+  partyB_idCard?: string;
+  partyB_contact?: string;
+
+  // 房屋信息
   house_address?: string;
   house_area?: number;
   rent_purpose?: string;
+
+  // 租赁期限
   lease_start?: string;
   lease_end?: string;
   lease_months?: number;
   advance_notice_days?: number;
+
+  // 租金和支付
   monthly_rent?: number;
   year_rent?: number;
   payment_method?: PaymentMethod;
-  payment_cycle?: string;
+  payment_cycle?: number;
   payment_count?: number;
   first_payment_amount?: number;
   first_payment_date?: string;
   second_payment_amount?: number;
   second_payment_date?: string;
   third_payment_amount?: number;
-  third_payment_date?: string;
   deposit?: number;
   deposit_chinese?: string;
+  total_amount?: number;
+
+  // 费用约定
   fee_water?: boolean;
   fee_electric?: boolean;
   fee_gas?: boolean;
-  fee_tv?: boolean;
-  fee_network?: boolean;
   fee_property?: boolean;
   fee_heating?: boolean;
+
+  // 居间服务
+  intermediary_name?: string;
   partyA_commission?: number;
   partyA_commission_chinese?: string;
   partyB_commission?: number;
   partyB_commission_chinese?: string;
-  electricity_meter?: number;
-  water_meter?: number;
-  gas_meter?: number;
+
+  // 水电表读数
+  electricity_meter?: string;
+  water_meter?: string;
+  gas_meter?: string;
+
+  // 备注
   remark?: string;
-  // 签署状态
-  lessor_sign_status?: number;
-  lessee_sign_status?: number;
-  lessor_signed_at?: string;
-  lessee_signed_at?: string;
-  lessor_signature?: string;
-  lessee_signature?: string;
-  sign_date?: string;
-  // 签署邀请
-  invite_code?: string;
-  invite_expires_at?: string;
-  // 合同文档
-  contract_pdf_path?: string;
-  // 物品清单
-  item_tv_qty?: number;
-  item_wardrobe_qty?: number;
-  item_tv_remote_qty?: number;
-  item_tv_table_qty?: number;
-  item_box_qty?: number;
-  item_sofa_qty?: number;
-  item_coffee_table_qty?: number;
-  item_dining_table_qty?: number;
-  item_chair_qty?: number;
-  item_bed_qty?: number;
-  item_nightstand_qty?: number;
-  item_curtain_qty?: number;
-  item_ac_qty?: number;
-  item_ac_remote_qty?: number;
-  item_fridge_qty?: number;
-  item_mattress_qty?: number;
-  item_washer_qty?: number;
-  item_water_heater_qty?: number;
-  item_gas_stove_qty?: number;
-  item_hood_qty?: number;
-  item_induction_qty?: number;
-  item_door_card_qty?: number;
-  item_water_card_qty?: number;
-  item_power_card_qty?: number;
+
+  // 物品清单（JSON格式）
+  inventory_items?: InventoryItems;
 }
 
 // 合同查询参数
@@ -380,7 +315,7 @@ export const ContractStatusFlow = {
 
 // 检查状态是否可以流转
 export const canTransitionTo = (currentStatus: ContractStatus, targetStatus: ContractStatus): boolean => {
-  const allowedTransitions = ContractStatusFlow[currentStatus];
+  const allowedTransitions = ContractStatusFlow[currentStatus] as unknown as ContractStatus[];
   if (!allowedTransitions) {
     return false;
   }

@@ -43,9 +43,60 @@ const PAYMENT_METHODS = {
 
 // 用户角色（与后端 UserRole 一致）
 const USER_ROLE = {
-  PARTY_A: 'PARTY_A',      // 甲方（出租方）
-  PARTY_B: 'PARTY_B'       // 乙方（承租方）
+  LESSOR: 'LESSOR',      // 甲方（出租方）- 房东
+  LESSEE: 'LESSEE',       // 乙方（承租方）- 租客
+  ADMIN: 'ADMIN'          // 系统管理员
 }
+
+// 字段映射：旧字段 -> 新字段（lessor_* -> partyA_*, lessee_* -> partyB_*）
+const FIELD_MAPPING_LESSOR = {
+  lessor_name: 'partyA_company',
+  lessor_phone: 'partyA_phone',
+  lessor_phone2: 'partyA_phone2',
+  lessor_contact: 'partyA_contact',
+  lessor_idcard: 'partyA_idcard',
+  lessor_account: 'partyA_account'
+}
+
+const FIELD_MAPPING_LESSEE = {
+  lessee_name: 'partyB_name',
+  lessee_phone: 'partyB_phone',
+  lessee_idcard: 'partyB_idCard',
+  lessee_contact: 'partyB_contact'
+}
+
+// 物品清单字段映射（name -> templateField）
+const INVENTORY_ITEMS_MAPPING = {
+  '电视': 'item_tv_qty',
+  '衣柜': 'item_wardrobe_qty',
+  '电视（遥控器）': 'item_tv_remote_qty',
+  '电视柜': 'item_tv_table_qty',
+  '机顶盒（遥控器）': 'item_box_qty',
+  '沙发': 'item_sofa_qty',
+  '茶几': 'item_coffee_table_qty',
+  '餐桌': 'item_dining_table_qty',
+  '餐桌椅': 'item_chair_qty',
+  '床': 'item_bed_qty',
+  '床头柜': 'item_nightstand_qty',
+  '窗帘': 'item_curtain_qty',
+  '空调': 'item_ac_qty',
+  '空调（遥控器）': 'item_ac_remote_qty',
+  '冰箱': 'item_fridge_qty',
+  '床垫子': 'item_mattress_qty',
+  '洗衣机': 'item_washer_qty',
+  '热水器': 'item_water_heater_qty',
+  '煤气灶': 'item_gas_stove_qty',
+  '油烟机': 'item_hood_qty',
+  '电磁灶': 'item_induction_qty',
+  '门禁卡': 'item_door_card_qty',
+  '水卡': 'item_water_card_qty',
+  '电卡': 'item_power_card_qty'
+}
+
+// 物品清单反向映射（templateField -> name）
+const INVENTORY_ITEMS_REVERSE_MAPPING = Object.fromEntries(
+  Object.entries(INVENTORY_ITEMS_MAPPING).map(([name, field]) => [field, name])
+)
 
 // 事件名称
 const EVENT_NAME = {
@@ -96,6 +147,10 @@ module.exports = {
   USER_ROLE,
   EVENT_NAME,
   STORAGE_KEYS,
+  FIELD_MAPPING_LESSOR,
+  FIELD_MAPPING_LESSEE,
+  INVENTORY_ITEMS_MAPPING,
+  INVENTORY_ITEMS_REVERSE_MAPPING,
   getStatusText,
   getStatusColor,
   getPaymentMethodText

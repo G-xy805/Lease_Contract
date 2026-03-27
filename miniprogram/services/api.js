@@ -220,6 +220,53 @@ function realNameVerify(data) {
   })
 }
 
+// ==================== 管理员模块 ====================
+
+/**
+ * 申请成为甲方
+ */
+function applyLessor() {
+  return request('/users/apply-lessor', {
+    method: 'POST',
+    loadingText: '申请中...'
+  })
+}
+
+/**
+ * 审核甲方申请
+ * @param {number} userId - 用户ID
+ * @param {boolean} approved - 是否通过
+ */
+function auditLessor(userId, approved) {
+  return request('/users/audit-lessor', {
+    method: 'POST',
+    data: { userId, approved },
+    loadingText: '审核中...'
+  })
+}
+
+/**
+ * 封禁用户
+ * @param {number} userId - 用户ID
+ */
+function banUser(userId) {
+  return request(`/users/${userId}/ban`, {
+    method: 'POST',
+    loadingText: '封禁中...'
+  })
+}
+
+/**
+ * 解封用户
+ * @param {number} userId - 用户ID
+ */
+function unbanUser(userId) {
+  return request(`/users/${userId}/unban`, {
+    method: 'POST',
+    loadingText: '解封中...'
+  })
+}
+
 // ==================== 合同模块（甲方） ====================
 
 /**
@@ -366,6 +413,63 @@ function generateContractPdf(id) {
 }
 
 /**
+ * 下载合同PDF
+ * @param {number} id - 合同ID
+ * @returns {Promise<string>} 返回本地文件路径
+ */
+function downloadContractPdf(id) {
+  return new Promise((resolve, reject) => {
+    const token = wx.getStorageSync('token')
+    const staticBase = getApp().globalData.baseUrl || 'http://localhost:3000'
+
+    // 先调用 API 获取 PDF URL
+    wx.request({
+      url: `${BASE_URL}/contracts/${id}/pdf`,
+      method: 'GET',
+      header: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      success: (res) => {
+        if (res.data.code === 200 && res.data.data?.url) {
+          // 拼接 PDF 下载地址（uploads 在根路径 /uploads）
+          const pdfUrl = `${staticBase}${res.data.data.url}`
+          console.log('PDF下载地址:', pdfUrl)
+
+          // 下载文件到本地
+          wx.downloadFile({
+            url: pdfUrl,
+            header: {
+              'Authorization': `Bearer ${token}`
+            },
+            success: (downloadRes) => {
+              console.log('downloadFile响应:', downloadRes)
+              if (downloadRes.statusCode === 200 && downloadRes.tempFilePath) {
+                console.log('下载成功, tempFilePath:', downloadRes.tempFilePath)
+                resolve(downloadRes.tempFilePath)
+              } else {
+                console.error('下载失败, statusCode:', downloadRes.statusCode)
+                reject(new Error(`下载失败, statusCode: ${downloadRes.statusCode}`))
+              }
+            },
+            fail: (err) => {
+              console.error('下载PDF失败:', err)
+              reject(err)
+            }
+          })
+        } else {
+          reject(new Error(res.data.message || '获取PDF失败'))
+        }
+      },
+      fail: (err) => {
+        console.error('请求PDF失败:', err)
+        reject(err)
+      }
+    })
+  })
+}
+
+/**
  * 验证合同真伪
  * @param {string} code - 合同编号
  */
@@ -507,6 +611,12 @@ module.exports = {
   updateProfile,
   realNameVerify,
 
+  // 管理员模块
+  applyLessor,
+  auditLessor,
+  banUser,
+  unbanUser,
+
   // 合同模块
   getLandlordContracts,
   getTenantContracts,
@@ -521,6 +631,7 @@ module.exports = {
   rejectContract,
   cancelContract,
   generateContractPdf,
+  downloadContractPdf,
   verifyContract,
 
   // 邀请模块

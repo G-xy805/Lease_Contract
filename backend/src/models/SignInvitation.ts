@@ -80,6 +80,8 @@ export interface IInvitationResponse {
   expires_at: Date;
   accepted_at: Date | null;
   created_at: Date;
+  contract_title?: string;
+  house_address?: string;
 }
 
 // 合同信息响应（通过邀请码获取）

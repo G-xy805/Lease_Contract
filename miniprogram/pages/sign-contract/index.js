@@ -112,61 +112,46 @@ Page({
   // 通过邀请码加载合同信息
   loadContractByInviteCode(inviteCode) {
     wx.showLoading({ title: '加载中...' })
-    wx.request({
-      url: `${app.globalData.baseUrl}/api/invitations/${inviteCode}/verify`,
-      method: 'GET',
-      header: {
-        'Authorization': `Bearer ${wx.getStorageSync('token') || ''}`
-      },
-      success: (res) => {
-        wx.hideLoading()
-        if (res.data.code === 200) {
-          const contract = res.data.data.contract
-          this.setData({
-            'contractInfo.id': contract.id,
-            'contractInfo.title': contract.title || '房屋租赁合同',
-            'contractInfo.contractNo': contract.contract_no || '',
-            'contractInfo.partyA': contract.lessor_name || '',
-            'contractInfo.partyB': contract.lessee_name || '',
-            'contractInfo.status': 'pending_sign'
-          })
-        } else {
-          wx.showToast({ title: res.data.message || '无效的邀请码', icon: 'none' })
-        }
-      },
-      fail: () => {
-        wx.hideLoading()
-        wx.showToast({ title: '网络错误', icon: 'none' })
+    api.verifyInviteCode(inviteCode).then(res => {
+      wx.hideLoading()
+      if (res.code === 200) {
+        const contract = res.data
+        this.setData({
+          'contractInfo.id': contract.contract_id,
+          'contractInfo.title': contract.title || '房屋租赁合同',
+          'contractInfo.contractNo': contract.contract_no || '',
+          'contractInfo.partyA': contract.partyA_company || '',
+          'contractInfo.partyB': contract.partyB_name || '',
+          'contractInfo.status': 'pending_sign'
+        })
+      } else {
+        wx.showToast({ title: res.message || '无效的邀请码', icon: 'none' })
       }
+    }).catch(err => {
+      wx.hideLoading()
+      wx.showToast({ title: '网络错误', icon: 'none' })
     })
   },
 
   // 加载合同详情
   loadContractInfo(contractId) {
     wx.showLoading({ title: '加载中...' })
-    wx.request({
-      url: `${app.globalData.baseUrl}/api/contracts/${contractId}`,
-      method: 'GET',
-      header: {
-        'Authorization': `Bearer ${wx.getStorageSync('token') || ''}`
-      },
-      success: (res) => {
-        wx.hideLoading()
-        if (res.data.code === 200) {
-          const contract = res.data.data.contract
-          this.setData({
-            'contractInfo.id': contract.id,
-            'contractInfo.title': contract.title || '房屋租赁合同',
-            'contractInfo.contractNo': contract.contract_no || '',
-            'contractInfo.partyA': contract.lessor_name || '',
-            'contractInfo.partyB': contract.lessee_name || '',
-            'contractInfo.status': contract.status === 3 ? 'pending_sign' : 'pending'
-          })
-        }
-      },
-      fail: () => {
-        wx.hideLoading()
+    api.getContractDetail(contractId).then(res => {
+      wx.hideLoading()
+      if (res.code === 200) {
+        const contract = res.data.contract
+        this.setData({
+          'contractInfo.id': contract.id,
+          'contractInfo.title': contract.title || '房屋租赁合同',
+          'contractInfo.contractNo': contract.contract_no || '',
+          'contractInfo.partyA': contract.partyA_company || contract.lessor_name || '',
+          'contractInfo.partyB': contract.partyB_name || contract.lessee_name || '',
+          'contractInfo.status': contract.status === 3 ? 'pending_sign' : 'pending'
+        })
       }
+    }).catch(err => {
+      wx.hideLoading()
+      console.error('加载合同详情失败', err)
     })
   },
 
@@ -409,35 +394,6 @@ Page({
   goToResult() {
     this.setData({ showResult: false })
     wx.navigateBack()
-  },
-
-  // 点击清除签名
-  showClearConfirmDialog() {
-    if (!this.data.hasSigned) return
-
-    wx.showModal({
-      title: '确认清除',
-      content: '确定要清除当前签名吗？',
-      confirmText: '清除',
-      confirmColor: '#ee0a24',
-      success: (res) => {
-        if (res.confirm) {
-          this.clearSign()
-        }
-      }
-    })
-  },
-
-  // 提交签名
-  submitSign() {
-    if (!this.data.hasSigned) {
-      wx.showToast({
-        title: '请先完成签名',
-        icon: 'none'
-      })
-      return
-    }
-    this.confirmSign()
   },
 
   // 点击清除签名

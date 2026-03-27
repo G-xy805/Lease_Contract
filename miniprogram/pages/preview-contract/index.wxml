@@ -98,11 +98,11 @@
       <view class="info-grid">
         <view class="info-item">
           <text class="info-label">租赁开始</text>
-          <text class="info-value">{{formatDate(rentInfo.leaseStart)}}</text>
+          <text class="info-value">{{rentInfo.leaseStart}}</text>
         </view>
         <view class="info-item">
           <text class="info-label">租赁结束</text>
-          <text class="info-value">{{formatDate(rentInfo.leaseEnd)}}</text>
+          <text class="info-value">{{rentInfo.leaseEnd}}</text>
         </view>
         <view class="info-item">
           <text class="info-label">租赁月数</text>
@@ -115,53 +115,87 @@
       </view>
     </view>
 
-    <!-- 租金信息 -->
+    <!-- 租金及押金信息 -->
     <view class="card">
-      <view class="section-title">四、租金及支付方式</view>
+      <view class="section-title">四、租金及押金</view>
       <view class="info-grid">
         <view class="info-item">
           <text class="info-label">月租金</text>
           <text class="info-value highlight">¥{{rentInfo.monthlyRent}}</text>
         </view>
         <view class="info-item" wx:if="{{rentInfo.yearRent}}">
-          <text class="info-label">年租金</text>
+          <text class="info-label">租金总计</text>
           <text class="info-value">¥{{rentInfo.yearRent}}</text>
         </view>
         <view class="info-item">
-          <text class="info-label">支付方式</text>
-          <text class="info-value">{{paymentInfo.method}}</text>
+          <text class="info-label">押金</text>
+          <text class="info-value highlight">¥{{depositInfo.amount}}</text>
         </view>
-        <view class="info-item" wx:if="{{paymentInfo.firstAmount}}">
-          <text class="info-label">首期金额</text>
-          <text class="info-value">¥{{paymentInfo.firstAmount}}</text>
-        </view>
-        <view class="info-item" wx:if="{{paymentInfo.firstDate}}">
-          <text class="info-label">首期支付日期</text>
-          <text class="info-value">{{formatDate(paymentInfo.firstDate)}}</text>
-        </view>
-        <view class="info-item" wx:if="{{paymentInfo.secondAmount}}">
-          <text class="info-label">第二期金额</text>
-          <text class="info-value">¥{{paymentInfo.secondAmount}}</text>
-        </view>
-        <view class="info-item" wx:if="{{paymentInfo.secondDate}}">
-          <text class="info-label">第二期日期</text>
-          <text class="info-value">{{formatDate(paymentInfo.secondDate)}}</text>
+        <view class="info-item" wx:if="{{depositInfo.chinese}}">
+          <text class="info-label">押金大写</text>
+          <text class="info-value">{{depositInfo.chinese}}</text>
         </view>
       </view>
     </view>
 
-    <!-- 押金信息 -->
-    <view class="card" wx:if="{{depositInfo.amount}}">
-      <view class="section-title">五、押金</view>
-      <view class="deposit-box">
-        <text class="deposit-amount">¥{{depositInfo.amount}}</text>
-        <text class="deposit-chinese" wx:if="{{depositInfo.chinese}}">（{{depositInfo.chinese}}）</text>
+    <!-- 支付方式 -->
+    <view class="card">
+      <view class="section-title">五、支付方式</view>
+      <view class="info-grid">
+        <view class="info-item">
+          <text class="info-label">支付方式</text>
+          <text class="info-value">{{paymentInfo.method}}</text>
+        </view>
+        <view class="info-item" wx:if="{{paymentInfo.cycleText}}">
+          <text class="info-label">支付周期</text>
+          <text class="info-value">{{paymentInfo.cycleText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 分期付款计划 -->
+    <view class="card" wx:if="{{paymentInfo.firstAmount}}">
+      <view class="section-title">六、分期付款计划</view>
+      <view class="payment-plan">
+        <view class="payment-item">
+          <view class="payment-title">第一期付款</view>
+          <view class="payment-row">
+            <text class="payment-label">金额</text>
+            <text class="payment-value">¥{{paymentInfo.firstAmount}}</text>
+          </view>
+          <view class="payment-row" wx:if="{{paymentInfo.firstDate}}">
+            <text class="payment-label">日期</text>
+            <text class="payment-value">{{paymentInfo.firstDate}}</text>
+          </view>
+        </view>
+        <view class="payment-item" wx:if="{{paymentInfo.secondAmount}}">
+          <view class="payment-title">第二期付款</view>
+          <view class="payment-row">
+            <text class="payment-label">金额</text>
+            <text class="payment-value">¥{{paymentInfo.secondAmount}}</text>
+          </view>
+          <view class="payment-row" wx:if="{{paymentInfo.secondDate}}">
+            <text class="payment-label">日期</text>
+            <text class="payment-value">{{paymentInfo.secondDate}}</text>
+          </view>
+        </view>
+        <view class="payment-item" wx:if="{{paymentInfo.thirdAmount}}">
+          <view class="payment-title">第三期付款</view>
+          <view class="payment-row">
+            <text class="payment-label">金额</text>
+            <text class="payment-value">¥{{paymentInfo.thirdAmount}}</text>
+          </view>
+          <view class="payment-row" wx:if="{{paymentInfo.thirdDate}}">
+            <text class="payment-label">日期</text>
+            <text class="payment-value">{{paymentInfo.thirdDate}}</text>
+          </view>
+        </view>
       </view>
     </view>
 
     <!-- 物品清单 -->
     <view class="card" wx:if="{{inventoryItems.length > 0}}">
-      <view class="section-title">六、房屋物品清单</view>
+      <view class="section-title">七、房屋物品清单</view>
       <view class="inventory-grid">
         <view class="inventory-item" wx:for="{{inventoryItems}}" wx:key="index">
           <text class="item-name">{{item.name}}</text>
@@ -172,7 +206,7 @@
 
     <!-- 费用约定 -->
     <view class="card" wx:if="{{fees.length > 0}}">
-      <view class="section-title">七、费用约定</view>
+      <view class="section-title">八、费用约定</view>
       <view class="fees-list">
         <view class="fee-item" wx:for="{{fees}}" wx:key="index">
           <text class="fee-label">{{item.label}}</text>
@@ -181,9 +215,31 @@
       </view>
     </view>
 
+    <!-- 居间服务费 -->
+    <view class="card" wx:if="{{commissions.length > 0}}">
+      <view class="section-title">九、居间服务费</view>
+      <view class="fees-list">
+        <view class="fee-item" wx:for="{{commissions}}" wx:key="index">
+          <text class="fee-label">{{item.party}}应支付</text>
+          <text class="fee-value highlight">¥{{item.amount}}{{item.chinese ? ' (' + item.chinese + ')' : ''}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 水电表读数 -->
+    <view class="card" wx:if="{{meters.length > 0}}">
+      <view class="section-title">十、水电表读数</view>
+      <view class="info-grid">
+        <view class="info-item" wx:for="{{meters}}" wx:key="index">
+          <text class="info-label">{{item.label}}</text>
+          <text class="info-value">{{item.value}}</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 备注 -->
     <view class="card" wx:if="{{remark}}">
-      <view class="section-title">八、备注</view>
+      <view class="section-title">十一、备注</view>
       <view class="remark-text">{{remark}}</view>
     </view>
 

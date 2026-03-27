@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { uploadImage, uploadFile, generateContractPdf } from '../controllers/uploadController';
+import { uploadImage, uploadFile } from '../controllers/uploadController';
 
 const router = Router();
 
@@ -14,7 +14,6 @@ const createStorage = (subDir: string) => {
       cb(null, uploadPath);
     },
     filename: (req, file, cb) => {
-      // 生成唯一文件名，保留原始扩展名
       const ext = path.extname(file.originalname);
       const uniqueName = `${uuidv4()}${ext}`;
       cb(null, uniqueName);
@@ -23,7 +22,7 @@ const createStorage = (subDir: string) => {
 };
 
 // 文件过滤器
-const imageFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const imageFilter = (req: any, file: any, cb: any) => {
   const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
   if (allowedImageTypes.includes(file.mimetype)) {
     cb(null, true);
@@ -32,7 +31,7 @@ const imageFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterC
   }
 };
 
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (req: any, file: any, cb: any) => {
   const allowedFileTypes = [
     'application/pdf',
     'application/msword',
@@ -55,7 +54,7 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
 const imageUpload = multer({
   storage: createStorage('images'),
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB
+    fileSize: 5 * 1024 * 1024
   },
   fileFilter: imageFilter
 });
@@ -63,25 +62,15 @@ const imageUpload = multer({
 const fileUpload = multer({
   storage: createStorage('files'),
   limits: {
-    fileSize: 50 * 1024 * 1024 // 50MB
+    fileSize: 50 * 1024 * 1024
   },
   fileFilter: fileFilter
 });
 
 // 错误处理中间件
-const handleMulterError = (err: Error, req: Request, res: Response, next: NextFunction) => {
-  if (err instanceof multer.MulterError) {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({
-        code: 400,
-        message: '文件大小超过限制'
-      });
-    }
-    return res.status(400).json({
-      code: 400,
-      message: err.message
-    });
-  } else if (err) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const handleMulterError = (err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err) {
     return res.status(400).json({
       code: 400,
       message: err.message
@@ -93,7 +82,7 @@ const handleMulterError = (err: Error, req: Request, res: Response, next: NextFu
 // 确保上传目录存在
 import fs from 'fs';
 const ensureUploadDirs = () => {
-  const dirs = ['uploads/images', 'uploads/files', 'uploads/pdfs'];
+  const dirs = ['uploads/images', 'uploads/files'];
   dirs.forEach(dir => {
     const fullPath = path.join(process.cwd(), dir);
     if (!fs.existsSync(fullPath)) {
@@ -108,20 +97,13 @@ ensureUploadDirs();
  * @desc 图片上传接口
  * @access public
  */
-router.post('/image', imageUpload.single('file'), handleMulterError, uploadImage);
+router.post('/image', imageUpload.single('file') as any, handleMulterError, uploadImage as any);
 
 /**
  * @route POST /api/upload/file
  * @desc 文件上传接口
  * @access public
  */
-router.post('/file', fileUpload.single('file'), handleMulterError, uploadFile);
-
-/**
- * @route GET /api/contracts/:id/pdf
- * @desc 生成合同PDF接口
- * @access public
- */
-router.get('/contracts/:id/pdf', generateContractPdf);
+router.post('/file', fileUpload.single('file') as any, handleMulterError, uploadFile as any);
 
 export default router;

@@ -1,5 +1,6 @@
 // pages/contracts/index.js
 const app = getApp()
+const api = require('../../services/api')
 const { CONTRACT_STATUS, CONTRACT_STATUS_TEXT, CONTRACT_STATUS_COLOR } = require('../../utils/constants')
 
 // Tab空状态文案配置
@@ -114,53 +115,42 @@ Page({
       params.keyword = searchValue
     }
 
-    wx.request({
-      url: `${app.globalData.baseUrl}/api/contracts/landlord`,
-      method: 'GET',
-      data: params,
-      header: {
-        'Authorization': `Bearer ${app.globalData.token || wx.getStorageSync('token')}`,
-        'Content-Type': 'application/json'
-      },
-      success: (res) => {
-        if (res.data.code === 200) {
-          const result = res.data.data?.list || []
-          const total = res.data.data?.total || 0
+    api.getLandlordContracts(params).then(res => {
+      if (res.code === 200) {
+        const result = res.data?.list || []
+        const total = res.data?.total || 0
 
-          this.setData({
-            contracts: isRefresh || isLoadMore ? result : [...this.data.contracts, ...result],
-            hasMore: result.length >= pageSize && (isRefresh || isLoadMore ? result.length < total : this.data.contracts.length < total),
-            page: isRefresh || isLoadMore ? 2 : this.data.page + 1,
-            skeletonLoading: false
-          })
-        } else {
-          wx.showToast({
-            title: res.data.message || '获取合同列表失败',
-            icon: 'none'
-          })
-          this.setData({ skeletonLoading: false })
-        }
-      },
-      fail: (err) => {
-        console.error('获取合同列表失败', err)
-        wx.showToast({
-          title: '网络错误，请稍后重试',
-          icon: 'none'
-        })
         this.setData({
-          contracts: [],
-          hasMore: false,
+          contracts: isRefresh || isLoadMore ? result : [...this.data.contracts, ...result],
+          hasMore: result.length >= pageSize && (isRefresh || isLoadMore ? result.length < total : this.data.contracts.length < total),
+          page: isRefresh || isLoadMore ? 2 : this.data.page + 1,
           skeletonLoading: false
         })
-      },
-      complete: () => {
-        this.setData({
-          loading: false,
-          refreshing: false,
-          loadingMore: false
+      } else {
+        wx.showToast({
+          title: res.message || '获取合同列表失败',
+          icon: 'none'
         })
-        wx.stopPullDownRefresh()
+        this.setData({ skeletonLoading: false })
       }
+    }).catch(err => {
+      console.error('获取合同列表失败', err)
+      wx.showToast({
+        title: '网络错误，请稍后重试',
+        icon: 'none'
+      })
+      this.setData({
+        contracts: [],
+        hasMore: false,
+        skeletonLoading: false
+      })
+    }).finally(() => {
+      this.setData({
+        loading: false,
+        refreshing: false,
+        loadingMore: false
+      })
+      wx.stopPullDownRefresh()
     })
   },
 
@@ -261,35 +251,25 @@ Page({
   },
 
   doDeleteContract(id) {
-    wx.request({
-      url: `${app.globalData.baseUrl}/api/contracts/${id}`,
-      method: 'DELETE',
-      header: {
-        'Authorization': `Bearer ${app.globalData.token || wx.getStorageSync('token')}`,
-        'Content-Type': 'application/json'
-      },
-      success: (res) => {
-        if (res.data.code === 200) {
-          wx.showToast({
-            title: '删除成功',
-            icon: 'success'
-          })
-          // 从列表中移除
-          const contracts = this.data.contracts.filter(c => c.id !== id)
-          this.setData({ contracts })
-        } else {
-          wx.showToast({
-            title: res.data.message || '删除失败',
-            icon: 'none'
-          })
-        }
-      },
-      fail: () => {
+    api.deleteContract(id).then(res => {
+      if (res.code === 200) {
         wx.showToast({
-          title: '网络错误',
+          title: '删除成功',
+          icon: 'success'
+        })
+        const contracts = this.data.contracts.filter(c => c.id !== id)
+        this.setData({ contracts })
+      } else {
+        wx.showToast({
+          title: res.message || '删除失败',
           icon: 'none'
         })
       }
+    }).catch(() => {
+      wx.showToast({
+        title: '网络错误',
+        icon: 'none'
+      })
     })
   },
 

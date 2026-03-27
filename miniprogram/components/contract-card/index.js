@@ -1,5 +1,5 @@
 // components/contract-card/index.js
-const { CONTRACT_STATUS_TEXT, CONTRACT_STATUS_COLOR } = require('../../utils/constants')
+const { CONTRACT_STATUS_TEXT, CONTRACT_STATUS_COLOR, USER_ROLE } = require('../../utils/constants')
 
 Component({
   properties: {
@@ -9,13 +9,14 @@ Component({
     },
     type: {
       type: String,
-      value: 'PARTY_A'
+      value: USER_ROLE.LESSOR
     }
   },
 
   data: {
     CONTRACT_STATUS_TEXT,
-    CONTRACT_STATUS_COLOR
+    CONTRACT_STATUS_COLOR,
+    USER_ROLE
   },
 
   methods: {

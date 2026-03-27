@@ -61,3 +61,8 @@ env/
 .DS_Store
 Thumbs.db
 .trae/
+backend/node_modules/
+backend/dist/
+backend/uploads/
+miniprogram/miniprogram_npm/
+miniprogram/node_modules/

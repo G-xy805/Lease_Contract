@@ -106,7 +106,7 @@
             </view>
             <view class="contract-info">
               <van-icon name="user-o" size="32rpx" class="info-icon" />
-              <text class="text-sm text-gray">乙方：{{item.lessee_name || '未知'}}</text>
+              <text class="text-sm text-gray">乙方：{{item.partyB_name || item.lessee_name || '未知'}}</text>
             </view>
             <view class="contract-info">
               <van-icon name="paid" size="32rpx" class="info-icon" />

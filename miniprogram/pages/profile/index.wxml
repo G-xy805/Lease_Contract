@@ -22,8 +22,8 @@
         <view class="user-details">
           <view class="name-row">
             <text class="nickname">{{userInfo.name || '未设置昵称'}}</text>
-            <view class="role-tag" wx:if="{{userInfo.role === 'PARTY_A'}}">甲方</view>
-            <view class="role-tag role-tenant" wx:elif="{{userInfo.role === 'PARTY_B'}}">乙方</view>
+            <view class="role-tag" wx:if="{{userInfo.role === USER_ROLE.LESSOR}}">甲方</view>
+            <view class="role-tag role-tenant" wx:elif="{{userInfo.role === USER_ROLE.LESSEE}}">乙方</view>
           </view>
           <text class="phone">{{userInfo.phone || '未绑定手机'}}</text>
         </view>
@@ -119,6 +119,13 @@
           <view class="menu-item-left">
             <van-icon name="info-o" size="40rpx" color="#07c160" />
             <text>身份信息</text>
+          </view>
+          <van-icon name="arrow" size="32rpx" color="#c8c9cc" />
+        </view>
+        <view class="menu-item" bindtap="onApplyLessor" wx:if="{{userInfo.role === USER_ROLE.LESSEE}}">
+          <view class="menu-item-left">
+            <van-icon name="upgrade" size="40rpx" color="#07c160" />
+            <text>申请成为甲方</text>
           </view>
           <van-icon name="arrow" size="32rpx" color="#c8c9cc" />
         </view>

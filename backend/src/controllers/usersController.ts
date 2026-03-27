@@ -14,9 +14,26 @@ import {
   UserRole,
   UserRow
 } from '../models/User';
+import { RowDataPacket } from 'mysql2';
 
 // 存储模拟验证码（本地开发用）
 const verificationCodes: Map<string, { code: string; expiresAt: Date }> = new Map();
+
+/**
+ * 获取角色显示名称
+ */
+const getRoleName = (role: string): string => {
+  switch (role) {
+    case UserRole.LESSOR:
+      return '房东';
+    case UserRole.LESSEE:
+      return '租客';
+    case UserRole.ADMIN:
+      return '管理员';
+    default:
+      return '未知';
+  }
+};
 
 /**
  * 生成6位数字验证码
@@ -52,7 +69,11 @@ const findOrCreateUser = async (data: IUserRegister): Promise<IUser> => {
 
   // 创建新用户（id由数据库自动生成）
   const now = new Date().toISOString();
-  const role = data.role || UserRole.PARTY_B;
+  // 检查是否是第一个用户
+  const userCount = await query<RowDataPacket[]>('SELECT COUNT(*) as count FROM users');
+  const isFirstUser = userCount[0].count === 0;
+  // 如果是第一个用户，角色设为 ADMIN
+  const role = isFirstUser ? UserRole.ADMIN : (data.role || UserRole.LESSEE);
 
   const result = await insert(
     `INSERT INTO users (openid, phone, name, real_name_status, role, created_at, updated_at)
@@ -84,7 +105,7 @@ export const wechatLogin = async (req: Request, res: Response): Promise<void> =>
     const user = await findOrCreateUser({
       openid,
       phone: '',
-      role: role || UserRole.PARTY_B
+      role: role || UserRole.LESSEE
     });
 
     // 生成JWT令牌
@@ -103,7 +124,8 @@ export const wechatLogin = async (req: Request, res: Response): Promise<void> =>
         name: user.name,
         real_name_status: user.real_name_status,
         role: user.role as UserRole,
-        roleName: user.role === UserRole.PARTY_A ? '甲方' : '乙方'
+        roleName: getRoleName(user.role),
+        status: user.status
       }
     };
 
@@ -185,7 +207,8 @@ export const phoneLogin = async (req: Request, res: Response): Promise<void> => 
         name: user.name,
         real_name_status: user.real_name_status,
         role: user.role as UserRole,
-        roleName: user.role === UserRole.PARTY_A ? '甲方' : '乙方'
+        roleName: getRoleName(user.role),
+        status: user.status
       }
     };
 
@@ -297,12 +320,11 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
       phone: user.phone,
       name: user.name,
       idcard: user.idcard,
-      idcard_front: user.idcard_front,
-      idcard_back: user.idcard_back,
       real_name_status: user.real_name_status,
       real_name_at: user.real_name_at,
       role: user.role as UserRole,
-      roleName: user.role === UserRole.PARTY_A ? '甲方' : '乙方',
+      roleName: getRoleName(user.role),
+      status: user.status,
       created_at: user.created_at
     };
 
@@ -327,7 +349,7 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
 export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
-    const { name, idcard_front, idcard_back } = req.body as IUserProfileUpdate;
+    const { name } = req.body as IUserProfileUpdate;
 
     if (!userId) {
       res.status(401).json({
@@ -354,14 +376,6 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
     if (name !== undefined) {
       updates.push('name = ?');
       values.push(name);
-    }
-    if (idcard_front !== undefined) {
-      updates.push('idcard_front = ?');
-      values.push(idcard_front);
-    }
-    if (idcard_back !== undefined) {
-      updates.push('idcard_back = ?');
-      values.push(idcard_back);
     }
 
     if (updates.length === 0) {
@@ -391,12 +405,11 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
       phone: user.phone,
       name: user.name,
       idcard: user.idcard,
-      idcard_front: user.idcard_front,
-      idcard_back: user.idcard_back,
       real_name_status: user.real_name_status,
       real_name_at: user.real_name_at,
       role: user.role as UserRole,
-      roleName: user.role === UserRole.PARTY_A ? '甲方' : '乙方',
+      roleName: getRoleName(user.role),
+      status: user.status,
       created_at: user.created_at
     };
 
@@ -421,7 +434,7 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
 export const realNameVerify = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
-    const { name, idcard, idcard_front, idcard_back } = req.body as IRealNameVerify;
+    const { name, idcard } = req.body as IRealNameVerify;
 
     if (!userId) {
       res.status(401).json({
@@ -467,9 +480,8 @@ export const realNameVerify = async (req: AuthRequest, res: Response): Promise<v
       // 开发环境直接认证成功
       const now = new Date().toISOString();
       await execute(
-        `UPDATE users SET name = ?, idcard = ?, idcard_front = ?, idcard_back = ?,
-         real_name_status = ?, real_name_at = ?, updated_at = ? WHERE id = ?`,
-        [name, idcard, idcard_front || null, idcard_back || null, RealNameStatus.VERIFIED, now, now, userId]
+        `UPDATE users SET name = ?, idcard = ?, real_name_status = ?, real_name_at = ?, updated_at = ? WHERE id = ?`,
+        [name, idcard, RealNameStatus.VERIFIED, now, now, userId]
       );
 
       // 返回更新后的用户信息
@@ -482,10 +494,11 @@ export const realNameVerify = async (req: AuthRequest, res: Response): Promise<v
         phone: user.phone,
         name: user.name,
         idcard: user.idcard,
-        idcard_front: user.idcard_front,
-        idcard_back: user.idcard_back,
         real_name_status: user.real_name_status,
         real_name_at: user.real_name_at,
+        role: user.role as UserRole,
+        roleName: getRoleName(user.role),
+        status: user.status,
         created_at: user.created_at
       };
 
@@ -504,9 +517,8 @@ export const realNameVerify = async (req: AuthRequest, res: Response): Promise<v
       if (thirdPartyResult.success) {
         const now = new Date().toISOString();
         await execute(
-          `UPDATE users SET name = ?, idcard = ?, idcard_front = ?, idcard_back = ?,
-           real_name_status = ?, real_name_at = ?, updated_at = ? WHERE id = ?`,
-          [name, idcard, idcard_front || null, idcard_back || null, RealNameStatus.VERIFIED, now, now, userId]
+          `UPDATE users SET name = ?, idcard = ?, real_name_status = ?, real_name_at = ?, updated_at = ? WHERE id = ?`,
+          [name, idcard, RealNameStatus.VERIFIED, now, now, userId]
         );
 
         const updatedUsers = await query<UserRow[]>('SELECT * FROM users WHERE id = ?', [userId]);
@@ -526,9 +538,8 @@ export const realNameVerify = async (req: AuthRequest, res: Response): Promise<v
         });
       } else {
         await execute(
-          `UPDATE users SET name = ?, idcard = ?, idcard_front = ?, idcard_back = ?,
-           real_name_status = ?, updated_at = ? WHERE id = ?`,
-          [name, idcard, idcard_front || null, idcard_back || null, RealNameStatus.FAILED, new Date().toISOString(), userId]
+          `UPDATE users SET name = ?, idcard = ?, real_name_status = ?, updated_at = ? WHERE id = ?`,
+          [name, idcard, RealNameStatus.FAILED, new Date().toISOString(), userId]
         );
 
         res.status(400).json({
@@ -539,6 +550,271 @@ export const realNameVerify = async (req: AuthRequest, res: Response): Promise<v
     }
   } catch (error) {
     console.error('实名认证错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '服务器内部错误'
+    });
+  }
+};
+
+/**
+ * POST /api/users/apply-lessor
+ * 申请成为甲方
+ */
+export const applyLessor = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({
+        code: 401,
+        message: '用户未认证'
+      });
+      return;
+    }
+
+    // 检查用户是否已是 LESSOR 或 ADMIN
+    const users = await query<UserRow[]>('SELECT * FROM users WHERE id = ?', [userId]);
+    if (users.length === 0) {
+      res.status(404).json({
+        code: 404,
+        message: '用户不存在'
+      });
+      return;
+    }
+
+    const user = users[0];
+    if (user.role === UserRole.LESSOR) {
+      res.status(400).json({
+        code: 400,
+        message: '您已经是房东'
+      });
+      return;
+    }
+
+    if (user.role === UserRole.ADMIN) {
+      res.status(400).json({
+        code: 400,
+        message: '管理员无需申请'
+      });
+      return;
+    }
+
+    // 将用户角色更新为 LESSOR（待审核状态，实际审核由管理员操作）
+    // 这里暂时直接改role，实际生产环境可能需要单独的申请状态字段
+    await execute(
+      'UPDATE users SET role = ?, updated_at = ? WHERE id = ?',
+      [UserRole.LESSOR, new Date().toISOString(), userId]
+    );
+
+    res.json({
+      code: 200,
+      message: '申请成功，请等待管理员审核'
+    });
+  } catch (error) {
+    console.error('申请成为甲方错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '服务器内部错误'
+    });
+  }
+};
+
+/**
+ * POST /api/users/audit-lessor
+ * 管理员审核甲方申请
+ */
+export const auditLessor = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const currentUserId = req.user?.userId;
+    const { userId, approved } = req.body;
+
+    if (!currentUserId) {
+      res.status(401).json({
+        code: 401,
+        message: '用户未认证'
+      });
+      return;
+    }
+
+    if (!userId) {
+      res.status(400).json({
+        code: 400,
+        message: '目标用户ID不能为空'
+      });
+      return;
+    }
+
+    // 验证当前用户是 ADMIN
+    const currentUsers = await query<UserRow[]>('SELECT * FROM users WHERE id = ?', [currentUserId]);
+    if (currentUsers.length === 0 || currentUsers[0].role !== UserRole.ADMIN) {
+      res.status(403).json({
+        code: 403,
+        message: '只有管理员才能审核'
+      });
+      return;
+    }
+
+    // 检查目标用户是否存在
+    const targetUsers = await query<UserRow[]>('SELECT * FROM users WHERE id = ?', [userId]);
+    if (targetUsers.length === 0) {
+      res.status(404).json({
+        code: 404,
+        message: '目标用户不存在'
+      });
+      return;
+    }
+
+    // 根据审核结果更新目标用户的 role
+    const newRole = approved ? UserRole.LESSOR : UserRole.LESSEE;
+    await execute(
+      'UPDATE users SET role = ?, updated_at = ? WHERE id = ?',
+      [newRole, new Date().toISOString(), userId]
+    );
+
+    res.json({
+      code: 200,
+      message: approved ? '审核通过，用户已成为房东' : '审核拒绝，用户角色已恢复'
+    });
+  } catch (error) {
+    console.error('审核甲方申请错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '服务器内部错误'
+    });
+  }
+};
+
+/**
+ * POST /api/users/:id/ban
+ * 管理员封禁用户
+ */
+export const banUser = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const currentUserId = req.user?.userId;
+    const targetUserId = parseInt(req.params.id);
+
+    if (!currentUserId) {
+      res.status(401).json({
+        code: 401,
+        message: '用户未认证'
+      });
+      return;
+    }
+
+    if (isNaN(targetUserId)) {
+      res.status(400).json({
+        code: 400,
+        message: '无效的用户ID'
+      });
+      return;
+    }
+
+    // 验证当前用户是 ADMIN
+    const currentUsers = await query<UserRow[]>('SELECT * FROM users WHERE id = ?', [currentUserId]);
+    if (currentUsers.length === 0 || currentUsers[0].role !== UserRole.ADMIN) {
+      res.status(403).json({
+        code: 403,
+        message: '只有管理员才能封禁用户'
+      });
+      return;
+    }
+
+    // 检查目标用户是否存在
+    const targetUsers = await query<UserRow[]>('SELECT * FROM users WHERE id = ?', [targetUserId]);
+    if (targetUsers.length === 0) {
+      res.status(404).json({
+        code: 404,
+        message: '目标用户不存在'
+      });
+      return;
+    }
+
+    // 不能封禁自己
+    if (targetUserId === currentUserId) {
+      res.status(400).json({
+        code: 400,
+        message: '不能封禁自己'
+      });
+      return;
+    }
+
+    // 更新目标用户的 status = 1
+    await execute(
+      'UPDATE users SET status = 1, updated_at = ? WHERE id = ?',
+      [new Date().toISOString(), targetUserId]
+    );
+
+    res.json({
+      code: 200,
+      message: '用户已封禁'
+    });
+  } catch (error) {
+    console.error('封禁用户错误:', error);
+    res.status(500).json({
+      code: 500,
+      message: '服务器内部错误'
+    });
+  }
+};
+
+/**
+ * POST /api/users/:id/unban
+ * 管理员解封用户
+ */
+export const unbanUser = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const currentUserId = req.user?.userId;
+    const targetUserId = parseInt(req.params.id);
+
+    if (!currentUserId) {
+      res.status(401).json({
+        code: 401,
+        message: '用户未认证'
+      });
+      return;
+    }
+
+    if (isNaN(targetUserId)) {
+      res.status(400).json({
+        code: 400,
+        message: '无效的用户ID'
+      });
+      return;
+    }
+
+    // 验证当前用户是 ADMIN
+    const currentUsers = await query<UserRow[]>('SELECT * FROM users WHERE id = ?', [currentUserId]);
+    if (currentUsers.length === 0 || currentUsers[0].role !== UserRole.ADMIN) {
+      res.status(403).json({
+        code: 403,
+        message: '只有管理员才能解封用户'
+      });
+      return;
+    }
+
+    // 检查目标用户是否存在
+    const targetUsers = await query<UserRow[]>('SELECT * FROM users WHERE id = ?', [targetUserId]);
+    if (targetUsers.length === 0) {
+      res.status(404).json({
+        code: 404,
+        message: '目标用户不存在'
+      });
+      return;
+    }
+
+    // 更新目标用户的 status = 0
+    await execute(
+      'UPDATE users SET status = 0, updated_at = ? WHERE id = ?',
+      [new Date().toISOString(), targetUserId]
+    );
+
+    res.json({
+      code: 200,
+      message: '用户已解封'
+    });
+  } catch (error) {
+    console.error('解封用户错误:', error);
     res.status(500).json({
       code: 500,
       message: '服务器内部错误'

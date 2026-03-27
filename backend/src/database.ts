@@ -86,7 +86,28 @@ function migrateMissingColumns() {
   if (!sqliteDb) return;
 
   const alterStatements = [
-    "ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'PARTY_B'",
+    // users 表迁移
+    // role 字段: PARTY_B -> LESSEE
+    "ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'LESSEE'",
+    // status 字段
+    "ALTER TABLE users ADD COLUMN status INTEGER DEFAULT 0",
+
+    // contracts 表迁移 - 甲乙方字段重命名
+    "ALTER TABLE contracts ADD COLUMN partyA_company VARCHAR(200)",
+    "ALTER TABLE contracts ADD COLUMN partyA_phone VARCHAR(20)",
+    "ALTER TABLE contracts ADD COLUMN partyA_idcard VARCHAR(18)",
+    "ALTER TABLE contracts ADD COLUMN partyA_account VARCHAR(100)",
+    "ALTER TABLE contracts ADD COLUMN partyA_contact VARCHAR(100)",
+    "ALTER TABLE contracts ADD COLUMN partyA_phone2 VARCHAR(20)",
+    "ALTER TABLE contracts ADD COLUMN partyB_name VARCHAR(100)",
+    "ALTER TABLE contracts ADD COLUMN partyB_phone VARCHAR(20)",
+    "ALTER TABLE contracts ADD COLUMN partyB_idCard VARCHAR(18)",
+    "ALTER TABLE contracts ADD COLUMN partyB_contact VARCHAR(100)",
+
+    // 物品清单改为 JSON
+    "ALTER TABLE contracts ADD COLUMN inventory_items TEXT",
+
+    // 合同基础信息
     "ALTER TABLE contracts ADD COLUMN lessor_account VARCHAR(100)",
     "ALTER TABLE contracts ADD COLUMN rent_purpose VARCHAR(50)",
     "ALTER TABLE contracts ADD COLUMN lease_months INTEGER",
@@ -100,49 +121,33 @@ function migrateMissingColumns() {
     "ALTER TABLE contracts ADD COLUMN third_payment_amount DECIMAL(10,2)",
     "ALTER TABLE contracts ADD COLUMN third_payment_date DATE",
     "ALTER TABLE contracts ADD COLUMN deposit_chinese VARCHAR(100)",
+    "ALTER TABLE contracts ADD COLUMN total_amount DECIMAL(12,2)",
+
+    // 费用约定 - 保留 fee_water, fee_electric, fee_gas, fee_property, fee_heating
     "ALTER TABLE contracts ADD COLUMN fee_water BOOLEAN DEFAULT 1",
     "ALTER TABLE contracts ADD COLUMN fee_electric BOOLEAN DEFAULT 1",
     "ALTER TABLE contracts ADD COLUMN fee_gas BOOLEAN DEFAULT 1",
-    "ALTER TABLE contracts ADD COLUMN fee_tv BOOLEAN DEFAULT 1",
-    "ALTER TABLE contracts ADD COLUMN fee_network BOOLEAN DEFAULT 1",
     "ALTER TABLE contracts ADD COLUMN fee_property BOOLEAN DEFAULT 0",
     "ALTER TABLE contracts ADD COLUMN fee_heating BOOLEAN DEFAULT 0",
+
+    // 居间信息
     "ALTER TABLE contracts ADD COLUMN intermediary_name VARCHAR(100)",
     "ALTER TABLE contracts ADD COLUMN partyA_commission DECIMAL(10,2)",
     "ALTER TABLE contracts ADD COLUMN partyB_commission DECIMAL(10,2)",
-    "ALTER TABLE contracts ADD COLUMN electricity_meter DECIMAL(10,2)",
-    "ALTER TABLE contracts ADD COLUMN water_meter DECIMAL(10,2)",
-    "ALTER TABLE contracts ADD COLUMN gas_meter DECIMAL(10,2)",
+
+    // 签署信息
+    "ALTER TABLE contracts ADD COLUMN partyA_sign_status INTEGER DEFAULT 0",
+    "ALTER TABLE contracts ADD COLUMN partyB_sign_status INTEGER DEFAULT 0",
+
+    // 物品清单相关
+    "ALTER TABLE contracts ADD COLUMN electricity_meter VARCHAR(50)",
+    "ALTER TABLE contracts ADD COLUMN water_meter VARCHAR(50)",
+    "ALTER TABLE contracts ADD COLUMN gas_meter VARCHAR(50)",
+
+    // 其他
     "ALTER TABLE contracts ADD COLUMN remark TEXT",
     "ALTER TABLE contracts ADD COLUMN reject_reason VARCHAR(255)",
-    "ALTER TABLE contracts ADD COLUMN year_rent DECIMAL(10,2)",
-    "ALTER TABLE contracts ADD COLUMN partyA_company VARCHAR(200)",
-    "ALTER TABLE contracts ADD COLUMN lessor_contact VARCHAR(50)",
-    "ALTER TABLE contracts ADD COLUMN lessee_contact VARCHAR(50)",
-    "ALTER TABLE contracts ADD COLUMN item_tv_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_wardrobe_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_tv_remote_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_tv_table_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_box_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_sofa_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_coffee_table_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_dining_table_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_chair_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_bed_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_nightstand_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_curtain_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_ac_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_ac_remote_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_fridge_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_mattress_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_washer_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_water_heater_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_gas_stove_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_hood_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_induction_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_door_card_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_water_card_qty INTEGER DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN item_power_card_qty INTEGER DEFAULT 0"
+    "ALTER TABLE contracts ADD COLUMN year_rent DECIMAL(10,2)"
   ];
 
   for (const sql of alterStatements) {
@@ -153,84 +158,15 @@ function migrateMissingColumns() {
     }
   }
 
-  // 创建物品清单表
-  try {
-    sqliteDb.exec(`
-      CREATE TABLE IF NOT EXISTS contract_inventory (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        contract_id INTEGER NOT NULL,
-        item_name VARCHAR(100) NOT NULL,
-        item_quantity VARCHAR(20) DEFAULT NULL,
-        item_unit VARCHAR(10) DEFAULT NULL,
-        item_confirmed BOOLEAN DEFAULT FALSE,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (contract_id) REFERENCES contracts(id)
-      )
-    `);
-  } catch (e) {
-    // 表已存在
-  }
-
-  // 创建签署记录表
-  try {
-    sqliteDb.exec(`
-      CREATE TABLE IF NOT EXISTS signatures (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        contract_id INTEGER NOT NULL,
-        user_id INTEGER NOT NULL,
-        sign_type VARCHAR(20) DEFAULT 'image_upload',
-        sign_role VARCHAR(20) NOT NULL,
-        sign_image TEXT,
-        sign_data TEXT,
-        sign_ip VARCHAR(50),
-        sign_device VARCHAR(255),
-        sign_location VARCHAR(255),
-        signed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (contract_id) REFERENCES contracts(id),
-        FOREIGN KEY (user_id) REFERENCES users(id)
-      )
-    `);
-  } catch (e) {
-    // 表已存在
-  }
-
-  // 创建签署邀请表
-  try {
-    sqliteDb.exec(`
-      CREATE TABLE IF NOT EXISTS sign_invitations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        contract_id INTEGER NOT NULL,
-        invitation_no VARCHAR(64) NOT NULL UNIQUE,
-        invite_type VARCHAR(20) DEFAULT 'tenant',
-        invite_name VARCHAR(100) DEFAULT NULL,
-        invite_phone VARCHAR(20) DEFAULT NULL,
-        invite_email VARCHAR(100) DEFAULT NULL,
-        receiver_type VARCHAR(20) DEFAULT 'tenant',
-        receiver_name VARCHAR(100) DEFAULT NULL,
-        receiver_phone VARCHAR(20) DEFAULT NULL,
-        receiver_email VARCHAR(100) DEFAULT NULL,
-        status INTEGER DEFAULT 0,
-        expires_at DATETIME NOT NULL,
-        accepted_at DATETIME DEFAULT NULL,
-        refused_reason VARCHAR(255) DEFAULT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (contract_id) REFERENCES contracts(id)
-      )
-    `);
-  } catch (e) {
-    // 表已存在
-  }
-
   // 创建索引
   try {
-    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_sign_invitations_receiver_phone ON sign_invitations(receiver_phone)');
-    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_sign_invitations_invitation_no ON sign_invitations(invitation_no)');
-    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_contracts_lessor_phone ON contracts(lessor_phone)');
-    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_contracts_lease_start ON contracts(lease_start)');
-    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_contracts_lease_end ON contracts(lease_end)');
+    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)');
+    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone)');
+    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_users_openid ON users(openid)');
+    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_contracts_partyB_phone ON contracts(partyB_phone)');
+    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_contracts_status ON contracts(status)');
+    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_contracts_lessor_user ON contracts(lessor_user_id)');
+    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_contracts_invite_code ON contracts(invite_code)');
   } catch (e) {
     // 索引已存在
   }
