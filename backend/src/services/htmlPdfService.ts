@@ -29,6 +29,12 @@ export interface RentInfo {
   deposit: number;
   paymentDate: string;
   purpose?: string;
+  paymentCount?: number;
+  firstPaymentAmount?: number;
+  secondPaymentAmount?: number;
+  secondPaymentDate?: string;
+  thirdPaymentAmount?: number;
+  fourthPaymentAmount?: number;
 }
 
 export interface DurationInfo {
@@ -56,6 +62,7 @@ export interface ContractData {
   secondPaymentDate?: string;
   thirdPaymentAmount?: number;
   thirdPaymentDate?: string;
+  fourthPaymentAmount?: number;
   items?: Array<{ name: string; quantity?: string; unit?: string }>;
   electricityMeter?: string;
   waterMeter?: string;
@@ -157,6 +164,7 @@ class HtmlPdfService {
       '{{second_payment_amount}}': (data.secondPaymentAmount || data.rent.amount).toString(),
       '{{second_payment_date}}': data.secondPaymentDate || '',
       '{{third_payment_amount}}': (data.thirdPaymentAmount || 0).toString(),
+      '{{fourth_payment_amount}}': (data.fourthPaymentAmount || 0).toString(),
 
       '{{partyA_commission}}': (data.partyACommission || 0).toString(),
       '{{partyA_commission_chinese}}': this.numberToChinese(data.partyACommission || 0),
@@ -321,6 +329,11 @@ class HtmlPdfService {
     } catch {
       return false;
     }
+  }
+
+  renderContractHtml(contractData: ContractData): string {
+    const template = this.loadTemplate();
+    return this.fillTemplate(template, contractData);
   }
 }
 

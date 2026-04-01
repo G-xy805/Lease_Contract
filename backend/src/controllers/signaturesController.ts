@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { query, insert, execute } from '../database';
+import { RowDataPacket } from 'mysql2';
 import { AuthRequest } from '../middleware/auth';
 import {
   ISignature,
@@ -12,6 +13,12 @@ import {
   ContractStatus,
   IContract
 } from '../models/Signature';
+import { UserRole } from '../models/User';
+
+const isAdminUser = async (userId: number): Promise<boolean> => {
+  const users = await query<RowDataPacket[]>('SELECT role FROM users WHERE id = ?', [userId]);
+  return users.length > 0 && users[0].role === UserRole.ADMIN;
+};
 
 /**
  * 获取客户端IP地址
@@ -119,8 +126,8 @@ export const createSignature = async (req: AuthRequest, res: Response): Promise<
 
     const contract = contracts[0];
 
-    // 验证签署权限
-    if (sign_role === SignRole.LESSOR && contract.created_by !== userId) {
+    const isAdmin = userId ? await isAdminUser(userId) : false;
+    if (sign_role === SignRole.LESSOR && !isAdmin && contract.created_by !== userId) {
       res.status(403).json({
         code: 403,
         message: '您不是该合同的甲方，无权签署'

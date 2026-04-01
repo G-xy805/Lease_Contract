@@ -1,244 +1,190 @@
 <!-- pages/index/index.wxml -->
 <view class="container">
-  <!-- 用户信息卡片 - 优化：角色切换器+精美卡片 -->
-  <view class="user-card">
-    <view class="user-card-inner" wx:if="{{userInfo}}">
-      <view class="user-avatar-wrapper">
-        <van-image
-          round
-          width="120rpx"
-          height="120rpx"
-          src="{{userInfo.avatarUrl || '/assets/images/default-avatar.png'}}"
-        />
-        <view class="role-badge role-{{userInfo.role === USER_ROLE.LESSOR ? 'a' : 'b'}}">
-          {{userInfo.role === USER_ROLE.LESSOR ? '甲方' : '乙方'}}
+  <!-- 欢迎区域 -->
+  <view class="welcome-section">
+    <view class="welcome-left">
+      <view class="avatar-wrapper">
+        <image class="avatar" src="{{userInfo.avatar || '/assets/images/default-avatar.png'}}" mode="aspectFill" />
+        <view class="avatar-ring"></view>
+      </view>
+      <view class="welcome-info">
+        <text class="welcome-name">{{userInfo.name || '用户'}}</text>
+        <view class="role-badge role-{{userInfo.role === 'LESSOR' ? 'lessor' : userInfo.role === 'ADMIN' ? 'admin' : 'tenant'}}">
+          <van-icon name="{{userInfo.role === 'LESSOR' ? 'home-o' : userInfo.role === 'ADMIN' ? 'setting-o' : 'user-o'}}" class="role-icon" />
+          {{userInfo.role === 'LESSOR' ? '出租方' : userInfo.role === 'ADMIN' ? '管理员' : '承租方'}}
         </view>
       </view>
-      <view class="user-detail">
-        <view class="user-name text-lg text-bold">{{userInfo.name || '用户'}}</view>
-        <view class="user-role-name text-sm text-gray mt-xs">{{userInfo.roleName || ''}}</view>
-      </view>
     </view>
-    <view class="user-card-inner" wx:else>
-      <view class="user-avatar-wrapper">
-        <van-image
-          round
-          width="120rpx"
-          height="120rpx"
-          src="/assets/images/default-avatar.png"
-        />
-      </view>
-      <view class="user-detail">
-        <view class="user-name text-lg text-bold">未登录</view>
-        <view class="user-role-name text-sm text-gray mt-xs">点击登录</view>
-      </view>
+    <view class="notification-btn touch-target" bindtap="goToNotifications">
+      <van-icon name="bell" size="44rpx" color="var(--text-color-secondary)" />
+      <view class="notification-dot" wx:if="{{unreadCount > 0}}"></view>
     </view>
   </view>
 
   <!-- 甲方视图 -->
-  <block wx:if="{{userInfo && userInfo.role === USER_ROLE.LESSOR}}">
-    <!-- 统计卡片 - 3列网格布局 -->
-    <view class="stats-grid">
-      <view class="stat-card stat-draft" bindtap="goToContracts" data-status="draft">
-        <view class="stat-icon-wrapper">
-          <van-icon name="description" size="40rpx" color="#ffffff" />
-        </view>
-        <view class="stat-number text-xl text-bold">{{stats.draftCount}}</view>
-        <view class="stat-label text-sm">草稿</view>
+  <block wx:if="{{userInfo && (userInfo.role === 'LESSOR' || userInfo.role === 'ADMIN')}}">
+    <!-- 统计卡片区域 -->
+    <view class="stats-section">
+      <view class="stats-header">
+        <text class="stats-title">合同概览</text>
       </view>
-      <view class="stat-card stat-pending" bindtap="goToContracts" data-status="pending">
-        <view class="stat-icon-wrapper">
-          <van-icon name="clock" size="40rpx" color="#ffffff" />
+      <view class="stats-grid">
+        <view class="stat-card stat-card-primary interactive" bindtap="goToContracts" data-filter="all">
+          <view class="stat-icon-bg">
+            <van-icon name="orders-o" class="stat-icon" />
+          </view>
+          <view class="stat-content">
+            <text class="stat-num">{{stats.totalCount}}</text>
+            <text class="stat-label">合同总数</text>
+          </view>
+          <view class="stat-decoration"></view>
         </view>
-        <view class="stat-number text-xl text-bold">{{stats.pendingSignCount}}</view>
-        <view class="stat-label text-sm">待签署</view>
-      </view>
-      <view class="stat-card stat-signed" bindtap="goToContracts" data-status="signed">
-        <view class="stat-icon-wrapper">
-          <van-icon name="passed" size="40rpx" color="#ffffff" />
+
+        <view class="stat-card stat-card-warning interactive" bindtap="goToContracts" data-filter="pending">
+          <view class="stat-icon-bg">
+            <van-icon name="clock-o" class="stat-icon" />
+          </view>
+          <view class="stat-content">
+            <text class="stat-num">{{stats.pendingSignCount}}</text>
+            <text class="stat-label">待签署</text>
+          </view>
+          <view class="stat-decoration"></view>
         </view>
-        <view class="stat-number text-xl text-bold">{{stats.signedCount}}</view>
-        <view class="stat-label text-sm">已签署</view>
+
+        <view class="stat-card stat-card-success interactive" bindtap="goToContracts" data-filter="signed">
+          <view class="stat-icon-bg">
+            <van-icon name="passed" class="stat-icon" />
+          </view>
+          <view class="stat-content">
+            <text class="stat-num">{{stats.signedCount}}</text>
+            <text class="stat-label">已签署</text>
+          </view>
+          <view class="stat-decoration"></view>
+        </view>
       </view>
     </view>
 
-    <!-- 创建合同按钮 - 醒目设计 -->
-    <view class="create-btn-wrapper card">
-      <view class="create-btn-inner" bindtap="goToCreateContract">
-        <view class="create-btn-left">
-          <van-icon name="plus-circle" size="48rpx" color="#ffffff" />
-          <text class="create-btn-text">创建新合同</text>
-        </view>
-        <van-icon name="arrow" color="#ffffff" size="32rpx" />
-      </view>
-    </view>
-
-    <!-- 最近合同列表 - 卡片式展示 -->
-    <view class="contract-section card">
+    <!-- 快捷操作 -->
+    <view class="action-section">
       <view class="section-header">
-        <text class="text-lg text-bold">最近合同</text>
-        <view class="view-all" bindtap="goToContracts">
-          <text class="text-sm text-primary">查看全部</text>
-          <van-icon name="arrow" color="#1989fa" size="24rpx" />
+        <text class="section-title">快捷操作</text>
+      </view>
+      <view class="action-buttons">
+        <van-button type="primary" size="large" round block bind:click="goToCreateContract" class="action-btn-primary">
+          <van-icon name="plus" class="btn-icon" />
+          <text class="btn-text">创建合同</text>
+        </van-button>
+        <van-button type="default" size="large" round block bind:click="goToContracts" class="action-btn-secondary">
+          <van-icon name="list" class="btn-icon" />
+          <text class="btn-text-secondary">查看合同列表</text>
+        </van-button>
+      </view>
+    </view>
+
+    <!-- 最近合同 -->
+    <view class="section">
+      <view class="section-header">
+        <text class="section-title">最近操作</text>
+        <view class="section-more interactive" bindtap="goToContracts">
+          <text>查看更多</text>
+          <van-icon name="arrow-right" size="24rpx" />
         </view>
       </view>
+
       <view wx:if="{{recentContracts.length > 0}}" class="contract-list">
         <view
           wx:for="{{recentContracts}}"
           wx:key="id"
-          class="contract-card"
+          class="contract-card interactive"
           bindtap="goToContractDetail"
           data-id="{{item.id}}"
         >
-          <view class="contract-card-header">
-            <view class="contract-title text-bold text-md">{{item.title}}</view>
-            <van-tag type="{{item.status === 4 ? 'success' : item.status === 2 || item.status === 3 ? 'warning' : 'default'}}" size="medium">
-              {{item.statusText}}
-            </van-tag>
-          </view>
-          <view class="contract-card-body">
-            <view class="contract-info-item" wx:if="{{item.propertyAddress}}">
-              <van-icon name="location-o" size="28rpx" color="#969799" />
-              <text class="text-sm text-gray contract-info-text">{{item.propertyAddress}}</text>
+          <view class="contract-status-bar status-color-{{item.status}}"></view>
+          <view class="contract-content">
+            <view class="contract-header">
+              <text class="contract-title text-ellipsis">{{item.title}}</text>
+              <van-tag type="{{item.status === 3 ? 'success' : item.status === 2 ? 'warning' : item.status === 4 ? 'danger' : 'default'}}" size="small">
+                {{item.statusText}}
+              </van-tag>
             </view>
-            <view class="contract-info-item" wx:if="{{item.monthlyRent}}">
-              <van-icon name="coupon-o" size="28rpx" color="#969799" />
-              <text class="text-sm text-gray contract-info-text">¥{{item.monthlyRent}}/月</text>
+            <view class="contract-meta">
+              <van-icon name="clock-o" size="24rpx" class="meta-icon" />
+              <text class="contract-date">{{item.updateTime}}</text>
             </view>
           </view>
-          <view class="contract-card-footer">
-            <text class="text-xs text-gray">{{item.createdAt}}</text>
-            <view class="contract-action-hint">
-              <text class="text-xs text-primary">查看详情</text>
-              <van-icon name="arrow" color="#1989fa" size="20rpx" />
-            </view>
-          </view>
+          <van-icon name="arrow" class="contract-arrow" size="32rpx" color="var(--text-color-tertiary)" />
         </view>
       </view>
-      <van-empty wx:else description="暂无合同" />
+
+      <view wx:else class="empty-state">
+        <view class="empty-illustration">
+          <van-empty description="暂无合同" image="default" />
+        </view>
+        <van-button type="primary" round size="small" bind:click="goToCreateContract" class="create-btn">
+          <van-icon name="plus" class="btn-icon" />
+          立即创建
+        </van-button>
+      </view>
     </view>
   </block>
 
   <!-- 乙方视图 -->
-  <block wx:if="{{userInfo && userInfo.role === USER_ROLE.LESSEE}}">
-    <!-- 邀请码和扫码入口 - 醒目设计 -->
-    <view class="invite-action-cards">
-      <view class="invite-action-card invite-code-card" bindtap="goToVerifyInvite">
-        <view class="invite-action-icon">
-          <van-icon name="edit" size="52rpx" color="#1989fa" />
-        </view>
-        <view class="invite-action-content">
-          <view class="invite-action-title text-bold">输入邀请码</view>
-          <view class="invite-action-desc text-sm text-gray">已有邀请码？输入签署</view>
-        </view>
-        <van-icon name="arrow" color="#969799" size="32rpx" />
-      </view>
-      <view class="invite-action-card scan-card" bindtap="scanInviteCode">
-        <view class="invite-action-icon scan-icon">
-          <van-icon name="scan" size="52rpx" color="#07c160" />
-        </view>
-        <view class="invite-action-content">
-          <view class="invite-action-title text-bold">扫码签署</view>
-          <view class="invite-action-desc text-sm text-gray">扫描合同二维码快速签署</view>
-        </view>
-        <van-icon name="arrow" color="#969799" size="32rpx" />
-      </view>
+  <block wx:if="{{userInfo && userInfo.role === 'LESSEE'}}">
+    <!-- 待签署提醒 -->
+    <view wx:if="{{pendingSignCount > 0}}" class="pending-notice interactive" bindtap="goToMyContracts">
+      <van-notice-bar text="您有 {{pendingSignCount}} 份合同待签署" left-icon="warning-o" color="var(--warning-color-dark)" background="var(--warning-color-light)" />
     </view>
 
-    <!-- 收到的签署邀请入口 -->
-    <view class="invitation-entry card" bindtap="goToInvitations">
-      <view class="invitation-left">
-        <view class="invitation-icon">
-          <van-icon name="envelop-o" size="44rpx" color="#1989fa" />
-        </view>
-        <view class="ml-md">
-          <view class="text-lg text-bold">收到的签署邀请</view>
-          <view class="text-sm text-gray mt-xs">{{pendingInvitationCount}} 待签署</view>
-        </view>
-      </view>
-      <view class="invitation-right">
-        <van-icon name="arrow" color="#999" />
-      </view>
-    </view>
-
-    <!-- 待签署列表 - 卡片式展示 -->
-    <view class="contract-section card">
+    <!-- 快捷操作 -->
+    <view class="action-section">
       <view class="section-header">
-        <text class="text-lg text-bold">待签署</text>
-        <view class="view-all" bindtap="goToInvitations">
-          <text class="text-sm text-primary">查看全部</text>
-          <van-icon name="arrow" color="#1989fa" size="24rpx" />
-        </view>
+        <text class="section-title">我的合同</text>
       </view>
-      <view wx:if="{{pendingList.length > 0}}" class="contract-list">
-        <view
-          wx:for="{{pendingList}}"
-          wx:key="id"
-          class="contract-card pending-card"
-          bindtap="goToInvitePreview"
-          data-id="{{item.id}}"
-          data-contractid="{{item.contractId}}"
-          data-invitationno="{{item.invitationNo}}"
-        >
-          <view class="contract-card-header">
-            <view class="contract-title text-bold text-md">{{item.title}}</view>
-            <van-tag type="warning" size="medium">待签署</van-tag>
-          </view>
-          <view class="contract-card-body">
-            <view class="contract-info-item">
-              <van-icon name="user-o" size="28rpx" color="#969799" />
-              <text class="text-sm text-gray contract-info-text">来自: {{item.partyAName}}</text>
-            </view>
-          </view>
-          <view class="contract-card-footer">
-            <text class="text-xs text-gray">{{item.createdAt}}</text>
-            <view class="contract-action-hint">
-              <text class="text-xs text-primary">去签署</text>
-              <van-icon name="arrow" color="#1989fa" size="20rpx" />
-            </view>
-          </view>
-        </view>
-      </view>
-      <van-empty wx:else description="暂无待签署合同" />
+      <van-button type="primary" size="large" round block bind:click="goToMyContracts" class="action-btn-primary">
+        <van-icon name="orders-o" class="btn-icon" />
+        <text class="btn-text">查看我的合同</text>
+      </van-button>
     </view>
 
-    <!-- 已签署合同列表 -->
-    <view class="contract-section card">
+    <!-- 最近合同 -->
+    <view class="section">
       <view class="section-header">
-        <text class="text-lg text-bold">已签署</text>
+        <text class="section-title">最近操作</text>
       </view>
-      <view wx:if="{{signedList.length > 0}}" class="contract-list">
+
+      <view wx:if="{{recentContracts.length > 0}}" class="contract-list">
         <view
-          wx:for="{{signedList}}"
+          wx:for="{{recentContracts}}"
           wx:key="id"
-          class="contract-card signed-card"
+          class="contract-card interactive"
           bindtap="goToContractDetail"
           data-id="{{item.id}}"
         >
-          <view class="contract-card-header">
-            <view class="contract-title text-bold text-md">{{item.title}}</view>
-            <van-tag type="success" size="medium">已签署</van-tag>
-          </view>
-          <view class="contract-card-footer">
-            <text class="text-xs text-gray">签署时间: {{item.signedAt}}</text>
-            <view class="contract-action-hint">
-              <text class="text-xs text-primary">查看详情</text>
-              <van-icon name="arrow" color="#1989fa" size="20rpx" />
+          <view class="contract-status-bar status-color-{{item.status}}"></view>
+          <view class="contract-content">
+            <view class="contract-header">
+              <text class="contract-title text-ellipsis">{{item.title}}</text>
+              <van-tag type="{{item.status === 3 ? 'success' : item.status === 2 ? 'warning' : item.status === 4 ? 'danger' : 'default'}}" size="small">
+                {{item.statusText}}
+              </van-tag>
+            </view>
+            <view class="contract-meta">
+              <van-icon name="clock-o" size="24rpx" class="meta-icon" />
+              <text class="contract-date">{{item.updateTime}}</text>
             </view>
           </view>
+          <van-icon name="arrow" class="contract-arrow" size="32rpx" color="var(--text-color-tertiary)" />
         </view>
       </view>
-      <van-empty wx:else description="暂无已签署合同" />
+
+      <view wx:else class="empty-state">
+        <van-empty description="暂无合同" image="default" />
+      </view>
     </view>
   </block>
 
-  <!-- 未登录提示 -->
-  <view wx:if="{{!userInfo}}" class="card login-tip">
-    <van-empty description="请先登录">
-      <van-button type="primary" size="small" bind:click="goToLogin">去登录</van-button>
-    </van-empty>
-  </view>
-
   <!-- 加载状态 -->
-  <van-loading class="loading-center" wx:if="{{loading}}" />
+  <view class="loading-overlay" wx:if="{{loading}}">
+    <van-loading type="spinner" size="60rpx" color="var(--primary-color)">加载中...</van-loading>
+  </view>
 </view>

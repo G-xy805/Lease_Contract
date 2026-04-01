@@ -1,283 +1,371 @@
+/* pages/real-name/index.wxss - Optimized */
+
 .container {
   min-height: 100vh;
-  background-color: #f5f5f5;
-  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--background-color);
+  padding: var(--spacing-md);
 }
 
-.steps-wrapper {
-  background-color: #fff;
-  padding: 32rpx 24rpx;
-  margin-bottom: 24rpx;
+/* ========== Page Header ========== */
+.page-header {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-sm) 0;
 }
 
-.content {
-  padding: 0 24rpx;
+.header-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
 }
 
-.section {
-  background-color: #fff;
-  border-radius: 16rpx;
-  margin-bottom: 24rpx;
-  overflow: hidden;
-}
-
-.section-title {
-  font-size: 28rpx;
-  font-weight: 500;
-  color: #333;
-  padding: 24rpx 32rpx 16rpx;
-  border-bottom: 1rpx solid #eee;
-}
-
-/* 身份证上传 */
-.id-card-upload {
-  padding: 24rpx 32rpx 32rpx;
-}
-
-.upload-item {
-  margin-bottom: 24rpx;
-}
-
-.upload-item:last-child {
-  margin-bottom: 0;
-}
-
-.upload-label {
-  font-size: 26rpx;
-  color: #666;
-  margin-bottom: 12rpx;
-}
-
-.upload-box {
-  width: 100%;
-  height: 200rpx;
-  background-color: #f8f8f8;
-  border: 2rpx dashed #ddd;
-  border-radius: 12rpx;
+.header-icon-wrapper {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-light) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-md);
 }
 
-.upload-placeholder {
+.header-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding-top: var(--spacing-xs);
+}
+
+.page-title {
+  display: block;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--text-color-primary);
+}
+
+.page-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
+}
+
+/* ========== Card Base ========== */
+.card {
+  background: var(--card-background);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid var(--border-color);
+}
+
+/* ========== Auth Status Card ========== */
+.auth-status-card {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, var(--card-background) 0%, var(--background-color-light) 100%);
+  border-left: 6rpx solid var(--primary-color);
+}
+
+.status-icon-wrapper {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: var(--spacing-md);
+  flex-shrink: 0;
+}
+
+.status-success {
+  background: var(--success-color-light);
+}
+
+.status-pending {
+  background: var(--warning-color-light);
+}
+
+.status-default {
+  background: var(--primary-color-light);
+}
+
+.status-icon {
+  font-size: 52rpx;
+}
+
+.status-success .status-icon {
+  color: var(--success-color);
+}
+
+.status-pending .status-icon {
+  color: var(--warning-color);
+}
+
+.status-default .status-icon {
+  color: var(--primary-color);
+}
+
+.status-info {
+  flex: 1;
+}
+
+.status-title {
+  display: block;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--text-color-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.status-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+  line-height: 1.5;
+}
+
+/* ========== User Info Card ========== */
+.user-info-card .info-header,
+.auth-form .form-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2rpx solid var(--border-color);
+}
+
+.header-icon-wrapper {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: var(--radius-md);
+  background: var(--primary-color-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+.header-icon-wrapper.sm {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: var(--radius-sm);
+}
+
+.header-title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-color-primary);
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) 0;
+}
+
+.info-row:not(:last-child) {
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.info-label-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.row-icon {
+  color: var(--text-color-tertiary);
+}
+
+.info-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
+}
+
+.info-value {
+  font-size: var(--font-size-md);
+  color: var(--text-color-primary);
+  font-weight: 600;
+}
+
+.info-value.idcard-value {
+  font-family: monospace;
+  letter-spacing: 2rpx;
+}
+
+.verified-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--success-color-light);
+  border-radius: var(--radius-full);
+  color: var(--success-color);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+/* ========== Auth Form ========== */
+.form-item {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-item:last-child {
+  margin-bottom: 0;
+}
+
+.form-label-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+}
+
+.form-icon {
+  color: var(--primary-color);
+}
+
+.form-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+  font-weight: 500;
+}
+
+.required {
+  color: var(--danger-color);
+}
+
+.form-input {
+  background: var(--background-color-light) !important;
+  border-radius: var(--radius-lg) !important;
+  border: 2rpx solid var(--border-color) !important;
+  transition: border-color var(--transition-fast) var(--ease-out);
+}
+
+.form-input:focus {
+  border-color: var(--primary-color) !important;
+}
+
+/* ========== Photo Upload ========== */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.photo-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.photo-label-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+}
+
+.photo-icon {
+  color: var(--text-color-tertiary);
+}
+
+.photo-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+  font-weight: 500;
+}
+
+.photo-upload-area {
+  position: relative;
+  aspect-ratio: 1.5;
+  background: var(--background-color-light);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3rpx dashed var(--border-color);
+  transition: all var(--transition-fast) var(--ease-out);
+}
+
+.photo-upload-area:active {
+  border-color: var(--primary-color);
+  background: var(--primary-color-light);
+}
+
+.photo-upload-area.has-image {
+  border-style: solid;
+  border-color: var(--success-color);
+}
+
+.photo-placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12rpx;
+  color: var(--text-color-placeholder);
+  gap: var(--spacing-xs);
 }
 
-.upload-text {
-  font-size: 24rpx;
-  color: #999;
+.placeholder-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
 }
 
-.preview-image {
+.placeholder-hint {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-placeholder);
+}
+
+.photo-preview {
   width: 100%;
   height: 100%;
 }
 
-.upload-tip {
-  font-size: 22rpx;
-  color: #999;
-  margin-top: 12rpx;
-}
-
-/* 人脸核身 */
-.face-verification {
-  padding: 24rpx 32rpx 32rpx;
-}
-
-.face-box {
-  width: 100%;
-  height: 240rpx;
-  background-color: #f8f8f8;
-  border: 2rpx dashed #ddd;
-  border-radius: 12rpx;
+.photo-tip {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16rpx;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--background-color-light);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
 }
 
-.face-box.verified {
-  border-color: #07c160;
-  background-color: #f0f9f0;
+.photo-tip van-icon {
+  color: var(--primary-color);
 }
 
-.face-text {
-  font-size: 26rpx;
-  color: #666;
+/* ========== Submit Section ========== */
+.submit-section {
+  padding: var(--spacing-lg) var(--spacing-sm);
 }
 
-/* 协议 */
-.agreement {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  padding: 24rpx 32rpx;
-  background-color: #fff;
-  border-radius: 16rpx;
-  margin-bottom: 24rpx;
-}
-
-.agreement-text {
-  font-size: 24rpx;
-  color: #666;
-  margin-left: 8rpx;
-}
-
-.link {
-  font-size: 24rpx;
-  color: #1989fa;
-}
-
-/* 提交按钮 */
 .submit-btn {
-  padding: 32rpx;
-}
-
-/* 状态卡片通用 */
-.status-card {
-  background-color: #fff;
-  border-radius: 16rpx;
-  padding: 48rpx 32rpx;
-  text-align: center;
-  margin-bottom: 24rpx;
-}
-
-.status-icon {
-  margin-bottom: 24rpx;
-}
-
-.status-title {
-  font-size: 36rpx;
+  height: 96rpx;
+  font-size: var(--font-size-md);
   font-weight: 600;
-  color: #333;
-  margin-bottom: 16rpx;
+  box-shadow: var(--shadow-md);
 }
 
-.status-desc {
-  font-size: 26rpx;
-  color: #666;
-  margin-bottom: 32rpx;
+.submit-btn .btn-icon {
+  margin-right: var(--spacing-sm);
+  font-size: 36rpx;
 }
 
-/* 审核中 */
-.status-card.pending .status-icon {
-  display: flex;
-  justify-content: center;
-}
-
-.status-info {
-  background-color: #f8f8f8;
-  border-radius: 12rpx;
-  padding: 24rpx;
-  text-align: left;
-}
-
-.info-item {
-  display: flex;
-  font-size: 26rpx;
-  margin-bottom: 12rpx;
-}
-
-.info-item:last-child {
-  margin-bottom: 0;
-}
-
-.info-label {
-  color: #666;
-}
-
-.info-value {
-  color: #333;
-}
-
-/* 成功 */
-.status-card.success .success-icon {
-  width: 120rpx;
+.bottom-placeholder {
   height: 120rpx;
-  background-color: #07c160;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 24rpx;
-}
-
-.certified-info {
-  background-color: #f8f8f8;
-  border-radius: 12rpx;
-  padding: 24rpx;
-  text-align: left;
-}
-
-/* 失败 */
-.status-card.failed .failed-icon {
-  width: 120rpx;
-  height: 120rpx;
-  background-color: #ee0a24;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 24rpx;
-}
-
-.failed-reason {
-  background-color: #fff5f5;
-  border-radius: 12rpx;
-  padding: 24rpx;
-  text-align: left;
-  margin-top: 16rpx;
-}
-
-.reason-title {
-  font-size: 26rpx;
-  color: #ee0a24;
-  font-weight: 500;
-  margin-bottom: 8rpx;
-}
-
-.reason-content {
-  font-size: 26rpx;
-  color: #666;
-  line-height: 1.6;
-}
-
-/* 提示卡片 */
-.tips-card {
-  background-color: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx 32rpx;
-}
-
-.tips-title {
-  font-size: 28rpx;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 16rpx;
-}
-
-.tips-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
-}
-
-.tips-list text {
-  font-size: 26rpx;
-  color: #666;
-  line-height: 1.5;
-}
-
-.tips-list text::before {
-  content: "• ";
-}
-
-/* 操作按钮 */
-.action-btns {
-  padding: 32rpx;
 }

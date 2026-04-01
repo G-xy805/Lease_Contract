@@ -1,50 +1,258 @@
-/* pages/login/index.wxss */
+/* pages/login/index.wxss - Optimized */
+
 .container {
   min-height: 100vh;
-  background-color: #f5f5f5;
-  padding: 0 24rpx;
-  box-sizing: border-box;
+  background: linear-gradient(180deg, var(--primary-color-light) 0%, var(--background-color) 50%);
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-xl);
 }
 
-.login-header {
+/* 品牌区域 - Enhanced */
+.brand-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 80rpx 0 60rpx;
+  padding: var(--spacing-xxl) 0 var(--spacing-xl);
+  animation: fadeIn var(--transition-slow) var(--ease-out);
 }
 
-.login-form {
-  padding: 40rpx 32rpx;
-}
-
-.code-btn {
-  width: 160rpx;
-}
-
-.logo-placeholder {
+.brand-logo-wrapper {
   width: 160rpx;
   height: 160rpx;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #f0f9f0 0%, #e0f0e0 100%);
+  border-radius: var(--radius-2xl);
+  background: var(--card-background);
+  box-shadow: var(--shadow-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20rpx;
+  margin-bottom: var(--spacing-lg);
+  overflow: hidden;
+  border: 4rpx solid var(--primary-color-light);
 }
 
-.tab-content {
-  min-height: 400rpx;
+.brand-logo {
+  width: 120rpx;
+  height: 120rpx;
 }
 
-.btn-icon {
-  margin-right: 8rpx;
+.brand-name {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--text-color-primary);
+  margin-bottom: var(--spacing-xs);
+  letter-spacing: -0.02em;
 }
 
-.login-tip {
-  padding: 0 40rpx;
+.brand-slogan {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
+  letter-spacing: 0.05em;
 }
 
-.login-tip .van-icon {
-  vertical-align: middle;
-  margin-right: 4rpx;
+/* 登录表单 */
+.login-form {
+  flex: 1;
+  animation: slideUp var(--transition-slow) var(--ease-out);
+  animation-delay: 100ms;
+  animation-fill-mode: backwards;
+}
+
+.form-card {
+  background: var(--card-background);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-lg);
+  border: 1rpx solid var(--border-color);
+}
+
+.form-title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--text-color-primary);
+  text-align: center;
+  margin-bottom: var(--spacing-xs);
+  letter-spacing: -0.01em;
+}
+
+.form-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.form-item {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+  margin-bottom: var(--spacing-sm);
+  font-weight: 500;
+}
+
+.label-icon {
+  margin-right: var(--spacing-xs);
+  color: var(--primary-color);
+}
+
+/* 自定义输入框 */
+.custom-input {
+  background: var(--background-color-light) !important;
+  border-radius: var(--radius-md) !important;
+  padding: var(--spacing-md) !important;
+  font-size: var(--font-size-md) !important;
+  transition: all var(--transition-fast) var(--ease-out);
+  border: 2rpx solid transparent !important;
+}
+
+.custom-input:focus {
+  border-color: var(--primary-color) !important;
+  background: var(--card-background) !important;
+}
+
+/* 验证码输入 */
+.code-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.code-input-wrapper .van-field {
+  flex: 1;
+}
+
+.code-btn {
+  flex-shrink: 0;
+  min-width: 180rpx;
+  height: 72rpx;
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast) var(--ease-out);
+}
+
+.code-btn:not(.code-btn-disabled) {
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+.code-btn-disabled {
+  background: var(--background-color-light) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-color-tertiary) !important;
+}
+
+/* 协议 */
+.agreement-row {
+  margin-bottom: var(--spacing-xl);
+}
+
+.agreement-checkbox {
+  display: flex;
+  align-items: flex-start;
+}
+
+.agreement-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
+  line-height: var(--line-height-normal);
+}
+
+.link {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+/* 登录按钮 */
+.login-btn {
+  height: 100rpx;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast) var(--ease-out);
+}
+
+.login-btn:not(.van-button--disabled) {
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+.login-btn:not(.van-button--disabled):active {
+  transform: scale(0.98);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-text {
+  letter-spacing: 0.05em;
+}
+
+/* 底部信息 - Enhanced */
+.footer-section {
+  padding: var(--spacing-xl) 0 var(--spacing-lg);
+  animation: fadeIn var(--transition-slow) var(--ease-out);
+  animation-delay: 200ms;
+  animation-fill-mode: backwards;
+}
+
+.footer-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.divider-line {
+  flex: 1;
+  height: 1rpx;
+  background: var(--border-color);
+}
+
+.divider-text {
+  padding: 0 var(--spacing-md);
+  font-size: var(--font-size-xs);
+  color: var(--text-color-placeholder);
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.footer-links .link {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+}
+
+.dot {
+  color: var(--text-color-placeholder);
+  font-size: var(--font-size-xs);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

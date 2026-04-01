@@ -1,13 +1,12 @@
 {
   "usingComponents": {
     "van-button": "@vant/weapp/button/index",
-    "van-image": "@vant/weapp/image/index",
-    "van-icon": "@vant/weapp/icon/index",
-    "van-cell": "@vant/weapp/cell/index",
+    "van-card": "@vant/weapp/card/index",
     "van-tag": "@vant/weapp/tag/index",
     "van-empty": "@vant/weapp/empty/index",
-    "van-loading": "@vant/weapp/loading/index"
+    "van-loading": "@vant/weapp/loading/index",
+    "van-notice-bar": "@vant/weapp/notice-bar/index"
   },
-  "navigationBarTitleText": "首页",
+  "navigationBarTitleText": "租赁合同",
   "enablePullDownRefresh": true
 }

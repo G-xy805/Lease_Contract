@@ -1,96 +1,181 @@
 <view class="container">
+  <!-- 页面标题 -->
   <view class="header">
-    <text class="title">输入邀请码</text>
-    <text class="subtitle">请输入甲方分享的合同邀请码</text>
+    <view class="header-icon">
+      <van-icon name="invitation" size="48rpx" color="var(--primary-color)" />
+    </view>
+    <text class="title">签署邀请</text>
+    <text class="subtitle">请验证合同信息并完成签署</text>
   </view>
 
-  <view class="input-section" wx:if="{{!verified}}">
-    <van-field
-      value="{{inviteCode}}"
-      placeholder="请输入邀请码"
-      border="{{ false }}"
-      bind:change="onInviteCodeInput"
-      size="large"
-    />
-    <van-button
-      type="primary"
-      block
-      loading="{{loading}}"
-      bind:click="verifyInviteCode"
-      class="verify-btn"
-    >
-      验证邀请码
+  <!-- 加载状态 -->
+  <view class="loading-section" wx:if="{{loading}}">
+    <view class="loading-animation">
+      <van-loading type="spinner" size="72rpx" color="var(--primary-color)" />
+    </view>
+    <text class="loading-text">验证邀请码中...</text>
+  </view>
+
+  <!-- 错误状态 -->
+  <view class="error-section" wx:if="{{!loading && errorMessage}}">
+    <view class="error-icon-wrapper">
+      <van-icon name="warning-o" size="80rpx" color="var(--danger-color)" />
+    </view>
+    <text class="error-title">验证失败</text>
+    <text class="error-message">{{errorMessage}}</text>
+    <van-button type="default" block bind:click="goBack" class="back-btn" round>
+      <van-icon name="arrow-left" class="btn-icon" />
+      返回首页
     </van-button>
-    <text class="error-text" wx:if="{{errorMessage}}">{{errorMessage}}</text>
   </view>
 
-  <view class="contract-info" wx:if="{{verified && contractInfo}}">
+  <!-- 验证结果 -->
+  <view class="result-section" wx:if="{{!loading && verified && contractInfo && !errorMessage}}">
+    <!-- 状态提示 -->
+    <view class="status-tip" wx:if="{{statusText}}">
+      <van-notify-bar
+        text="{{statusText}}"
+        type="{{statusType}}"
+        duration="{{0}}"
+      />
+    </view>
+
+    <!-- 合同概要信息卡片 -->
     <view class="info-card">
-      <view class="card-title">合同信息</view>
-      <view class="info-row">
-        <text class="label">合同编号</text>
-        <text class="value">{{contractInfo.contract_no}}</text>
+      <view class="card-header">
+        <view class="card-title-wrapper">
+          <van-icon name="document-text" size="40rpx" class="card-icon" />
+          <text class="card-title">合同概要</text>
+        </view>
+        <van-tag type="{{isExpired || isInvalid ? 'default' : 'success'}}" size="medium">
+          {{isExpired ? '已过期' : isInvalid ? '无效' : '有效'}}        
+        </van-tag>
       </view>
-      <view class="info-row">
-        <text class="label">合同标题</text>
-        <text class="value">{{contractInfo.title}}</text>
+
+      <view class="info-row" wx:if="{{contractInfo.title}}">
+        <view class="info-label-wrapper">
+          <van-icon name="label-o" size="32rpx" class="info-icon" />
+          <text class="label">合同标题</text>
+        </view>
+        <text class="value">{{contractInfo.title || '房屋租赁合同'}}</text>
       </view>
-      <view class="info-row">
-        <text class="label">甲方姓名</text>
-        <text class="value">{{contractInfo.partyA_company || contractInfo.lessor_name}}</text>
+
+      <view class="info-row" wx:if="{{contractInfo.contract_no}}">
+        <view class="info-label-wrapper">
+          <van-icon name="qr" size="32rpx" class="info-icon" />
+          <text class="label">合同编号</text>
+        </view>
+        <text class="value contract-no">{{contractInfo.contract_no}}</text>
       </view>
-      <view class="info-row">
-        <text class="label">甲方电话</text>
-        <text class="value">{{contractInfo.partyA_phone || contractInfo.lessor_phone}}</text>
+
+      <view class="divider"></view>
+
+      <view class="info-row" wx:if="{{contractInfo.partyA_name || contractInfo.lessor_name}}">
+        <view class="info-label-wrapper">
+          <van-icon name="user-o" size="32rpx" class="info-icon" />
+          <text class="label">甲方姓名</text>
+        </view>
+        <text class="value">{{contractInfo.partyA_name || contractInfo.lessor_name || '-'}}</text>
       </view>
-      <view class="info-row">
-        <text class="label">房屋地址</text>
-        <text class="value">{{contractInfo.house_address}}</text>
+
+      <view class="info-row" wx:if="{{contractInfo.partyA_company || contractInfo.lessor_company}}">
+        <view class="info-label-wrapper">
+          <van-icon name="shop-o" size="32rpx" class="info-icon" />
+          <text class="label">甲方公司</text>
+        </view>
+        <text class="value">{{contractInfo.partyA_company || contractInfo.lessor_company || '-'}}</text>
       </view>
-      <view class="info-row">
-        <text class="label">租赁期限</text>
+
+      <view class="info-row" wx:if="{{contractInfo.house_address || contractInfo.property_address}}">
+        <view class="info-label-wrapper">
+          <van-icon name="location-o" size="32rpx" class="info-icon" />
+          <text class="label">房屋地址</text>
+        </view>
+        <text class="value address">{{contractInfo.house_address || contractInfo.property_address || '-'}}</text>
+      </view>
+
+      <view class="info-row" wx:if="{{contractInfo.lease_start && contractInfo.lease_end}}">
+        <view class="info-label-wrapper">
+          <van-icon name="clock-o" size="32rpx" class="info-icon" />
+          <text class="label">租赁期限</text>
+        </view>
         <text class="value">{{contractInfo.lease_start}} 至 {{contractInfo.lease_end}}</text>
       </view>
-      <view class="info-row">
-        <text class="label">月租金</text>
-        <text class="value price">¥{{contractInfo.monthly_rent}}</text>
-      </view>
-      <view class="info-row">
-        <text class="label">押金</text>
-        <text class="value">¥{{contractInfo.deposit}}</text>
-      </view>
-      <view class="info-row">
-        <text class="label">合同状态</text>
-        <van-tag type="primary">{{contractInfo.status_text}}</van-tag>
+
+      <view class="divider"></view>
+
+      <view class="price-row" wx:if="{{contractInfo.monthly_rent}}">
+        <view class="price-item">
+          <text class="price-label">月租金</text>
+          <text class="price-value">¥{{contractInfo.monthly_rent}}</text>
+        </view>
+        <view class="price-divider"></view>
+        <view class="price-item">
+          <text class="price-label">押金</text>
+          <text class="price-value secondary">¥{{contractInfo.deposit}}</text>
+        </view>
       </view>
     </view>
 
-    <view class="action-section" wx:if="{{contractInfo.status === 2}}">
+    <!-- 操作按钮区域 -->
+    <!-- 有效邀请且手机号匹配：显示接受签署按钮 -->        
+    <view class="action-section" wx:if="{{isPhoneMatched && !isExpired && !isInvalid}}">
+      <view class="action-highlight">
+        <van-icon name="checked" size="48rpx" color="var(--success-color)" />
+        <text class="action-tip">信息核对无误，请确认签署合同</text>
+      </view>
       <van-button
         type="primary"
         block
         loading="{{loading}}"
-        bind:click="acceptInvitation"
+        bind:click="onAcceptSign"
+        size="large"
+        round
+        class="primary-action-btn"
       >
-        接受并签署
+        <van-icon name="sign" class="btn-icon" />
+        接受签署
       </van-button>
+    </view>
+
+    <!-- 有效邀请但手机号不匹配：显示联系甲方提示 -->      
+    <view class="contact-section" wx:if="{{!isPhoneMatched && !isExpired && !isInvalid}}">
+      <view class="contact-icon-wrapper">
+        <van-icon name="phone-o" size="64rpx" />
+      </view>
+      <text class="contact-title">手机号不匹配</text>
+      <text class="contact-message">此邀请码绑定的手机号与您当前登录账号不一致，如有疑问请联系甲方</text>
       <van-button
         type="default"
         block
-        class="reject-btn"
-        bind:click="rejectInvitation"
+        bind:click="contactPartyA"
+        size="large"
+        round
+        class="contact-btn"
       >
-        拒绝签署
+        <van-icon name="service-o" class="btn-icon" />
+        联系甲方
       </van-button>
     </view>
 
-    <view class="status-tip" wx:if="{{contractInfo.status !== 2}}">
-      <van-notify bar-desc="{{statusTip}}" type="warning" />
+    <!-- 已过期或无效：显示返回按钮 -->
+    <view class="action-section expired" wx:if="{{isExpired || isInvalid}}">
+      <view class="expired-icon-wrapper">
+        <van-icon name="warning-o" size="64rpx" color="var(--warning-color)" />
+      </view>
+      <text class="expired-title">{{isExpired ? '邀请已过期' : '邀请已失效'}}</text>
+      <text class="expired-message">{{isExpired ? '该签署邀请已超过有效期，请联系甲方获取新的邀请' : '该签署邀请已失效，请联系甲方获取新的邀请'}}</text>
+      <van-button
+        type="default"
+        block
+        bind:click="goBack"
+        size="large"
+        round
+        class="back-action-btn"
+      >
+        <van-icon name="arrow-left" class="btn-icon" />
+        返回首页
+      </van-button>
     </view>
-  </view>
-
-  <view class="login-tip" wx:if="{{verified && !userInfo}}">
-    <text>请先登录后再操作</text>
-    <van-button type="primary" size="small" bind:click="goToLogin">去登录</van-button>
   </view>
 </view>

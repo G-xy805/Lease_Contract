@@ -1,254 +1,383 @@
 <view class="container">
   <block wx:if="{{loading}}">
     <view class="loading-container">
-      <van-loading size="48px" type="spinner">加载中...</van-loading>
+      <van-loading type="spinner" size="60rpx" color="var(--primary-color)" />
+      <text class="loading-text">加载合同数据...</text>
     </view>
   </block>
 
   <block wx:elif="{{contractData}}">
-    <!-- 合同标题 -->
-    <view class="contract-header">
-      <view class="contract-title">房屋租赁合同</view>
-      <view class="contract-subtitle">{{contractData.title || '预览合同'}}</view>
-    </view>
+    <scroll-view scroll-y class="preview-scroll">
+      <!-- 合同标题 -->
+      <view class="contract-header">
+        <view class="contract-icon">
+          <van-icon name="document-text" size="64rpx" color="#ffffff" />
+        </view>
+        <view class="contract-title">房屋租赁合同</view>
+        <view class="contract-subtitle">{{contractData.title || '预览合同'}}</view>
+        <view class="contract-badge" style="background: {{statusColor}}">
+          <van-icon name="info-o" size="24rpx" />
+          {{statusText}}
+        </view>
+      </view>
 
-    <!-- 甲乙双方信息 -->
-    <view class="card">
-      <view class="section-title">一、甲乙双方信息</view>
-
-      <view class="party-section">
-        <view class="party-label">甲方（出租方）</view>
+      <!-- 合同基本信息 -->
+      <view class="card">
+        <view class="section-header">
+          <van-icon name="info-circle" size="36rpx" class="section-icon" />
+          <view class="section-title">合同信息</view>
+        </view>
         <view class="info-grid">
           <view class="info-item">
-            <text class="info-label">姓名/公司</text>
-            <text class="info-value">{{lessorInfo.name}}</text>
-          </view>
-          <view class="info-item" wx:if="{{lessorInfo.company}}">
-            <text class="info-label">公司名称</text>
-            <text class="info-value">{{lessorInfo.company}}</text>
+            <text class="info-label">合同编号</text>
+            <text class="info-value">{{contractNo}}</text>
           </view>
           <view class="info-item">
-            <text class="info-label">联系电话</text>
-            <text class="info-value">{{lessorInfo.phone}}</text>
-          </view>
-          <view class="info-item" wx:if="{{lessorInfo.phone2}}">
-            <text class="info-label">备用电话</text>
-            <text class="info-value">{{lessorInfo.phone2}}</text>
-          </view>
-          <view class="info-item" wx:if="{{lessorInfo.contact}}">
-            <text class="info-label">委托代理人</text>
-            <text class="info-value">{{lessorInfo.contact}}</text>
-          </view>
-          <view class="info-item" wx:if="{{lessorInfo.idcard}}">
-            <text class="info-label">身份证号</text>
-            <text class="info-value">{{lessorInfo.idcard}}</text>
-          </view>
-          <view class="info-item" wx:if="{{lessorInfo.account}}">
-            <text class="info-label">收款账户</text>
-            <text class="info-value">{{lessorInfo.account}}</text>
+            <text class="info-label">合同状态</text>
+            <view class="status-tag" style="background-color: {{statusColor}}">{{statusText}}</view>
           </view>
         </view>
       </view>
 
-      <view class="party-section">
-        <view class="party-label">乙方（承租方）</view>
+      <view class="section-divider"></view>
+
+      <!-- 甲乙双方信息 -->
+      <view class="card party-card">
+        <view class="section-header">
+          <van-icon name="user-o" size="36rpx" class="section-icon" />
+          <view class="section-title">一、甲乙双方信息</view>
+        </view>
+
+        <view class="party-section lessor">
+          <view class="party-label-wrapper">
+            <view class="party-dot lessor-dot"></view>
+            <view class="party-label">甲方（出租方）</view>
+          </view>
+          <view class="info-grid">
+            <view class="info-item">
+              <text class="info-label">公司名称</text>
+              <text class="info-value">{{lessorInfo.company}}</text>
+            </view>
+            <view class="info-item" wx:if="{{lessorInfo.name}}">
+              <text class="info-label">联系人</text>
+              <text class="info-value">{{lessorInfo.name}}</text>
+            </view>
+            <view class="info-item">
+              <text class="info-label">联系电话</text>
+              <text class="info-value">{{lessorInfo.phone}}</text>
+            </view>
+            <view class="info-item" wx:if="{{lessorInfo.phone2}}">
+              <text class="info-label">备用电话</text>
+              <text class="info-value">{{lessorInfo.phone2}}</text>
+            </view>
+            <view class="info-item" wx:if="{{lessorInfo.contact}}">
+              <text class="info-label">委托代理人</text>
+              <text class="info-value">{{lessorInfo.contact}}</text>
+            </view>
+            <view class="info-item" wx:if="{{lessorInfo.idcard}}">
+              <text class="info-label">身份证号</text>
+              <text class="info-value">{{lessorInfo.idcard}}</text>
+            </view>
+            <view class="info-item full-width" wx:if="{{lessorInfo.account}}">
+              <text class="info-label">收款账户</text>
+              <text class="info-value">{{lessorInfo.account}}</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="party-divider"></view>
+
+        <view class="party-section lessee">
+          <view class="party-label-wrapper">
+            <view class="party-dot lessee-dot"></view>
+            <view class="party-label">乙方（承租方）</view>
+          </view>
+          <view class="info-grid">
+            <view class="info-item">
+              <text class="info-label">姓名</text>
+              <text class="info-value">{{lesseeInfo.name}}</text>
+            </view>
+            <view class="info-item">
+              <text class="info-label">联系电话</text>
+              <text class="info-value">{{lesseeInfo.phone}}</text>
+            </view>
+            <view class="info-item" wx:if="{{lesseeInfo.idcard}}">
+              <text class="info-label">身份证号</text>
+              <text class="info-value">{{lesseeInfo.idcard}}</text>
+            </view>
+            <view class="info-item" wx:if="{{lesseeInfo.contact}}">
+              <text class="info-label">委托代理人</text>
+              <text class="info-value">{{lesseeInfo.contact}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-divider"></view>
+
+      <!-- 房屋和租赁信息 -->
+      <view class="card" wx:if="{{houseInfo.address}}">
+        <view class="section-header">
+          <van-icon name="home-o" size="36rpx" class="section-icon" />
+          <view class="section-title">二、房屋信息</view>
+        </view>
+        <view class="info-grid">
+          <view class="info-item full-width">
+            <text class="info-label">房屋地址</text>
+            <text class="info-value">{{houseInfo.address}}</text>
+          </view>
+          <view class="info-item" wx:if="{{houseInfo.area}}">
+            <text class="info-label">房屋面积</text>
+            <text class="info-value">{{houseInfo.area}} 平方米</text>
+          </view>
+          <view class="info-item" wx:if="{{houseInfo.purpose}}">
+            <text class="info-label">租赁用途</text>
+            <text class="info-value">{{houseInfo.purpose}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-divider" wx:if="{{houseInfo.address}}"></view>
+
+      <!-- 租赁期限 -->
+      <view class="card" wx:if="{{leaseInfo.leaseStart}}">
+        <view class="section-header">
+          <van-icon name="clock-o" size="36rpx" class="section-icon" />
+          <view class="section-title">三、租赁期限</view>
+        </view>
         <view class="info-grid">
           <view class="info-item">
-            <text class="info-label">姓名</text>
-            <text class="info-value">{{lesseeInfo.name}}</text>
+            <text class="info-label">租赁开始</text>
+            <text class="info-value">{{leaseInfo.leaseStart}}</text>
           </view>
           <view class="info-item">
-            <text class="info-label">联系电话</text>
-            <text class="info-value">{{lesseeInfo.phone}}</text>
+            <text class="info-label">租赁结束</text>
+            <text class="info-value">{{leaseInfo.leaseEnd}}</text>
           </view>
-          <view class="info-item" wx:if="{{lesseeInfo.idcard}}">
-            <text class="info-label">身份证号</text>
-            <text class="info-value">{{lesseeInfo.idcard}}</text>
+          <view class="info-item">
+            <text class="info-label">租赁月数</text>
+            <text class="info-value highlight">{{leaseInfo.months}} 个月</text>
           </view>
-          <view class="info-item" wx:if="{{lesseeInfo.contact}}">
-            <text class="info-label">委托代理人</text>
-            <text class="info-value">{{lesseeInfo.contact}}</text>
-          </view>
-        </view>
-      </view>
-    </view>
-
-    <!-- 房屋信息 -->
-    <view class="card" wx:if="{{houseInfo.address}}">
-      <view class="section-title">二、房屋信息</view>
-      <view class="info-grid">
-        <view class="info-item full-width">
-          <text class="info-label">房屋地址</text>
-          <text class="info-value">{{houseInfo.address}}</text>
-        </view>
-        <view class="info-item" wx:if="{{houseInfo.area}}">
-          <text class="info-label">房屋面积</text>
-          <text class="info-value">{{houseInfo.area}} 平方米</text>
-        </view>
-        <view class="info-item" wx:if="{{houseInfo.purpose}}">
-          <text class="info-label">租赁用途</text>
-          <text class="info-value">{{houseInfo.purpose}}</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 租赁期限 -->
-    <view class="card" wx:if="{{rentInfo.leaseStart}}">
-      <view class="section-title">三、租赁期限</view>
-      <view class="info-grid">
-        <view class="info-item">
-          <text class="info-label">租赁开始</text>
-          <text class="info-value">{{rentInfo.leaseStart}}</text>
-        </view>
-        <view class="info-item">
-          <text class="info-label">租赁结束</text>
-          <text class="info-value">{{rentInfo.leaseEnd}}</text>
-        </view>
-        <view class="info-item">
-          <text class="info-label">租赁月数</text>
-          <text class="info-value">{{rentInfo.months}} 个月</text>
-        </view>
-        <view class="info-item">
-          <text class="info-label">提前通知期</text>
-          <text class="info-value">{{rentInfo.advanceNoticeDays}} 天</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 租金及押金信息 -->
-    <view class="card">
-      <view class="section-title">四、租金及押金</view>
-      <view class="info-grid">
-        <view class="info-item">
-          <text class="info-label">月租金</text>
-          <text class="info-value highlight">¥{{rentInfo.monthlyRent}}</text>
-        </view>
-        <view class="info-item" wx:if="{{rentInfo.yearRent}}">
-          <text class="info-label">租金总计</text>
-          <text class="info-value">¥{{rentInfo.yearRent}}</text>
-        </view>
-        <view class="info-item">
-          <text class="info-label">押金</text>
-          <text class="info-value highlight">¥{{depositInfo.amount}}</text>
-        </view>
-        <view class="info-item" wx:if="{{depositInfo.chinese}}">
-          <text class="info-label">押金大写</text>
-          <text class="info-value">{{depositInfo.chinese}}</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 支付方式 -->
-    <view class="card">
-      <view class="section-title">五、支付方式</view>
-      <view class="info-grid">
-        <view class="info-item">
-          <text class="info-label">支付方式</text>
-          <text class="info-value">{{paymentInfo.method}}</text>
-        </view>
-        <view class="info-item" wx:if="{{paymentInfo.cycleText}}">
-          <text class="info-label">支付周期</text>
-          <text class="info-value">{{paymentInfo.cycleText}}</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 分期付款计划 -->
-    <view class="card" wx:if="{{paymentInfo.firstAmount}}">
-      <view class="section-title">六、分期付款计划</view>
-      <view class="payment-plan">
-        <view class="payment-item">
-          <view class="payment-title">第一期付款</view>
-          <view class="payment-row">
-            <text class="payment-label">金额</text>
-            <text class="payment-value">¥{{paymentInfo.firstAmount}}</text>
-          </view>
-          <view class="payment-row" wx:if="{{paymentInfo.firstDate}}">
-            <text class="payment-label">日期</text>
-            <text class="payment-value">{{paymentInfo.firstDate}}</text>
-          </view>
-        </view>
-        <view class="payment-item" wx:if="{{paymentInfo.secondAmount}}">
-          <view class="payment-title">第二期付款</view>
-          <view class="payment-row">
-            <text class="payment-label">金额</text>
-            <text class="payment-value">¥{{paymentInfo.secondAmount}}</text>
-          </view>
-          <view class="payment-row" wx:if="{{paymentInfo.secondDate}}">
-            <text class="payment-label">日期</text>
-            <text class="payment-value">{{paymentInfo.secondDate}}</text>
-          </view>
-        </view>
-        <view class="payment-item" wx:if="{{paymentInfo.thirdAmount}}">
-          <view class="payment-title">第三期付款</view>
-          <view class="payment-row">
-            <text class="payment-label">金额</text>
-            <text class="payment-value">¥{{paymentInfo.thirdAmount}}</text>
-          </view>
-          <view class="payment-row" wx:if="{{paymentInfo.thirdDate}}">
-            <text class="payment-label">日期</text>
-            <text class="payment-value">{{paymentInfo.thirdDate}}</text>
+          <view class="info-item">
+            <text class="info-label">提前通知期</text>
+            <text class="info-value">{{leaseInfo.advanceNoticeDays}} 天</text>
           </view>
         </view>
       </view>
-    </view>
 
-    <!-- 物品清单 -->
-    <view class="card" wx:if="{{inventoryItems.length > 0}}">
-      <view class="section-title">七、房屋物品清单</view>
-      <view class="inventory-grid">
-        <view class="inventory-item" wx:for="{{inventoryItems}}" wx:key="index">
-          <text class="item-name">{{item.name}}</text>
-          <text class="item-qty">×{{item.quantity}}</text>
+      <view class="section-divider" wx:if="{{leaseInfo.leaseStart}}"></view>
+
+      <!-- 租金和押金信息 -->
+      <view class="card rent-card">
+        <view class="section-header">
+          <van-icon name="cash-o" size="36rpx" class="section-icon" />
+          <view class="section-title">四、租金和押金</view>
+        </view>
+        <view class="rent-highlight">
+          <view class="rent-main">
+            <text class="rent-label">月租金</text>
+            <text class="rent-value">¥{{rentInfo.monthlyRent}}</text>
+          </view>
+          <view class="rent-divider"></view>
+          <view class="rent-secondary">
+            <text class="rent-label">押金</text>
+            <text class="rent-value secondary">¥{{depositInfo.amount}}</text>
+          </view>
+        </view>
+        <view class="info-grid" wx:if="{{rentInfo.yearRent || depositInfo.chinese}}">
+          <view class="info-item" wx:if="{{rentInfo.yearRent}}">
+            <text class="info-label">租金总计</text>
+            <text class="info-value">¥{{rentInfo.yearRent}}</text>
+          </view>
+          <view class="info-item" wx:if="{{depositInfo.chinese}}">
+            <text class="info-label">押金大写</text>
+            <text class="info-value">{{depositInfo.chinese}}</text>
+          </view>
         </view>
       </view>
-    </view>
 
-    <!-- 费用约定 -->
-    <view class="card" wx:if="{{fees.length > 0}}">
-      <view class="section-title">八、费用约定</view>
-      <view class="fees-list">
-        <view class="fee-item" wx:for="{{fees}}" wx:key="index">
-          <text class="fee-label">{{item.label}}</text>
-          <text class="fee-value">{{item.tenant}}</text>
+      <view class="section-divider"></view>
+
+      <!-- 支付方式 -->
+      <view class="card">
+        <view class="section-header">
+          <van-icon name="card" size="36rpx" class="section-icon" />
+          <view class="section-title">五、支付方式</view>
+        </view>
+        <view class="payment-method">
+          <view class="payment-method-item">
+            <van-icon name="todo-list-o" size="40rpx" class="payment-icon" />
+            <view class="payment-method-info">
+              <text class="payment-method-label">支付方式</text>
+              <text class="payment-method-value">{{rentInfo.paymentCycleText}}</text>
+            </view>
+          </view>
+          <view class="payment-method-item">
+            <van-icon name="records" size="40rpx" class="payment-icon" />
+            <view class="payment-method-info">
+              <text class="payment-method-label">支付次数</text>
+              <text class="payment-method-value">{{rentInfo.paymentCount}} 次</text>
+            </view>
+          </view>
+          <view class="payment-method-item">
+            <van-icon name="calendar" size="40rpx" class="payment-icon" />
+            <view class="payment-method-info">
+              <text class="payment-method-label">支付周期</text>
+              <text class="payment-method-value">每{{rentInfo.paymentCycle}}月</text>
+            </view>
+          </view>
         </view>
       </view>
-    </view>
 
-    <!-- 居间服务费 -->
-    <view class="card" wx:if="{{commissions.length > 0}}">
-      <view class="section-title">九、居间服务费</view>
-      <view class="fees-list">
-        <view class="fee-item" wx:for="{{commissions}}" wx:key="index">
-          <text class="fee-label">{{item.party}}应支付</text>
-          <text class="fee-value highlight">¥{{item.amount}}{{item.chinese ? ' (' + item.chinese + ')' : ''}}</text>
+      <!-- 分期付款计划 -->
+      <view class="card" wx:if="{{paymentInfo.firstAmount}}">
+        <view class="section-header">
+          <van-icon name="balance-list" size="36rpx" class="section-icon" />
+          <view class="section-title">六、分期付款计划</view>
+        </view>
+        <view class="payment-plan">
+          <view class="payment-item" wx:if="{{paymentInfo.firstAmount}}">
+            <view class="payment-header">
+              <view class="payment-number">1</view>
+              <view class="payment-title">第一期付款</view>
+            </view>
+            <view class="payment-row">
+              <text class="payment-label">金额</text>
+              <text class="payment-value">¥{{paymentInfo.firstAmount}}</text>
+            </view>
+            <view class="payment-row" wx:if="{{paymentInfo.firstDate}}">
+              <text class="payment-label">日期</text>
+              <text class="payment-value">{{paymentInfo.firstDate}}</text>
+            </view>
+          </view>
+          <view class="payment-item" wx:if="{{paymentInfo.secondAmount}}">
+            <view class="payment-header">
+              <view class="payment-number">2</view>
+              <view class="payment-title">第二期付款</view>
+            </view>
+            <view class="payment-row">
+              <text class="payment-label">金额</text>
+              <text class="payment-value">¥{{paymentInfo.secondAmount}}</text>
+            </view>
+            <view class="payment-row" wx:if="{{paymentInfo.secondDate}}">
+              <text class="payment-label">日期</text>
+              <text class="payment-value">{{paymentInfo.secondDate}}</text>
+            </view>
+          </view>
+          <view class="payment-item" wx:if="{{paymentInfo.thirdAmount}}">
+            <view class="payment-header">
+              <view class="payment-number">3</view>
+              <view class="payment-title">第三期付款</view>
+            </view>
+            <view class="payment-row">
+              <text class="payment-label">金额</text>
+              <text class="payment-value">¥{{paymentInfo.thirdAmount}}</text>
+            </view>
+            <view class="payment-row" wx:if="{{paymentInfo.thirdDate}}">
+              <text class="payment-label">日期</text>
+              <text class="payment-value">{{paymentInfo.thirdDate}}</text>
+            </view>
+          </view>
         </view>
       </view>
-    </view>
 
-    <!-- 水电表读数 -->
-    <view class="card" wx:if="{{meters.length > 0}}">
-      <view class="section-title">十、水电表读数</view>
-      <view class="info-grid">
-        <view class="info-item" wx:for="{{meters}}" wx:key="index">
-          <text class="info-label">{{item.label}}</text>
-          <text class="info-value">{{item.value}}</text>
+      <view class="section-divider" wx:if="{{paymentInfo.firstAmount}}"></view>
+
+      <!-- 物品清单 -->
+      <view class="card" wx:if="{{inventoryItems.length > 0}}">
+        <view class="section-header">
+          <van-icon name="orders-o" size="36rpx" class="section-icon" />
+          <view class="section-title">七、房屋物品清单</view>
+        </view>
+        <view class="inventory-grid">
+          <view class="inventory-item" wx:for="{{inventoryItems}}" wx:key="index">
+            <view class="inventory-icon-wrapper">
+              <van-icon name="gift-o" size="32rpx" />
+            </view>
+            <text class="item-name">{{item.name}}</text>
+            <text class="item-qty">×{{item.quantity}}{{item.unit}}</text>
+          </view>
         </view>
       </view>
-    </view>
 
-    <!-- 备注 -->
-    <view class="card" wx:if="{{remark}}">
-      <view class="section-title">十一、备注</view>
-      <view class="remark-text">{{remark}}</view>
-    </view>
+      <view class="section-divider" wx:if="{{inventoryItems.length > 0}}"></view>
 
-    <view class="bottom-space"></view>
+      <!-- 费用约定 -->
+      <view class="card" wx:if="{{fees.length > 0}}">
+        <view class="section-header">
+          <van-icon name="bill-o" size="36rpx" class="section-icon" />
+          <view class="section-title">八、费用约定</view>
+        </view>
+        <view class="fees-list">
+          <view class="fee-item" wx:for="{{fees}}" wx:key="index">
+            <text class="fee-label">{{item.label}}</text>
+            <text class="fee-value {{item.tenant == '甲方承担' ? 'owner' : ''}}">{{item.tenant}}</text>
+          </view>
+        </view>
+        <view class="fee-tip">
+          <van-icon name="info-o" size="24rpx" />
+          以上费用均不包含在租金内，由乙方另行支付
+        </view>
+      </view>
+
+      <!-- 居间服务费 -->
+      <view class="card" wx:if="{{commissions.length > 0}}">
+        <view class="section-header">
+          <van-icon name="balance-o" size="36rpx" class="section-icon" />
+          <view class="section-title">九、居间服务费</view>
+        </view>
+        <view class="fees-list">
+          <view class="fee-item commission" wx:for="{{commissions}}" wx:key="index">
+            <text class="fee-label">{{item.party}}应支付</text>
+            <text class="fee-value highlight">¥{{item.amount}}{{item.chinese ? ' (' + item.chinese + ')' : ''}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-divider" wx:if="{{commissions.length > 0}}"></view>
+
+      <!-- 水电表读数 -->
+      <view class="card" wx:if="{{meters.length > 0}}">
+        <view class="section-header">
+          <van-icon name="chart-trending-o" size="36rpx" class="section-icon" />
+          <view class="section-title">十、水电表读数（入住时）</view>
+        </view>
+        <view class="info-grid">
+          <view class="info-item" wx:for="{{meters}}" wx:key="index">
+            <text class="info-label">{{item.label}}</text>
+            <text class="info-value">{{item.value}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 备注 -->
+      <view class="card" wx:if="{{remark}}">
+        <view class="section-header">
+          <van-icon name="edit-o" size="36rpx" class="section-icon" />
+          <view class="section-title">十一、备注</view>
+        </view>
+        <view class="remark-text">{{remark}}</view>
+      </view>
+
+      <view class="bottom-space"></view>
+    </scroll-view>
+
+    <!-- 底部按钮 -->
+    <view class="bottom-bar">
+      <van-button type="default" size="large" round bind:click="goBackToEdit" class="bottom-bar-btn edit-btn">
+        <van-icon name="arrow-left" class="btn-icon" />
+        返回修改
+      </van-button>
+      <van-button type="primary" size="large" round bind:click="goToSign" class="bottom-bar-btn sign-btn">
+        <van-icon name="sign" class="btn-icon" />
+        确认签署
+      </van-button>
+    </view>
   </block>
 
   <block wx:else>
     <view class="empty-container">
-      <text>暂无合同数据</text>
+      <van-empty image="default" description="暂无合同数据" />
     </view>
   </block>
 </view>

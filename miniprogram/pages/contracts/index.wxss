@@ -1,267 +1,234 @@
-/* pages/contracts/index.wxss */
+/* pages/contracts/index.wxss - Optimized */
 
 .container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background-color: #f5f5f5;
+  min-height: 100vh;
+  background: var(--background-color);
+  box-sizing: border-box;
 }
 
-.search-wrapper {
-  background-color: #ffffff;
-  padding: 16rpx 24rpx;
+/* ========== Page Header ========== */
+.page-header {
+  padding: var(--spacing-lg) var(--spacing-md) var(--spacing-md);
+  background: var(--card-background);
+  border-bottom: 1rpx solid var(--border-color);
 }
 
-.create-btn-wrapper {
-  background-color: #ffffff;
-  padding: 16rpx 24rpx;
-  border-bottom: 1rpx solid #ebedf0;
+.page-title {
+  display: block;
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--text-color-primary);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--spacing-xs);
 }
 
-.create-btn {
-  background: linear-gradient(135deg, #1989fa 0%, #1977fa 100%);
+.page-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
 }
 
-.contract-scroll {
-  flex: 1;
-  height: calc(100vh - 220rpx);
+/* ========== Filter Section ========== */
+.filter-section {
+  background: var(--card-background);
+  padding-bottom: var(--spacing-xs);
+  box-shadow: var(--shadow-sm);
 }
 
-/* 骨架屏样式 */
-.skeleton-container {
-  padding: 24rpx;
-}
-
-.skeleton-list {
-  display: flex;
-  flex-direction: column;
-  gap: 24rpx;
-}
-
-.skeleton-item {
-  background-color: #ffffff;
-  border-radius: 16rpx;
-  padding: 28rpx;
-}
-
-/* 下拉刷新样式 */
-.refresh-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 24rpx 0;
-  gap: 16rpx;
-}
-
-.refresh-text {
-  font-size: 26rpx;
-  color: #969799;
-}
-
-/* 合同列表 */
+/* ========== Contract List ========== */
 .contract-list {
-  padding: 24rpx;
+  padding: var(--spacing-md);
 }
 
-/* 滑动单元格样式 */
 .contract-item {
-  background-color: #ffffff;
-  border-radius: 16rpx;
-  padding: 28rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
-}
-
-.swipe-action {
   display: flex;
-  height: 100%;
-  align-items: center;
+  align-items: stretch;
+  background: var(--card-background);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid var(--border-color);
+  overflow: hidden;
+  transition: all var(--transition-fast) var(--ease-out);
+  cursor: pointer;
 }
 
-.swipe-action-left {
-  background-color: #1989fa;
+.contract-item:active {
+  transform: scale(0.99);
+  box-shadow: var(--shadow-xs);
+  border-color: var(--border-color-dark);
 }
 
-.swipe-action-right {
-  background-color: #ee0a24;
-}
-
-.swipe-btn {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  width: 140rpx;
-  border: none;
-  border-radius: 0;
-  font-size: 24rpx;
-  padding: 0;
-}
-
-.swipe-btn text {
-  margin-top: 8rpx;
-  color: #ffffff;
-}
-
-.swipe-edit-btn {
-  background-color: #1989fa !important;
-}
-
-.swipe-delete-btn {
-  background-color: #ee0a24 !important;
-}
-
-/* 列表项样式 */
-.contract-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20rpx;
-}
-
-.contract-title {
-  flex: 1;
-  margin-right: 16rpx;
-  color: #323233;
-  line-height: 1.4;
-}
-
-.contract-body {
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
-}
-
-.contract-info {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-}
-
-.info-icon {
-  color: #969799;
+/* 状态指示条 */
+.status-indicator {
+  width: 10rpx;
   flex-shrink: 0;
 }
 
-.contract-footer {
-  margin-top: 24rpx;
-  padding-top: 24rpx;
-  border-top: 1rpx solid #ebedf0;
-  display: flex;
-  justify-content: flex-end;
+.status-0, .status-1 {
+  background: var(--text-color-secondary);
 }
 
-.invite-code-hint {
+.status-2 {
+  background: var(--warning-color);
+}
+
+.status-3 {
+  background: var(--success-color);
+}
+
+.status-4 {
+  background: var(--danger-color);
+}
+
+.status-5, .status-6 {
+  background: var(--text-color-tertiary);
+}
+
+/* 中间内容 */
+.contract-main {
+  flex: 1;
+  padding: var(--spacing-md);
+  min-width: 0;
+}
+
+.contract-header {
   display: flex;
   align-items: center;
-  gap: 8rpx;
-  color: #969799;
-  font-size: 24rpx;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+  gap: var(--spacing-sm);
 }
 
-/* 空状态样式 */
-.empty-wrapper {
-  margin-top: 120rpx;
+.contract-title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-color-primary);
+  flex: 1;
+  margin-right: var(--spacing-sm);
+  letter-spacing: -0.01em;
 }
 
-.empty-sub-text {
-  color: #969799;
-  font-size: 26rpx;
-  margin-top: 16rpx;
-  margin-bottom: 32rpx;
-  text-align: center;
+/* 信息区域 */
+.contract-info {
+  margin-bottom: var(--spacing-sm);
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-icon {
+  color: var(--text-color-tertiary);
+  margin-right: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.info-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+  flex: 1;
+}
+
+/* 底部区域 */
+.contract-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--spacing-sm);
+  border-top: 1rpx solid var(--border-color);
+}
+
+.contract-amount {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-xs);
+}
+
+.amount-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
+}
+
+.amount-value {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--danger-color);
+  letter-spacing: -0.01em;
+}
+
+.contract-date {
+  display: flex;
+  align-items: center;
+}
+
+.date-text {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
+}
+
+/* 箭头 */
+.contract-arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-md);
+  flex-shrink: 0;
+  transition: transform var(--transition-fast) var(--ease-out);
+}
+
+.contract-item:active .contract-arrow {
+  transform: translateX(4rpx);
+}
+
+/* ========== Empty State ========== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xxl) var(--spacing-xl);
+}
+
+.empty-illustration {
+  margin-bottom: var(--spacing-md);
 }
 
 .empty-action-btn {
-  margin-top: 16rpx;
+  margin-top: var(--spacing-lg);
+  width: 360rpx;
+  height: 88rpx;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
 }
 
-/* 加载更多样式 */
-.load-more {
-  padding: 32rpx 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.empty-action-btn .btn-icon {
+  margin-right: var(--spacing-xs);
+  font-size: 36rpx;
 }
 
-.loading-text {
-  font-size: 26rpx;
-  color: #969799;
-  margin-left: 12rpx;
-}
-
-.no-more-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  padding: 0 32rpx;
-}
-
-.no-more-line {
-  flex: 1;
-  height: 1rpx;
-  background-color: #ebedf0;
-}
-
-.no-more-text {
-  font-size: 24rpx;
-  color: #969799;
-  white-space: nowrap;
-}
-
-/* 全局加载遮罩 */
-.global-loading-mask {
+/* ========== Loading ========== */
+.loading-wrapper {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.9);
-  z-index: 999;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-lg);
 }
 
-/* 通用样式 */
-.text-bold {
-  font-weight: bold;
-}
-
-.text-lg {
-  font-size: 32rpx;
-}
-
-.text-sm {
-  font-size: 26rpx;
-}
-
-.text-gray {
-  color: #969799;
-}
-
-.text-primary {
-  color: #1989fa;
-}
-
-.text-success {
-  color: #07c160;
-}
-
-.text-warning {
-  color: #ff976a;
-}
-
-.text-danger {
-  color: #ee0a24;
-}
-
-/* 修复 van-tabs sticky 定位 */
-.van-tabs {
-  position: sticky;
-  top: 0;
-  z-index: 99;
-  background-color: #ffffff;
+/* ========== Bottom Placeholder ========== */
+.bottom-placeholder {
+  height: 140rpx;
 }

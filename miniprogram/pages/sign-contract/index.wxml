@@ -2,28 +2,72 @@
   <!-- 合同信息卡片 -->
   <view class="contract-info">
     <view class="info-header">
-      <text class="contract-title">{{contractInfo.title}}</text>
+      <view class="contract-title-wrapper">
+        <van-icon name="document-text" size="40rpx" class="contract-icon" />
+        <text class="contract-title">{{contractInfo.title}}</text>
+      </view>
       <text class="contract-status {{contractInfo.status}}">{{statusText}}</text>
     </view>
     <view class="info-detail">
       <view class="info-row">
-        <text class="label">合同编号</text>
-        <text class="value">{{contractInfo.contractNo}}</text>
+        <view class="info-label-wrapper">
+          <van-icon name="qr" size="28rpx" class="row-icon" />
+          <text class="label">合同编号</text>
+        </view>
+        <text class="value">{{contractInfo.contractNo || '-'}}</text>
       </view>
       <view class="info-row">
-        <text class="label">签约双方</text>
-        <text class="value">{{contractInfo.partyA}} - {{contractInfo.partyB}}</text>
+        <view class="info-label-wrapper">
+          <van-icon name="user-o" size="28rpx" class="row-icon" />
+          <text class="label">甲方（出租人）</text>
+        </view>
+        <text class="value">{{contractInfo.partyA || '-'}}</text>
       </view>
       <view class="info-row">
-        <text class="label">签署方</text>
-        <text class="value">{{isPartyA ? '甲方' : '乙方'}}</text>
+        <view class="info-label-wrapper">
+          <van-icon name="user-o" size="28rpx" class="row-icon" />
+          <text class="label">乙方（承租人）</text>
+        </view>
+        <text class="value">{{contractInfo.partyB || '-'}}</text>
+      </view>
+      <view class="info-row">
+        <view class="info-label-wrapper">
+          <van-icon name="location-o" size="28rpx" class="row-icon" />
+          <text class="label">房屋地址</text>
+        </view>
+        <text class="value address-value">{{contractInfo.propertyAddress || '-'}}</text>
+      </view>
+      <view class="info-row">
+        <view class="info-label-wrapper">
+          <van-icon name="clock-o" size="28rpx" class="row-icon" />
+          <text class="label">租赁期限</text>
+        </view>
+        <text class="value">{{contractInfo.leaseStartDate}} 至 {{contractInfo.leaseEndDate}}</text>
+      </view>
+      <view class="info-row highlight-row">
+        <view class="info-label-wrapper">
+          <van-icon name="cash-o" size="28rpx" class="row-icon highlight-icon" />
+          <text class="label">月租金</text>
+        </view>
+        <text class="value highlight">{{contractInfo.monthlyRent ? '¥' + contractInfo.monthlyRent : '-'}}</text>
       </view>
     </view>
   </view>
 
+  <!-- 签署角色提示 -->
+  <view class="role-hint">
+    <view class="role-icon-wrapper">
+      <van-icon name="info-o" size="32rpx" />
+    </view>
+    <text>您正在以<b>{{signRoleText}}</b>身份签署本合同</text>
+  </view>
+
   <!-- 签署区 -->
   <view class="sign-section">
-    <view class="section-title">请在下方签名</view>
+    <view class="section-header">
+      <van-icon name="edit" size="36rpx" class="section-icon" />
+      <text class="section-title">请在下方签名</text>
+    </view>
 
     <!-- 签名工具栏 -->
     <view class="sign-toolbar">
@@ -83,6 +127,7 @@
         bindtap="handleCanvasTap">
       </canvas>
       <view class="canvas-placeholder" wx:if="{{!hasSigned}}">
+        <van-icon name="pencil-o" size="64rpx" class="placeholder-icon" />
         <text>请在此处签名</text>
       </view>
       <!-- 右下角清除按钮 -->
@@ -96,8 +141,8 @@
 
     <!-- 签署提示 -->
     <view class="sign-hint" wx:if="{{hasSigned}}">
-      <van-icon name="info-o" size="14px" />
-      <text>滑动签名可取消本次签名</text>
+      <van-icon name="checked" size="28rpx" />
+      <text>签名已生成，点击确认签署</text>
     </view>
   </view>
 
@@ -107,39 +152,66 @@
       type="primary"
       size="large"
       block
+      round
       bind:click="submitSign"
       loading="{{isSubmitting}}"
-      disabled="{{!hasSigned || isSubmitting}}">
+      disabled="{{!hasSigned || isSubmitting}}"
+      class="submit-btn">
+      <van-icon name="sign" class="btn-icon" wx:if="{{!isSubmitting}}" />
       {{isSubmitting ? '签署中...' : '确认签署'}}
     </van-button>
   </view>
 
-  <!-- 清除确认弹窗 -->
+  <!-- 签署确认对话框 -->
   <van-dialog
-    show="{{ showClearConfirm }}"
-    title="确认清除"
-    message="确定要清除当前签名吗？清除后可重新签名。"
+    show="{{ showConfirmDialog }}"
+    title="确认签署"
+    message="请确认您已阅读并同意签署本合同。签署后将生成具有法律效力的电子合同。"
     show-cancel-button
-    confirm-button-open-type="bind:confirmClear"
-    bind:close="closeClearConfirm"
-    bind:confirm="confirmClear"
-    bind:cancel="closeClearConfirm">
+    confirm-button-color="#07c160"
+    bind:confirm="confirmSign"
+    bind:cancel="closeConfirmDialog">
+    <view slot="footer" class="confirm-footer">
+      <view class="confirm-info">
+        <view class="confirm-label-wrapper">
+          <van-icon name="user-o" size="28rpx" class="confirm-icon" />
+          <text class="confirm-label">签署人</text>
+        </view>
+        <text class="confirm-value">{{signRoleText}}</text>
+      </view>
+      <view class="confirm-info">
+        <view class="confirm-label-wrapper">
+          <van-icon name="clock-o" size="28rpx" class="confirm-icon" />
+          <text class="confirm-label">签署时间</text>
+        </view>
+        <text class="confirm-value">{{signTime}}</text>
+      </view>
+    </view>
   </van-dialog>
 
   <!-- 结果弹窗 -->
-  <van-popup show="{{showResult}}" position="center" round>
+  <van-popup show="{{showResultDialog}}" position="center" round close-on-click-overlay="{{false}}">
     <view class="result-popup">
-      <view class="result-icon {{resultType}}">
-        <van-icon name="{{resultType === 'success' ? 'passed' : 'close'}}" size="60"/>
+      <view class="result-icon-wrapper {{resultType}}">
+        <van-icon name="{{resultType === 'success' ? 'passed' : 'close'}}" size="72rpx" />
       </view>
       <view class="result-title">{{resultTitle}}</view>
       <view class="result-message">{{resultMessage}}</view>
       <view class="result-buttons" wx:if="{{resultType === 'success'}}">
-        <van-button type="primary" block bind:click="goToResult">确认</van-button>
+        <van-button type="default" size="small" round bind:click="closeResultDialog" class="result-btn">
+          返回
+        </van-button>
+        <van-button type="primary" size="small" round bind:click="viewContractDetail" class="result-btn primary">
+          查看详情
+        </van-button>
       </view>
       <view class="result-buttons" wx:else>
-        <van-button type="default" size="small" bind:click="closeResultPopup">关闭</van-button>
-        <van-button type="primary" size="small" bind:click="reSignFromResult">重新签署</van-button>
+        <van-button type="default" size="small" round bind:click="closeResultDialog" class="result-btn">
+          关闭
+        </van-button>
+        <van-button type="primary" size="small" round bind:click="reSignFromResult" class="result-btn primary">
+          重新签署
+        </van-button>
       </view>
     </view>
   </van-popup>

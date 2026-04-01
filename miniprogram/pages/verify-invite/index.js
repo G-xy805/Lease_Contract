@@ -8,31 +8,40 @@ Page({
     contractInfo: null,
     loading: false,
     verified: false,
-    errorMessage: ''
+    errorMessage: '',
+    isPhoneMatched: false,
+    isExpired: false,
+    isInvalid: false,
+    statusType: 'info',
+    statusText: '',
+    userPhone: ''
   },
 
   onLoad(options) {
-    if (options.code) {
-      this.setData({ inviteCode: options.code })
+    // 从 URL 参数或扫码获取邀请码
+    const code = options.code || options.inviteCode || ''
+    if (code) {
+      this.setData({ inviteCode: code })
       this.verifyInviteCode()
+    } else {
+      this.setData({ errorMessage: '无效的邀请码' })
     }
-  },
 
-  onInviteCodeInput(e) {
-    const value = e.detail || e.detail.value
-    this.setData({
-      inviteCode: value || '',
-      errorMessage: ''
-    })
+    // 获取当前用户手机号
+    const userInfo = app.globalData.userInfo
+    if (userInfo && userInfo.phone) {
+      this.setData({ userPhone: userInfo.phone })
+    }
   },
 
   async verifyInviteCode() {
     const { inviteCode } = this.data
 
-    console.log('验证邀请码，输入值:', inviteCode, '长度:', inviteCode.length)
-
     if (!inviteCode || inviteCode.trim().length < 6) {
-      this.setData({ errorMessage: '请输入正确的邀请码' })
+      this.setData({
+        errorMessage: '请输入正确的邀请码',
+        isInvalid: true
+      })
       return
     }
 
@@ -40,17 +49,48 @@ Page({
 
     try {
       const res = await api.verifyInviteCode(inviteCode.trim())
-      console.log('验证结果:', res)
 
       if (res.code === 200) {
+        const data = res.data
+
+        // 检查合同状态
+        const isExpired = data.expired || data.status === 6
+        const isInvalid = data.invalid || data.status === 4 || data.status === 5
+
+        // 检查手机号匹配（如果返回了 expected_phone）
+        const userPhone = this.data.userPhone
+        const expectedPhone = data.expected_phone || data.partyB_phone || data.lessee_phone
+        const isPhoneMatched = !expectedPhone || userPhone === expectedPhone
+
+        // 设置状态文本
+        let statusType = 'info'
+        let statusText = ''
+
+        if (isExpired) {
+          statusType = 'warning'
+          statusText = '邀请码已过期'
+        } else if (isInvalid) {
+          statusType = 'danger'
+          statusText = '邀请码无效'
+        } else if (!isPhoneMatched) {
+          statusType = 'warning'
+          statusText = '此邀请码不属于您的手机号'
+        }
+
         this.setData({
-          contractInfo: res.data,
+          contractInfo: data,
           verified: true,
+          isPhoneMatched: isPhoneMatched && !isExpired && !isInvalid,
+          isExpired: isExpired,
+          isInvalid: isInvalid,
+          statusType: statusType,
+          statusText: statusText,
           loading: false
         })
       } else {
         this.setData({
           errorMessage: res.message || '邀请码无效',
+          isInvalid: true,
           loading: false
         })
       }
@@ -58,81 +98,47 @@ Page({
       console.error('验证邀请码失败', error)
       this.setData({
         errorMessage: '验证失败，请稍后重试',
+        isInvalid: true,
         loading: false
       })
     }
   },
 
-  async acceptInvitation() {
-    const { inviteCode, contractInfo } = this.data
+  // 点击接受签署按钮
+  onAcceptSign() {
     const userInfo = app.globalData.userInfo
 
-    if (!userInfo) {
-      wx.navigateTo({ url: '/pages/login/index' })
+    // 未登录，跳转到登录页
+    if (!userInfo || !userInfo.phone) {
+      wx.navigateTo({
+        url: '/pages/login/index?redirect=/pages/verify-invite/index?code=' + this.data.inviteCode
+      })
       return
     }
 
-    this.setData({ loading: true })
-
-    try {
-      const res = await api.acceptInvitation(inviteCode.trim(), userInfo.phone)
-
-      if (res.code === 200) {
-        wx.showToast({ title: '已接受邀请', icon: 'success' })
-        setTimeout(() => {
-          wx.navigateTo({
-            url: `/pages/sign-contract/index?contractId=${contractInfo.contract_id}&isPartyA=false`
-          })
-        }, 1500)
-      } else {
-        wx.showToast({ title: res.message || '接受失败', icon: 'none' })
-        this.setData({ loading: false })
-      }
-    } catch (error) {
-      console.error('接受邀请失败', error)
-      wx.showToast({ title: '操作失败', icon: 'none' })
-      this.setData({ loading: false })
-    }
-  },
-
-  async rejectInvitation() {
-    const { inviteCode, contractInfo } = this.data
-    const userInfo = app.globalData.userInfo
-
-    if (!userInfo) {
-      wx.navigateTo({ url: '/pages/login/index' })
-      return
-    }
-
-    wx.showModal({
-      title: '确认拒绝',
-      content: '确定要拒绝签署此合同吗？',
-      success: async (res) => {
-        if (res.confirm) {
-          this.setData({ loading: true })
-          try {
-            const result = await api.rejectInvitation(inviteCode.trim(), userInfo.phone)
-
-            if (result.code === 200) {
-              wx.showToast({ title: '已拒绝', icon: 'success' })
-              setTimeout(() => {
-                wx.switchTab({ url: '/pages/my-contracts/index' })
-              }, 1500)
-            } else {
-              wx.showToast({ title: result.message || '操作失败', icon: 'none' })
-              this.setData({ loading: false })
-            }
-          } catch (error) {
-            console.error('拒绝邀请失败', error)
-            wx.showToast({ title: '操作失败', icon: 'none' })
-            this.setData({ loading: false })
-          }
-        }
-      }
+    // 已登录，跳转到签署页面
+    wx.navigateTo({
+      url: '/pages/sign-contract/index?contractId=' + this.data.contractInfo.contract_id + '&isPartyA=false&inviteCode=' + this.data.inviteCode
     })
   },
 
-  goToLogin() {
-    wx.navigateTo({ url: '/pages/login/index' })
+  // 返回首页
+  goBack() {
+    wx.switchTab({ url: '/pages/index/index' })
+  },
+
+  // 联系甲方
+  contactPartyA() {
+    const phone = this.data.contractInfo.partyA_phone || this.data.contractInfo.lessor_phone || ''
+    if (phone) {
+      wx.makePhoneCall({
+        phoneNumber: phone,
+        fail: () => {
+          wx.showToast({ title: '拨打失败', icon: 'none' })
+        }
+      })
+    } else {
+      wx.showToast({ title: '暂无甲方联系方式', icon: 'none' })
+    }
   }
 })

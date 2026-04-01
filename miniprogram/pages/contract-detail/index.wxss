@@ -1,401 +1,665 @@
+/* pages/contract-detail/index.wxss - Optimized */
+
 .container {
   min-height: 100vh;
-  background-color: #f5f5f5;
-  padding-bottom: 200rpx;
-}
-
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 60vh;
-}
-
-/* 合同头部 */
-.contract-header {
-  background: linear-gradient(135deg, #1989fa 0%, #0c63e4 100%);
-  color: white;
-  padding: 40rpx 32rpx;
-  text-align: center;
-}
-
-.contract-title {
-  font-size: 40rpx;
-  font-weight: bold;
-  margin-bottom: 12rpx;
-}
-
-.contract-no {
-  font-size: 26rpx;
-  opacity: 0.9;
-  margin-bottom: 16rpx;
-}
-
-.contract-meta {
-  display: flex;
-  justify-content: center;
-  gap: 16rpx;
-}
-
-/* 合同正文 */
-.contract-body {
-  padding: 24rpx;
-}
-
-.article {
-  margin-bottom: 24rpx;
-}
-
-.preamble {
-  font-size: 28rpx;
-  color: #333;
-  line-height: 1.8;
-  text-indent: 2em;
-}
-
-.article-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #1989fa;
-  margin-bottom: 16rpx;
-  padding-left: 16rpx;
-  border-left: 6rpx solid #1989fa;
-}
-
-.article-content {
-  padding-left: 16rpx;
-}
-
-.sub-item {
-  font-size: 28rpx;
-  color: #333;
-  line-height: 1.8;
-  margin-bottom: 12rpx;
-  text-indent: 2em;
-}
-
-.sub-item-bracket {
-  font-size: 28rpx;
-  color: #333;
-  line-height: 1.8;
-  margin-bottom: 12rpx;
-  padding-left: 16rpx;
-}
-
-.sub-item-bracket2 {
-  font-size: 28rpx;
-  color: #333;
-  line-height: 1.8;
-  margin-bottom: 12rpx;
-  padding-left: 32rpx;
-}
-
-/* 费用汇总表格 */
-.fees-summary {
-  margin-top: 16rpx;
-  background: #f8f9fa;
-  border-radius: 12rpx;
-  padding: 20rpx;
-}
-
-.fees-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 10rpx 0;
-  border-bottom: 1rpx solid #eee;
-}
-
-.fees-row:last-child {
-  border-bottom: none;
-}
-
-.fees-label {
-  font-size: 28rpx;
-  color: #666;
-}
-
-.fees-value {
-  font-size: 28rpx;
-  color: #07c160;
-  font-weight: 500;
-}
-
-.fees-value.landlord {
-  color: #1989fa;
-}
-
-/* 签署区域 */
-.sign-section {
-  margin-top: 40rpx;
-  padding-top: 24rpx;
-  border-top: 2rpx dashed #ddd;
-}
-
-.sign-table {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 24rpx;
-}
-
-.sign-cell {
-  width: 48%;
-  padding: 20rpx;
-  background: #f8f9fa;
-  border-radius: 12rpx;
-}
-
-.sign-label {
-  font-size: 28rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 12rpx;
-}
-
-.sign-value {
-  font-size: 30rpx;
-  color: #1989fa;
-  font-weight: bold;
-  margin-bottom: 8rpx;
-}
-
-.sign-info {
-  font-size: 24rpx;
-  color: #666;
-  margin-bottom: 4rpx;
-}
-
-.sign-date {
-  text-align: center;
-  margin-top: 24rpx;
-}
-
-.sign-date-item {
-  font-size: 28rpx;
-  color: #333;
-}
-
-.sign-date-value {
-  color: #1989fa;
-  font-weight: bold;
-}
-
-/* 物品清单表格 */
-.items-grid {
-  background: #f8f9fa;
-  border-radius: 12rpx;
-  padding: 16rpx;
-}
-
-.item-row {
-  display: flex;
-  padding: 12rpx 0;
-  border-bottom: 1rpx solid #eee;
-}
-
-.item-row.header {
-  background: #e8f4ff;
-  border-radius: 8rpx;
-  font-weight: bold;
-}
-
-.item-row:last-child {
-  border-bottom: none;
-}
-
-.item-cell {
-  flex: 1;
-  text-align: center;
-  font-size: 26rpx;
-}
-
-.item-cell.name {
-  flex: 1.5;
-}
-
-.item-cell.qty {
-  flex: 0.5;
-}
-
-.meter-info {
-  margin-top: 16rpx;
-  font-size: 24rpx;
-  color: #666;
-  text-align: center;
-}
-
-/* 签署状态 */
-.sign-status {
-  margin-top: 24rpx;
-}
-
-.sign-record {
-  display: flex;
-  justify-content: space-around;
-  background: #f8f9fa;
-  border-radius: 12rpx;
-  padding: 24rpx;
-}
-
-.record-item {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-}
-
-.record-icon {
-  width: 48rpx;
-  height: 48rpx;
-  border-radius: 50%;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #999;
-}
-
-.record-item.signed .record-icon {
-  background: #07c160;
-  color: #fff;
-}
-
-.record-info {
+  background: var(--background-color);
   display: flex;
   flex-direction: column;
 }
 
-.record-label {
-  font-size: 28rpx;
-  color: #333;
+/* ========== Loading ========== */
+.loading-center {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.loading-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
+}
+
+/* ========== Status Banner ========== */
+.status-banner {
+  padding: var(--spacing-lg) var(--spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.status-bg-1 { background: var(--warning-color); }
+.status-bg-2 { background: var(--warning-color); }
+.status-bg-3 { background: var(--success-color); }
+.status-bg-4 { background: var(--danger-color); }
+.status-bg-5 { background: var(--text-color-tertiary); }
+.status-bg-6 { background: var(--text-color-tertiary); }
+
+.status-icon-wrapper {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-content {
+  display: flex;
+  align-items: center;
+}
+
+.status-icon {
+  color: var(--text-color-inverse);
+  font-size: 36rpx;
+}
+
+.status-text {
+  color: var(--text-color-inverse);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+/* ========== Content Scroll ========== */
+.content-scroll {
+  flex: 1;
+  padding: var(--spacing-md);
+  padding-bottom: 280rpx;
+}
+
+/* ========== Card ========== */
+.card {
+  background: var(--card-background);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid var(--border-color);
+  transition: all var(--transition-fast) var(--ease-out);
+}
+
+.card:active {
+  transform: scale(0.995);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2rpx solid var(--border-color);
+}
+
+.card-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.card-icon {
+  font-size: 36rpx;
+  color: var(--primary-color);
+}
+
+.card-title {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--text-color-primary);
+}
+
+/* ========== Contract Info Card ========== */
+.contract-info-card {
+  text-align: center;
+  padding: var(--spacing-xl);
+}
+
+.contract-icon-wrapper {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: var(--primary-color-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--spacing-md);
+}
+
+.contract-no-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--background-color-light);
+  border-radius: var(--radius-full);
+}
+
+.contract-no-icon {
+  color: var(--text-color-tertiary);
+}
+
+.contract-no {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
+  font-family: monospace;
+}
+
+/* ========== Party Card ========== */
+.party-card {
+  padding: var(--spacing-md);
+}
+
+.party-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.party-badge-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.party-badge {
+  padding: 6rpx 20rpx;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.party-a {
+  background: var(--primary-color-light);
+  color: var(--primary-color);
+}
+
+.party-b {
+  background: var(--success-color-light);
+  color: var(--success-color);
+}
+
+.party-company {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-color-primary);
+}
+
+.party-header-icon {
+  color: var(--text-color-tertiary);
+}
+
+/* ========== Info Grid ========== */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.info-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
   font-weight: 500;
 }
 
-.record-time {
-  font-size: 24rpx;
-  color: #999;
-  margin-top: 4rpx;
+.info-value {
+  font-size: var(--font-size-md);
+  color: var(--text-color-primary);
+  font-weight: 500;
 }
 
-/* 备注文字 */
-.remark-text {
-  color: #666;
-  font-style: italic;
+.info-value.phone-value {
+  color: var(--primary-color);
 }
 
-/* 操作按钮区域 */
-.action-section {
+.info-value.idcard-value {
+  font-family: monospace;
+  font-size: var(--font-size-sm);
+}
+
+.info-value.address-value {
+  font-size: var(--font-size-sm);
+  text-align: right;
+}
+
+.info-label-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.row-icon {
+  color: var(--text-color-tertiary);
+}
+
+/* ========== Info List ========== */
+.info-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+/* ========== Rent Card ========== */
+.rent-card {
+  background: linear-gradient(135deg, var(--primary-color-light) 0%, var(--card-background) 100%);
+  border-color: var(--primary-color-light);
+}
+
+.rent-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: var(--spacing-md);
+  background: var(--card-background);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.rent-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.rent-secondary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.rent-divider {
+  width: 2rpx;
+  height: 80rpx;
+  background: var(--border-color);
+}
+
+.rent-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
+}
+
+.rent-value {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--danger-color);
+}
+
+.rent-value.secondary {
+  font-size: var(--font-size-lg);
+  color: var(--text-color-primary);
+}
+
+.deposit-chinese {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--background-color-light);
+  border-radius: var(--radius-md);
+}
+
+.deposit-info-icon {
+  color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+.deposit-chinese-text {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-secondary);
+}
+
+/* ========== Signature Card ========== */
+.signature-card {
+  background: var(--card-background);
+}
+
+.signature-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+}
+
+.signature-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.signature-badge-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.signature-badge {
+  padding: 4rpx 16rpx;
+  background: var(--success-color);
+  color: var(--card-background);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.signature-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+  font-weight: 500;
+}
+
+.signature-img {
+  width: 200rpx;
+  height: 100rpx;
+  background: var(--background-color-light);
+  border-radius: var(--radius-md);
+  border: 1rpx solid var(--border-color);
+}
+
+.signature-time {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
+}
+
+.signature-divider {
+  width: 2rpx;
+  height: 120rpx;
+  background: var(--border-color);
+}
+
+/* ========== Bottom Placeholder ========== */
+.bottom-placeholder {
+  height: 200rpx;
+}
+
+/* ========== Action Bar ========== */
+.action-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
-  padding: 24rpx;
-  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.08);
-  z-index: 100;
-}
-
-.action-card {
-  max-width: 700rpx;
-  margin: 0 auto;
-}
-
-.primary-actions {
-  margin-bottom: 24rpx;
-}
-
-.secondary-actions {
+  padding: var(--spacing-md);
+  padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom));
+  background: var(--card-background);
+  box-shadow: 0 -4rpx 24rpx rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
+  gap: var(--spacing-sm);
+}
+
+.action-row {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.action-btn {
+  height: 96rpx;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.action-btn-half {
+  flex: 1;
+  height: 96rpx;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.primary-action,
+.secondary-action {
+  display: flex;
+}
+
+.primary-action .action-btn {
+  box-shadow: var(--shadow-md);
+}
+
+.primary-btn .btn-icon,
+.reject-btn .btn-icon {
+  margin-right: var(--spacing-sm);
+  font-size: 36rpx;
+}
+
+.edit-btn .btn-icon,
+.delete-btn .btn-icon,
+.share-btn .btn-icon,
+.cancel-btn .btn-icon,
+.download-btn .btn-icon {
+  margin-right: var(--spacing-xs);
+  font-size: 32rpx;
 }
 
 .btn-icon {
-  margin-right: 8rpx;
+  flex-shrink: 0;
 }
 
-/* 邀请码区域 */
-.invite-code-section {
-  margin-bottom: 24rpx;
+/* ========== Items Grid ========== */
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
 }
 
-.invite-code-box {
+.item-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-sm);
+  background: var(--background-color-light);
+  border-radius: var(--radius-md);
+  border: 1rpx solid var(--border-color);
+}
+
+.item-name {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-secondary);
+  margin-bottom: 4rpx;
+  text-align: center;
+}
+
+.item-qty {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+/* ========== Fee Styles ========== */
+.tenant-b {
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+.tenant-a {
+  color: var(--text-color-tertiary);
+}
+
+/* ========== Meter Styles ========== */
+.meter-value {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+/* ========== Account Value ========== */
+.account-value {
+  font-size: var(--font-size-sm);
+  word-break: break-all;
+  color: var(--text-color-secondary);
+}
+
+/* ========== Payment Card ========== */
+.payment-card {
+  background: linear-gradient(135deg, var(--warning-color-light, #FFF7E6) 0%, var(--card-background) 100%);
+}
+
+/* ========== Payment Split List ========== */
+.payment-split-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius-lg);
+}
+
+.payment-split-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff7f0;
-  border-radius: 12rpx;
-  padding: 20rpx 24rpx;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1rpx dashed var(--border-color-light);
 }
 
-.invite-code-label {
-  font-size: 28rpx;
-  color: #666;
+.payment-split-item:last-child {
+  border-bottom: none;
 }
 
-.invite-code-value {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #ee0a24;
-  letter-spacing: 4rpx;
-}
-
-/* 分享弹窗 */
-.share-modal {
-  padding: 32rpx;
-}
-
-.share-modal-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 24rpx;
-}
-
-.share-modal-content {
-  margin-bottom: 24rpx;
-}
-
-.invite-code-display {
-  text-align: center;
-  margin-bottom: 24rpx;
-}
-
-.invite-code-display .label {
-  font-size: 28rpx;
-  color: #666;
-}
-
-.invite-code-display .code {
-  font-size: 40rpx;
-  font-weight: bold;
-  color: #ee0a24;
-  letter-spacing: 6rpx;
-}
-
-.qr-code-box {
-  text-align: center;
-  margin-bottom: 24rpx;
-}
-
-.qr-code {
-  width: 300rpx;
-  height: 300rpx;
-  margin-bottom: 12rpx;
-}
-
-.qr-tip {
-  font-size: 24rpx;
-  color: #999;
-}
-
-.share-tip {
-  font-size: 26rpx;
-  color: #666;
-  text-align: center;
-  line-height: 1.5;
-}
-
-.share-modal-actions {
+.payment-split-header {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
+  gap: 4rpx;
+}
+
+.payment-split-title {
+  font-size: var(--font-size-md);
+  color: var(--text-color-primary);
+  font-weight: 500;
+}
+
+.payment-split-tip {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
+}
+
+.payment-split-amount {
+  font-size: var(--font-size-lg);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* ========== Remark Content ========== */
+.remark-content {
+  padding: var(--spacing-md);
+  background: var(--background-color-light);
+  border-radius: var(--radius-md);
+}
+
+.remark-text {
+  font-size: var(--font-size-md);
+  color: var(--text-color-primary);
+  line-height: 1.6;
+}
+
+/* ========== Card Content ========== */
+.card-content {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+  line-height: 1.8;
+}
+
+/* ========== Contract Full Content ========== */
+.contract-full-content {
+  background: var(--card-background);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid var(--border-color);
+}
+
+.contract-full-content .card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2rpx solid var(--border-color);
+}
+
+.contract-content-body {
+  font-size: 24rpx;
+  line-height: 1.8;
+  color: var(--text-color-primary);
+  overflow-x: hidden;
+}
+
+.contract-content-body h1 {
+  text-align: center;
+  font-size: 32rpx;
+  color: #0000FF;
+  text-decoration: underline;
+  margin-bottom: 30rpx;
+}
+
+.contract-content-body p {
+  margin: 12rpx 0;
+}
+
+.contract-content-body .article-title {
+  font-weight: bold;
+  margin: 20rpx 0 10rpx 0;
+}
+
+.contract-content-body .content {
+  text-indent: 2em;
+  margin: 10rpx 0;
+}
+
+.contract-content-body .sub-item {
+  padding-left: 2em;
+  margin: 8rpx 0;
+}
+
+.contract-content-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20rpx 0;
+  font-size: 22rpx;
+}
+
+.contract-content-body table th,
+.contract-content-body table td {
+  border: 1rpx solid #000;
+  padding: 8rpx;
+  text-align: center;
+}
+
+.contract-content-body table th {
+  background: #f0f0f0;
+  font-weight: bold;
+}
+
+.contract-content-body img {
+  max-width: 100%;
+  height: auto;
 }

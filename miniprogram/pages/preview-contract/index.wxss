@@ -1,77 +1,183 @@
+/* pages/preview-contract/index.wxss - Optimized */
+
 .container {
   min-height: 100vh;
-  background-color: #f5f5f5;
-  padding: 24rpx;
-  padding-bottom: 120rpx;
+  background-color: var(--background-color);
+  position: relative;
 }
 
+.preview-scroll {
+  height: calc(100vh - 160rpx);
+  padding: var(--spacing-md);
+  padding-bottom: var(--spacing-xl);
+  box-sizing: border-box;
+}
+
+/* ========== Loading ========== */
 .loading-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 60vh;
+  gap: var(--spacing-md);
 }
 
+.loading-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
+}
+
+/* ========== Empty ========== */
 .empty-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 60vh;
-  color: #969799;
 }
 
+/* ========== Contract Header ========== */
 .contract-header {
-  background: linear-gradient(135deg, #1989fa 0%, #0c63e4 100%);
-  color: white;
-  padding: 40rpx 32rpx;
-  border-radius: 16rpx;
-  margin-bottom: 24rpx;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-dark) 100%);
+  color: var(--card-background);
+  padding: var(--spacing-xl) var(--spacing-lg);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--spacing-md);
   text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.contract-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+}
+
+.contract-icon {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--spacing-md);
 }
 
 .contract-title {
-  font-size: 40rpx;
-  font-weight: bold;
-  margin-bottom: 12rpx;
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  margin-bottom: var(--spacing-xs);
+  letter-spacing: -0.02em;
+  position: relative;
 }
 
 .contract-subtitle {
-  font-size: 28rpx;
+  font-size: var(--font-size-sm);
   opacity: 0.9;
+  position: relative;
 }
 
+.contract-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  margin-top: var(--spacing-md);
+  position: relative;
+}
+
+/* ========== Card ========== */
 .card {
-  background-color: white;
-  border-radius: 16rpx;
-  padding: 32rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  background-color: var(--card-background);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid var(--border-color);
+  transition: all var(--transition-fast) var(--ease-out);
+}
+
+.card:active {
+  transform: scale(0.995);
+}
+
+/* ========== Section Header ========== */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2rpx solid var(--border-color);
+}
+
+.section-icon {
+  color: var(--primary-color);
+  flex-shrink: 0;
 }
 
 .section-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #323233;
-  margin-bottom: 24rpx;
-  padding-left: 16rpx;
-  border-left: 6rpx solid #1989fa;
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--text-color-primary);
+  letter-spacing: -0.01em;
+}
+
+.section-divider {
+  height: var(--spacing-md);
+}
+
+/* ========== Party Section ========== */
+.party-card {
+  padding: var(--spacing-md);
 }
 
 .party-section {
-  margin-bottom: 24rpx;
+  padding: var(--spacing-sm) 0;
 }
 
-.party-section:last-child {
-  margin-bottom: 0;
+.party-label-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.party-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.lessor-dot {
+  background: var(--primary-color);
+}
+
+.lessee-dot {
+  background: var(--warning-color);
 }
 
 .party-label {
-  font-size: 28rpx;
-  color: #646566;
-  margin-bottom: 16rpx;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+  font-weight: 600;
 }
 
+.party-divider {
+  height: 1rpx;
+  background-color: var(--border-color);
+  margin: var(--spacing-md) 0;
+}
+
+/* ========== Info Grid ========== */
 .info-grid {
   display: flex;
   flex-wrap: wrap;
@@ -79,9 +185,10 @@
 
 .info-item {
   width: 50%;
-  padding: 12rpx 0;
+  padding: var(--spacing-sm) 0;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .info-item.full-width {
@@ -89,41 +196,182 @@
 }
 
 .info-label {
-  font-size: 24rpx;
-  color: #969799;
-  margin-bottom: 6rpx;
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
+  margin-bottom: 4rpx;
+  font-weight: 500;
 }
 
 .info-value {
-  font-size: 28rpx;
-  color: #323233;
+  font-size: var(--font-size-md);
+  color: var(--text-color-primary);
+  font-weight: 500;
 }
 
 .info-value.highlight {
-  color: #ee0a24;
-  font-weight: bold;
-  font-size: 32rpx;
+  color: var(--danger-color);
+  font-weight: 700;
+  font-size: var(--font-size-lg);
 }
 
-.deposit-box {
-  background-color: #fff7f0;
-  border-radius: 12rpx;
-  padding: 24rpx;
-  text-align: center;
+.status-tag {
+  display: inline-block;
+  padding: 6rpx var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--card-background);
+  font-weight: 600;
 }
 
-.deposit-amount {
-  font-size: 48rpx;
-  font-weight: bold;
-  color: #ee0a24;
+/* ========== Rent Card ========== */
+.rent-card {
+  background: linear-gradient(135deg, var(--primary-color-light) 0%, var(--card-background) 100%);
+  border-color: var(--primary-color-light);
 }
 
-.deposit-chinese {
-  font-size: 28rpx;
-  color: #646566;
-  margin-left: 12rpx;
+.rent-highlight {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: var(--spacing-md) 0;
+  margin-bottom: var(--spacing-md);
 }
 
+.rent-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.rent-secondary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.rent-divider {
+  width: 2rpx;
+  height: 80rpx;
+  background: var(--border-color);
+}
+
+.rent-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
+}
+
+.rent-value {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--danger-color);
+}
+
+.rent-value.secondary {
+  font-size: var(--font-size-lg);
+  color: var(--text-color-primary);
+}
+
+/* ========== Payment Method ========== */
+.payment-method {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.payment-method-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--background-color-light);
+  border-radius: var(--radius-md);
+}
+
+.payment-icon {
+  color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+.payment-method-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+}
+
+.payment-method-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
+}
+
+.payment-method-value {
+  font-size: var(--font-size-md);
+  color: var(--text-color-primary);
+  font-weight: 600;
+}
+
+/* ========== Payment Plan ========== */
+.payment-plan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.payment-item {
+  background-color: var(--background-color-light);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  border-left: 6rpx solid var(--primary-color);
+}
+
+.payment-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.payment-number {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: var(--card-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.payment-title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-color-primary);
+}
+
+.payment-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-xs) 0;
+}
+
+.payment-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
+}
+
+.payment-value {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-primary);
+  font-weight: 600;
+}
+
+/* ========== Inventory Grid ========== */
 .inventory-grid {
   display: flex;
   flex-wrap: wrap;
@@ -137,20 +385,34 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.inventory-icon-wrapper {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: var(--radius-lg);
+  background: var(--primary-color-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-xs);
 }
 
 .item-name {
-  font-size: 26rpx;
-  color: #646566;
-  margin-bottom: 4rpx;
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+  text-align: center;
 }
 
 .item-qty {
-  font-size: 28rpx;
-  color: #323233;
-  font-weight: 500;
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
+  font-weight: 600;
 }
 
+/* ========== Fees List ========== */
 .fees-list {
   display: flex;
   flex-direction: column;
@@ -159,67 +421,106 @@
 .fee-item {
   display: flex;
   justify-content: space-between;
-  padding: 16rpx 0;
-  border-bottom: 1rpx solid #ebedf0;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1rpx solid var(--border-color);
 }
 
 .fee-item:last-child {
   border-bottom: none;
 }
 
+.fee-item.commission {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--danger-color-light);
+  border-radius: var(--radius-md);
+  margin: var(--spacing-xs) 0;
+  border-bottom: none;
+}
+
 .fee-label {
-  font-size: 28rpx;
-  color: #323233;
+  font-size: var(--font-size-sm);
+  color: var(--text-color-primary);
 }
 
 .fee-value {
-  font-size: 28rpx;
-  color: #07c160;
+  font-size: var(--font-size-sm);
+  color: var(--success-color);
+  font-weight: 600;
 }
 
-.payment-plan {
+.fee-value.owner {
+  color: var(--primary-color);
+}
+
+.fee-value.highlight {
+  color: var(--danger-color);
+}
+
+.fee-tip {
   display: flex;
-  flex-direction: column;
-  gap: 24rpx;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--background-color-light);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
+  line-height: 1.5;
 }
 
-.payment-item {
-  background-color: #f7f8fa;
-  border-radius: 12rpx;
-  padding: 24rpx;
+.fee-tip .van-icon {
+  color: var(--warning-color);
+  flex-shrink: 0;
 }
 
-.payment-title {
-  font-size: 28rpx;
-  font-weight: bold;
-  color: #323233;
-  margin-bottom: 16rpx;
-  padding-bottom: 12rpx;
-  border-bottom: 1rpx solid #ebedf0;
-}
-
-.payment-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 8rpx 0;
-}
-
-.payment-label {
-  font-size: 26rpx;
-  color: #969799;
-}
-
-.payment-value {
-  font-size: 26rpx;
-  color: #323233;
-}
-
+/* ========== Remark ========== */
 .remark-text {
-  font-size: 28rpx;
-  color: #646566;
-  line-height: 1.6;
+  font-size: var(--font-size-md);
+  color: var(--text-color-secondary);
+  line-height: 1.8;
+  padding: var(--spacing-md);
+  background: var(--background-color-light);
+  border-radius: var(--radius-md);
 }
 
+/* ========== Bottom Space ========== */
 .bottom-space {
-  height: 40rpx;
+  height: var(--spacing-xl);
+}
+
+/* ========== Bottom Bar ========== */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom));
+  background-color: var(--card-background);
+  box-shadow: 0 -4rpx 24rpx rgba(0, 0, 0, 0.08);
+}
+
+.bottom-bar-btn {
+  flex: 1;
+  height: 96rpx;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.btn-icon {
+  margin-right: var(--spacing-xs);
+  font-size: 32rpx;
+}
+
+.edit-btn {
+  background: var(--background-color-light) !important;
+  border: 1rpx solid var(--border-color) !important;
+}
+
+.sign-btn {
+  box-shadow: var(--shadow-md);
 }

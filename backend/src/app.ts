@@ -12,6 +12,7 @@ import contractsRouter from './routes/contracts';
 import invitationsRouter from './routes/invitations';
 import notificationsRouter from './routes/notifications';
 import signaturesRouter from './routes/signatures';
+import testDataRouter from './routes/testData';
 
 dotenv.config({ path: './config/.env' });
 
@@ -84,6 +85,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/invitations', invitationsRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/signatures', signaturesRouter);
+app.use('/api/test-data', testDataRouter);
 
 // 二维码生成服务 - 使用外部API生成二维码图片
 app.get('/api/contracts/invite-qrcode/:code', (req: Request, res: Response) => {

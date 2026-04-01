@@ -53,27 +53,16 @@ const findOrCreateUser = async (data: IUserRegister): Promise<IUser> => {
   );
 
   if (users.length > 0) {
-    const user = users[0];
-    // 如果传入了角色信息，更新用户角色（无论是否相同）
-    if (data.role) {
-      await execute(
-        'UPDATE users SET role = ?, updated_at = ? WHERE id = ?',
-        [data.role, new Date().toISOString(), user.id]
-      );
-      // 返回更新后的用户
-      const updatedUsers = await query<UserRow[]>('SELECT * FROM users WHERE id = ?', [user.id]);
-      return updatedUsers[0];
-    }
-    return user;
+    return users[0];
   }
 
   // 创建新用户（id由数据库自动生成）
   const now = new Date().toISOString();
-  // 检查是否是第一个用户
+  // 检查是否是第一个用户，第一个用户强制设为 ADMIN
   const userCount = await query<RowDataPacket[]>('SELECT COUNT(*) as count FROM users');
   const isFirstUser = userCount[0].count === 0;
-  // 如果是第一个用户，角色设为 ADMIN
-  const role = isFirstUser ? UserRole.ADMIN : (data.role || UserRole.LESSEE);
+  // 只有第一个用户能成为 ADMIN，后续用户必须指定角色（通过管理界面分配）
+  const role = isFirstUser ? UserRole.ADMIN : UserRole.LESSEE;
 
   const result = await insert(
     `INSERT INTO users (openid, phone, name, real_name_status, role, created_at, updated_at)

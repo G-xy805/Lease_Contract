@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS contracts (
     lessor_user_id BIGINT UNSIGNED NOT NULL COMMENT '甲方用户ID',
     partyA_company VARCHAR(200) DEFAULT NULL COMMENT '甲方公司/姓名',
     partyA_phone VARCHAR(20) COMMENT '甲方电话',
+    partyA_idcard VARCHAR(18) COMMENT '甲方身份证',
     partyA_contact VARCHAR(100) COMMENT '甲方代理人',
     partyA_phone2 VARCHAR(20) COMMENT '甲方备用电话',
     partyA_account VARCHAR(100) COMMENT '甲方收款账户',
@@ -59,7 +60,13 @@ CREATE TABLE IF NOT EXISTS contracts (
 
     -- 租赁期限
     lease_start DATE NOT NULL COMMENT '租赁开始日期',
+    lease_start_year VARCHAR(4) DEFAULT NULL COMMENT '租赁开始年',
+    lease_start_month VARCHAR(2) DEFAULT NULL COMMENT '租赁开始月',
+    lease_start_day VARCHAR(2) DEFAULT NULL COMMENT '租赁开始日',
     lease_end DATE NOT NULL COMMENT '租赁结束日期',
+    lease_end_year VARCHAR(4) DEFAULT NULL COMMENT '租赁结束年',
+    lease_end_month VARCHAR(2) DEFAULT NULL COMMENT '租赁结束月',
+    lease_end_day VARCHAR(2) DEFAULT NULL COMMENT '租赁结束日',
     lease_months INT DEFAULT NULL COMMENT '租赁月数',
     advance_notice_days INT DEFAULT NULL COMMENT '提前通知天数',
 
@@ -88,6 +95,8 @@ CREATE TABLE IF NOT EXISTS contracts (
     fee_water TINYINT(1) DEFAULT 1 COMMENT '水费乙方承担',
     fee_electric TINYINT(1) DEFAULT 1 COMMENT '电费乙方承担',
     fee_gas TINYINT(1) DEFAULT 1 COMMENT '燃气费乙方承担',
+    fee_tv TINYINT(1) DEFAULT 1 COMMENT '有线电视乙方承担',
+    fee_network TINYINT(1) DEFAULT 1 COMMENT '网络费乙方承担',
     fee_property TINYINT(1) DEFAULT 0 COMMENT '物业费乙方承担',
     fee_heating TINYINT(1) DEFAULT 0 COMMENT '暖气费乙方承担',
 

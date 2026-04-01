@@ -12,6 +12,8 @@ Page({
     codeSent: false,
     countdown: 0,
     timer: null,
+    agreed: false,
+    canLogin: false,
     USER_ROLE: USER_ROLE
   },
 
@@ -31,10 +33,39 @@ Page({
 
   onPhoneChange(e) {
     this.setData({ phone: e.detail })
+    this.updateCanLogin()
   },
 
   onCodeChange(e) {
     this.setData({ code: e.detail })
+    this.updateCanLogin()
+  },
+
+  onAgreementChange(e) {
+    this.setData({ agreed: e.detail })
+    this.updateCanLogin()
+  },
+
+  updateCanLogin() {
+    const { phone, code, agreed } = this.data
+    const canLogin = phone.length === 11 && code.length === 6 && agreed
+    this.setData({ canLogin })
+  },
+
+  showAgreement() {
+    wx.showModal({
+      title: '用户服务协议',
+      content: '这里是用户服务协议的内容...',
+      showCancel: false
+    })
+  },
+
+  showPrivacy() {
+    wx.showModal({
+      title: '隐私政策',
+      content: '这里是隐私政策的内容...',
+      showCancel: false
+    })
   },
 
   async onSendCode() {
@@ -163,16 +194,16 @@ Page({
   },
 
   redirectBasedOnRole(role) {
-    switch (role) {
-      case USER_ROLE.ADMIN:
-        wx.reLaunch({ url: '/pages/admin/index' })
-        break
-      case USER_ROLE.LESSOR:
-        wx.reLaunch({ url: '/pages/contracts/index' })
-        break
-      case USER_ROLE.LESSEE:
-      default:
-        wx.reLaunch({ url: '/pages/my-contracts/index' })
+    let url = '/pages/my-contracts/index'
+
+    if (role === USER_ROLE.LESSOR) {
+      url = '/pages/index/index'
     }
+
+    if (role === USER_ROLE.ADMIN) {
+      url = '/pages/index/index'
+    }
+
+    wx.switchTab({ url })
   }
 })

@@ -120,15 +120,12 @@ function migrateMissingColumns() {
     "ALTER TABLE contracts ADD COLUMN second_payment_date DATE",
     "ALTER TABLE contracts ADD COLUMN third_payment_amount DECIMAL(10,2)",
     "ALTER TABLE contracts ADD COLUMN third_payment_date DATE",
+    "ALTER TABLE contracts ADD COLUMN fourth_payment_amount DECIMAL(10,2)",
     "ALTER TABLE contracts ADD COLUMN deposit_chinese VARCHAR(100)",
     "ALTER TABLE contracts ADD COLUMN total_amount DECIMAL(12,2)",
 
-    // 费用约定 - 保留 fee_water, fee_electric, fee_gas, fee_property, fee_heating
-    "ALTER TABLE contracts ADD COLUMN fee_water BOOLEAN DEFAULT 1",
-    "ALTER TABLE contracts ADD COLUMN fee_electric BOOLEAN DEFAULT 1",
-    "ALTER TABLE contracts ADD COLUMN fee_gas BOOLEAN DEFAULT 1",
-    "ALTER TABLE contracts ADD COLUMN fee_property BOOLEAN DEFAULT 0",
-    "ALTER TABLE contracts ADD COLUMN fee_heating BOOLEAN DEFAULT 0",
+    // 费用约定 - 使用 fee_items JSON 字段存储
+    "ALTER TABLE contracts ADD COLUMN fee_items TEXT",
 
     // 居间信息
     "ALTER TABLE contracts ADD COLUMN intermediary_name VARCHAR(100)",

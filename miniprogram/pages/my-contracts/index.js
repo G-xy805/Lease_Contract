@@ -1,29 +1,15 @@
 // pages/my-contracts/index.js
 const app = getApp()
 const api = require('../../services/api')
-const { USER_ROLE, CONTRACT_STATUS } = require('../../utils/constants')
+const { CONTRACT_STATUS, CONTRACT_STATUS_TEXT, CONTRACT_STATUS_COLOR } = require('../../utils/constants')
 
-const STATUS_MAP = {
-  1: { text: '待甲方签署', color: 'warning' },
-  2: { text: '待乙方签署', color: 'primary' },
-  3: { text: '已签署', color: 'success' },
-  4: { text: '已拒绝', color: 'danger' },
-  5: { text: '已取消', color: 'default' },
-  6: { text: '已到期', color: 'default' }
+// Tab空状态文案配置
+const EMPTY_CONFIG = {
+  all: { text: '暂无合同', subText: '您还没有任何合同' },
+  pending: { text: '暂无待签署的合同', subText: '待您签署的合同将显示在这里' },
+  signed: { text: '暂无已签署的合同', subText: '已签署的合同将显示在这里' },
+  rejected: { text: '暂无已拒绝/已取消的合同', subText: '已拒绝或已取消的合同' }
 }
-
-// 甲方 tabs
-const LESSOR_TABS = [
-  { name: '待签署', status: 1 },
-  { name: '待乙方签署', status: 2 },
-  { name: '已签署', status: 3 }
-]
-
-// 乙方 tabs
-const LESSEE_TABS = [
-  { name: '待签署', status: 2 },
-  { name: '已签署', status: 3 }
-]
 
 Page({
   data: {
@@ -31,37 +17,44 @@ Page({
     loading: false,
     refreshing: false,
     loadingMore: false,
+    skeletonLoading: true,
     page: 1,
     pageSize: 10,
     hasMore: true,
-    searchValue: '',
     activeTab: 0,
-    tabs: LESSOR_TABS,
-    userRole: USER_ROLE.LESSOR,
-    STATUS_MAP: STATUS_MAP,
-    USER_ROLE: USER_ROLE
+    tabs: [
+      { title: '全部', name: 'all', statuses: null },
+      { title: '待签署', name: 'pending', statuses: [CONTRACT_STATUS.PENDING_LESSOR_SIGN, CONTRACT_STATUS.PENDING_LESSEE_SIGN] },
+      { title: '已签署', name: 'signed', statuses: CONTRACT_STATUS.SIGNED },
+      { title: '已拒绝/取消', name: 'rejected', statuses: [CONTRACT_STATUS.REJECTED, CONTRACT_STATUS.CANCELLED] }
+    ]
   },
 
   onLoad(options) {
-    // 根据用户角色设置 tabs
-    const userInfo = app.globalData?.userInfo || wx.getStorageSync('userInfo') || {}
-    const userRole = userInfo.role || USER_ROLE.LESSOR
-    this.setData({
-      userRole,
-      tabs: userRole === USER_ROLE.LESSEE ? LESSEE_TABS : LESSOR_TABS,
-      activeTab: 0
-    })
-
-    if (options.status) {
-      const statusIndex = this.data.tabs.findIndex(tab => tab.status === parseInt(options.status))
-      if (statusIndex !== -1) {
-        this.setData({ activeTab: statusIndex })
-      }
+    const token = wx.getStorageSync('token')
+    if (!token) {
+      wx.showToast({ title: '请先登录', icon: 'none' })
+      setTimeout(() => {
+        wx.navigateTo({ url: '/pages/login/login' })
+      }, 1500)
+      return
     }
     this.loadContracts(true)
   },
 
-  onShow() {},
+  onShow() {
+    // 检查是否有合同被签署/更新
+    const updatedContract = wx.getStorageSync('contract_updated')
+    if (updatedContract && this.data.contracts.length > 0) {
+      wx.removeStorageSync('contract_updated')
+      const index = this.data.contracts.findIndex(c => c.id === updatedContract.id)
+      if (index !== -1) {
+        const contracts = [...this.data.contracts]
+        contracts[index] = { ...contracts[index], ...updatedContract }
+        this.setData({ contracts })
+      }
+    }
+  },
 
   onPullDownRefresh() {
     this.loadContracts(true)
@@ -74,70 +67,85 @@ Page({
   },
 
   loadContracts(isRefresh = false, isLoadMore = false) {
-    const { page, pageSize, searchValue, activeTab, tabs } = this.data
+    const { page, pageSize, activeTab, tabs } = this.data
 
     if (isRefresh) {
       this.setData({ refreshing: true, page: 1, hasMore: true })
     } else if (isLoadMore) {
       this.setData({ loadingMore: true })
     } else {
-      this.setData({ loading: true })
+      this.setData({ loading: true, skeletonLoading: true })
     }
+
+    const requestPage = isRefresh || isLoadMore ? 1 : page
+    const currentTab = tabs[activeTab]
 
     const params = {
-      page: isRefresh || isLoadMore ? 1 : page,
-      pageSize: pageSize
+      page: requestPage,
+      page_size: pageSize
     }
 
-    const currentTab = tabs[activeTab]
-    if (currentTab && currentTab.status) {
-      params.status = currentTab.status
+    if (currentTab && currentTab.statuses !== null) {
+      if (Array.isArray(currentTab.statuses)) {
+        params.status = currentTab.statuses.join(',')
+      } else {
+        params.status = currentTab.statuses
+      }
     }
 
-    if (searchValue) {
-      params.keyword = searchValue
-    }
+    const isLessor = app.isLessor()
+    const contractApi = isLessor ? api.getLandlordContracts : api.getTenantContracts
 
-    // 根据用户角色动态选择 API
-    const userInfo = app.globalData?.userInfo || {}
-    const userRole = userInfo.role || wx.getStorageSync('userInfo')?.role || ''
-    const apiMethod = userRole === USER_ROLE.LESSEE
-      ? api.getTenantContracts
-      : api.getLandlordContracts
-
-    apiMethod(params).then(res => {
+    contractApi(params).then(res => {
       if (res.code === 200) {
-        let result = res.data?.list || []
+        const result = res.data?.list || []
+        const total = res.data?.total || 0
 
-        // 按创建时间排序（最新的在前）
-        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        const transformContract = (item) => ({
+          id: item.id,
+          title: item.title || '房屋租赁合同',
+          status: item.status,
+          statusText: this.getStatusText(item.status),
+          contract_no: item.contract_no,
+          houseAddress: item.house_address || '',
+          house_address: item.house_address || '',
+          leaseStart: item.lease_start || '',
+          lease_start: item.lease_start || '',
+          leaseEnd: item.lease_end || '',
+          lease_end: item.lease_end || '',
+          monthlyRent: item.monthly_rent || 0,
+          monthly_rent: item.monthly_rent || 0,
+          deposit: item.deposit || 0,
+          leaseMonths: item.lease_months || 0,
+          lease_months: item.lease_months || 0,
+          partyA_company: item.partyA_company || '',
+          partyA_name: item.partyA_name || item.partyA_company || '',
+          partyB_name: item.partyB_name || '',
+          partyA_phone: item.partyA_phone || '',
+          partyB_phone: item.partyB_phone || '',
+          created_at: item.created_at || '',
+          updated_at: item.updated_at || '',
+          updateTime: item.updated_at || item.created_at || '',
+          lessor_sign_status: item.partyA_sign_status || 0,
+          lessee_sign_status: item.partyB_sign_status || 0,
+          partyA_sign_status: item.partyA_sign_status || 0,
+          partyB_sign_status: item.partyB_sign_status || 0,
+        })
 
-        // 应用标签筛选
-        if (currentTab && currentTab.status) {
-          result = result.filter(c => c.status === currentTab.status)
-        }
-
-        // 应用搜索筛选（兼容新旧字段）
-        if (searchValue) {
-          const keyword = searchValue.toLowerCase()
-          result = result.filter(c =>
-            (c.title && c.title.toLowerCase().includes(keyword)) ||
-            (c.contract_no && c.contract_no.toLowerCase().includes(keyword)) ||
-            ((c.partyB_name || c.lessee_name) && (c.partyB_name || c.lessee_name).toLowerCase().includes(keyword)) ||
-            (c.house_address && c.house_address.toLowerCase().includes(keyword))
-          )
-        }
+        const transformedList = result.map(transformContract)
 
         this.setData({
-          contracts: result,
-          hasMore: false,
-          page: 2
+          contracts: isRefresh || isLoadMore ? transformedList : [...this.data.contracts, ...transformedList],
+          hasMore: result.length >= pageSize && (isRefresh || isLoadMore ? result.length < total : this.data.contracts.length < total),
+          page: isRefresh || isLoadMore ? 2 : this.data.page + 1,
+          skeletonLoading: false
         })
       } else {
         wx.showToast({
           title: res.message || '获取合同列表失败',
           icon: 'none'
         })
+        this.setData({ skeletonLoading: false })
       }
     }).catch(err => {
       console.error('获取合同列表失败', err)
@@ -147,7 +155,8 @@ Page({
       })
       this.setData({
         contracts: [],
-        hasMore: false
+        hasMore: false,
+        skeletonLoading: false
       })
     }).finally(() => {
       this.setData({
@@ -161,37 +170,16 @@ Page({
 
   onTabChange(e) {
     const index = e.detail.index !== undefined ? e.detail.index : e.currentTarget.dataset.index
+    const tab = this.data.tabs[index]
+
     this.setData({
       activeTab: index,
       contracts: [],
       page: 1,
       hasMore: true
     })
-    this.loadContracts(true)
-  },
 
-  onSearchChange(e) {
-    this.setData({ searchValue: e.detail })
-  },
-
-  onSearch(e) {
-    const { value } = e.detail
-    this.setData({
-      searchValue: value,
-      contracts: [],
-      page: 1,
-      hasMore: true
-    })
-    this.loadContracts(true)
-  },
-
-  onSearchClear() {
-    this.setData({
-      searchValue: '',
-      contracts: [],
-      page: 1,
-      hasMore: true
-    })
+    this.setData({ skeletonLoading: true })
     this.loadContracts(true)
   },
 
@@ -202,91 +190,15 @@ Page({
     })
   },
 
-  onSignContract(e) {
-    const { id } = e.currentTarget.dataset
-    const isPartyA = this.data.userRole !== USER_ROLE.LESSEE ? true : false
-
-    wx.showModal({
-      title: '确认签署',
-      content: '确定要签署此合同吗？签署后合同将正式生效。',
-      success: (res) => {
-        if (res.confirm) {
-          wx.navigateTo({
-            url: `/pages/sign-contract/index?contractId=${id}&isPartyA=${isPartyA}`
-          })
-        }
-      }
-    })
-  },
-
-  onRejectContract(e) {
-    const { id } = e.currentTarget.dataset
-
-    wx.showModal({
-      title: '确认拒绝',
-      content: '确定要拒绝签署此合同吗？',
-      success: (res) => {
-        if (res.confirm) {
-          api.rejectContract(id, '乙方拒绝签署').then(res => {
-            if (res.code === 200) {
-              wx.showToast({
-                title: '已拒绝签署',
-                icon: 'success'
-              })
-              this.loadContracts(true)
-            } else {
-              wx.showToast({
-                title: res.message || '操作失败',
-                icon: 'none'
-              })
-            }
-          }).catch(() => {
-            wx.showToast({
-              title: '网络错误',
-              icon: 'none'
-            })
-          })
-        }
-      }
-    })
-  },
-
-  async onDownloadPdf(e) {
-    const contractId = e.currentTarget.dataset.id
-    if (!contractId) {
-      wx.showToast({ title: '合同ID不存在', icon: 'none' })
-      return
-    }
-
-    wx.showLoading({ title: '正在生成PDF...' })
-
-    try {
-      const tempFilePath = await api.downloadContractPdf(contractId)
-      wx.hideLoading()
-
-      wx.openDocument({
-        filePath: tempFilePath,
-        fileType: 'pdf',
-        success: () => {
-          console.log('打开PDF成功')
-        },
-        fail: (err) => {
-          console.error('打开PDF失败:', err)
-          wx.showToast({ title: '打开失败，请重试', icon: 'none' })
-        }
-      })
-    } catch (err) {
-      wx.hideLoading()
-      console.error('下载PDF失败:', err)
-      wx.showToast({ title: err.message || '下载失败', icon: 'none' })
-    }
+  getEmptyConfig() {
+    return EMPTY_CONFIG[this.data.tabs[this.data.activeTab].name] || EMPTY_CONFIG['all']
   },
 
   getStatusTagType(status) {
-    return STATUS_MAP[status]?.color || 'default'
+    return CONTRACT_STATUS_COLOR[status] || 'default'
   },
 
   getStatusText(status) {
-    return STATUS_MAP[status]?.text || '未知'
+    return CONTRACT_STATUS_TEXT[status] || '未知状态'
   }
 })

@@ -1,14 +1,40 @@
-<!-- components/contract-card/index.wxml -->
 <view class="contract-card" bindtap="onClick">
   <view class="card-header">
-    <view class="text-lg text-bold">{{contract.title}}</view>
-    <van-tag type="{{getStatusColor(contract.status)}}">
-      {{getStatusText(contract.status)}}
-    </van-tag>
+    <view class="card-title-wrap">
+      <view class="card-title text-lg text-bold">{{contract.title}}</view>
+      <view class="text-xs text-gray">编号：{{contract.contract_no || contract.id}}</view>
+    </view>
+    <van-tag color="{{getStatusColor(contract.status)}}" plain>{{getStatusText(contract.status)}}</van-tag>
   </view>
+
   <view class="card-body">
-    <view class="text-sm text-gray">{{type === USER_ROLE.LESSOR ? '乙方' : '甲方'}}：{{type === USER_ROLE.LESSOR ? (contract.partyB_name || contract.lessee_name) : (contract.partyA_company || contract.lessor_name)}}</view>
-    <view class="text-sm text-gray mt-xs">金额：¥{{contract.monthly_rent}}/月</view>
-    <view class="text-sm text-gray mt-xs">时间：{{contract.created_at}}</view>
+    <view class="card-info-row">
+      <text class="info-label">{{role === USER_ROLE.LESSOR ? '乙方' : '甲方'}}：</text>
+      <text class="info-value">{{getCounterpartyName()}}</text>
+    </view>
+    <view class="card-info-row" wx:if="{{contract.house_address}}">
+      <text class="info-label">房屋：</text>
+      <text class="info-value">{{contract.house_address}}</text>
+    </view>
+    <view class="card-info-row" wx:if="{{contract.monthly_rent}}">
+      <text class="info-label">金额：</text>
+      <text class="info-value info-money">¥{{contract.monthly_rent}}<text class="text-xs">/月</text></text>
+    </view>
+  </view>
+
+  <view class="card-divider"></view>
+
+  <view class="card-footer">
+    <view class="sign-status">
+      <view class="sign-item {{getLessorSigned() ? 'signed' : ''}}">
+        <van-icon name="{{getLessorSigned() ? 'passed' : 'circle'}}" size="32rpx" color="{{getLessorSigned() ? '#07c160' : '#999'}}" />
+        <text class="sign-text">甲方{{getLessorSigned() ? '已签' : '未签'}}</text>
+      </view>
+      <view class="sign-item {{getLesseeSigned() ? 'signed' : ''}}">
+        <van-icon name="{{getLesseeSigned() ? 'passed' : 'circle'}}" size="32rpx" color="{{getLesseeSigned() ? '#07c160' : '#999'}}" />
+        <text class="sign-text">乙方{{getLesseeSigned() ? '已签' : '未签'}}</text>
+      </view>
+    </view>
+    <view class="text-xs text-gray">{{contract.updated_at || contract.created_at}}</view>
   </view>
 </view>

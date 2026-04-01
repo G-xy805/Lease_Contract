@@ -32,29 +32,23 @@
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 20rpx;
+}
+
+.card-title-wrap {
+  flex: 1;
+  margin-right: 16rpx;
+  overflow: hidden;
 }
 
 .card-title {
   font-size: 32rpx;
   font-weight: 600;
   color: #323233;
-  flex: 1;
-  margin-right: 16rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.card-status {
-  flex-shrink: 0;
-}
-
-.card-status .van-tag {
-  font-size: 22rpx;
-  padding: 4rpx 12rpx;
-  border-radius: 8rpx;
 }
 
 .card-body {
@@ -92,13 +86,9 @@
   font-weight: 500;
 }
 
-.info-money .money-symbol {
-  font-size: 24rpx;
-}
-
-.info-money .money-amount {
-  font-size: 32rpx;
-  font-weight: 600;
+.info-money .text-xs {
+  color: #969799;
+  font-weight: normal;
 }
 
 .card-divider {
@@ -111,18 +101,24 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 16rpx;
-  padding-top: 16rpx;
-  border-top: 1rpx dashed #ebedf0;
 }
 
-.footer-action {
-  color: #1989fa;
-  font-size: 26rpx;
+.sign-status {
+  display: flex;
+  gap: 32rpx;
+}
+
+.sign-item {
   display: flex;
   align-items: center;
+  gap: 8rpx;
 }
 
-.footer-action .van-icon {
-  margin-right: 4rpx;
+.sign-item.signed .sign-text {
+  color: #07c160;
+}
+
+.sign-text {
+  font-size: 24rpx;
+  color: #999999;
 }

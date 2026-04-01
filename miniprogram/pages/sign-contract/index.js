@@ -8,21 +8,25 @@ Page({
     contractInfo: {
       id: '',
       title: '房屋租赁合同',
-      contractNo: 'HT202403150001',
-      partyA: '张三',
-      partyB: '李四',
+      contractNo: '',
+      partyA: '',
+      partyB: '',
+      propertyAddress: '',
+      leaseStartDate: '',
+      leaseEndDate: '',
+      monthlyRent: '',
       status: 'pending'
     },
 
-    // 当前用户角色 (true=甲方, false=乙方)
+    // 当前用户角色 (true=甲方/出租人, false=乙方/承租人)
     isPartyA: true,
 
-    // 邀请码（乙方访问时使用）
-    inviteCode: '',
+    // 签署提示文本
+    signRoleText: '',
 
     // 签名配置
-    currentColor: '#000000',  // 黑色
-    currentThickness: '2',   // 细
+    currentColor: '#000000',
+    currentThickness: '2',
     hasSigned: false,
 
     // 提交状态
@@ -31,74 +35,43 @@ Page({
     // 签署时间
     signTime: '',
 
+    // 确认弹窗
+    showConfirmDialog: false,
+
     // 结果弹窗
-    showResult: false,
+    showResultDialog: false,
     resultType: 'success',
     resultTitle: '',
-    resultMessage: '',
-
-    // 签名数据
-    signatureImage: ''
+    resultMessage: ''
   },
 
   // 签名上下文
   signContext: null,
-  // 签名路径
-  points: [],
-  isDrawing: false,
 
   onLoad(options) {
-    // 获取传入的合同信息
-    // 兼容两种参数格式：contractId/id 和 isPartyA/role
+    // 获取传入的合同ID
     const contractId = options.contractId || options.id
-    const isPartyA = options.isPartyA !== undefined
-      ? (options.isPartyA === 'true' || options.isPartyA === true)
-      : (options.role === 'partyA' || options.role === 'lessor')
 
     if (contractId) {
       this.setData({
         'contractInfo.id': contractId
       })
+      // 加载合同详情
+      this.loadContractDetail(contractId)
     }
-    if (options.title) {
-      this.setData({
-        'contractInfo.title': decodeURIComponent(options.title)
-      })
+
+    // 判断用户角色（优先使用URL参数，其次使用app.isLessor()）
+    const userRole = app.getUserRole()
+    let isPartyA = app.isLessor()
+    if (options.isPartyA !== undefined) {
+      isPartyA = options.isPartyA === 'true' || options.isPartyA === true
     }
-    if (options.contractNo) {
-      this.setData({
-        'contractInfo.contractNo': options.contractNo
-      })
-    }
-    if (options.partyA) {
-      this.setData({
-        'contractInfo.partyA': decodeURIComponent(options.partyA)
-      })
-    }
-    if (options.partyB) {
-      this.setData({
-        'contractInfo.partyB': decodeURIComponent(options.partyB)
-      })
-    }
+    const signRoleText = isPartyA ? '甲方（出租人）' : '乙方（承租人）'
 
     this.setData({
       isPartyA: isPartyA,
-      inviteCode: options.inviteCode || ''
+      signRoleText: signRoleText
     })
-
-    if (options.status) {
-      this.setData({
-        'contractInfo.status': options.status
-      })
-    }
-
-    // 如果有合同ID，就加载合同信息
-    if (contractId) {
-      this.loadContractInfo(contractId)
-    } else if (!isPartyA && options.inviteCode) {
-      // 乙方通过邀请码访问
-      this.loadContractByInviteCode(options.inviteCode)
-    }
 
     // 初始化签名画布
     this.initCanvas()
@@ -109,55 +82,57 @@ Page({
     this.signContext = wx.createCanvasContext('signCanvas')
   },
 
-  // 通过邀请码加载合同信息
-  loadContractByInviteCode(inviteCode) {
-    wx.showLoading({ title: '加载中...' })
-    api.verifyInviteCode(inviteCode).then(res => {
-      wx.hideLoading()
-      if (res.code === 200) {
-        const contract = res.data
-        this.setData({
-          'contractInfo.id': contract.contract_id,
-          'contractInfo.title': contract.title || '房屋租赁合同',
-          'contractInfo.contractNo': contract.contract_no || '',
-          'contractInfo.partyA': contract.partyA_company || '',
-          'contractInfo.partyB': contract.partyB_name || '',
-          'contractInfo.status': 'pending_sign'
-        })
-      } else {
-        wx.showToast({ title: res.message || '无效的邀请码', icon: 'none' })
-      }
-    }).catch(err => {
-      wx.hideLoading()
-      wx.showToast({ title: '网络错误', icon: 'none' })
-    })
-  },
-
   // 加载合同详情
-  loadContractInfo(contractId) {
+  loadContractDetail(contractId) {
     wx.showLoading({ title: '加载中...' })
+
     api.getContractDetail(contractId).then(res => {
       wx.hideLoading()
-      if (res.code === 200) {
-        const contract = res.data.contract
+
+      if (res.code === 200 && res.data) {
+        const contract = res.data.contract || res.data
+        const lessor = res.data.lessor || {}
+        const lessee = res.data.lessee || {}
+
         this.setData({
-          'contractInfo.id': contract.id,
+          'contractInfo.id': contract.id || contractId,
           'contractInfo.title': contract.title || '房屋租赁合同',
           'contractInfo.contractNo': contract.contract_no || '',
-          'contractInfo.partyA': contract.partyA_company || contract.lessor_name || '',
-          'contractInfo.partyB': contract.partyB_name || contract.lessee_name || '',
-          'contractInfo.status': contract.status === 3 ? 'pending_sign' : 'pending'
+          'contractInfo.partyA': lessor.name || lessor.company_name || contract.partyA_name || '',
+          'contractInfo.partyB': lessee.name || contract.partyB_name || '',
+          'contractInfo.propertyAddress': contract.property_address || '',
+          'contractInfo.leaseStartDate': contract.lease_start_date || '',
+          'contractInfo.leaseEndDate': contract.lease_end_date || '',
+          'contractInfo.monthlyRent': contract.monthly_rent || '',
+          'contractInfo.status': this.getStatusKey(contract.status)
         })
       }
     }).catch(err => {
       wx.hideLoading()
       console.error('加载合同详情失败', err)
+      wx.showToast({
+        title: '加载失败',
+        icon: 'none'
+      })
     })
+  },
+
+  // 将数字状态转换为字符串key
+  getStatusKey(status) {
+    const statusMap = {
+      0: 'draft',
+      1: 'pending',
+      2: 'pending_tenant',
+      3: 'signed',
+      4: 'rejected',
+      5: 'cancelled',
+      6: 'expired'
+    }
+    return statusMap[status] || 'pending'
   },
 
   // 初始化画布
   initCanvas() {
-    // 设置画布尺寸
     const query = wx.createSelectorQuery().in(this)
     query.select('.canvas-wrapper').boundingClientRect((rect) => {
       if (rect) {
@@ -181,7 +156,7 @@ Page({
     })
   },
 
-  // 点击选择颜色（wxml绑定）
+  // 点击选择颜色
   selectColor(e) {
     const color = e.currentTarget.dataset.color
     this.setData({
@@ -189,7 +164,7 @@ Page({
     })
   },
 
-  // 点击选择粗细（wxml绑定）
+  // 点击选择粗细
   selectThickness(e) {
     const thickness = e.currentTarget.dataset.thickness
     this.setData({
@@ -246,7 +221,7 @@ Page({
     this.signContext.draw(true)
 
     // 标记已有签名
-    if (this.points.length > 0) {
+    if (this.points && this.points.length > 0) {
       this.setData({
         hasSigned: true
       })
@@ -268,8 +243,7 @@ Page({
     this.signContext.draw()
 
     this.setData({
-      hasSigned: false,
-      signatureImage: ''
+      hasSigned: false
     })
   },
 
@@ -303,8 +277,8 @@ Page({
     })
   },
 
-  // 显示预览确认弹窗
-  showPreview() {
+  // 点击确认签署按钮
+  submitSign() {
     if (!this.data.hasSigned) {
       wx.showToast({
         title: '请先签名',
@@ -318,21 +292,22 @@ Page({
     const signTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
 
     this.setData({
-      showPreviewPopup: true,
+      showConfirmDialog: true,
       signTime: signTime
     })
   },
 
-  // 关闭预览弹窗
-  closePreview() {
+  // 关闭确认弹窗
+  closeConfirmDialog() {
     this.setData({
-      showPreviewPopup: false
+      showConfirmDialog: false
     })
   },
 
-  // 确认签署（预览后）
+  // 确认签署
   async confirmSign() {
     this.setData({
+      showConfirmDialog: false,
       isSubmitting: true
     })
 
@@ -342,30 +317,32 @@ Page({
       const signature = 'data:image/png;base64,' + signatureBase64
       const { contractInfo, isPartyA } = this.data
 
+      let res
       if (isPartyA) {
         // 甲方签署
-        const res = await api.lessorSign(contractInfo.id, signature)
-        if (res.code === 200) {
-          this.showSuccessPage()
-        } else {
-          throw new Error(res.message || '签署失败')
-        }
+        res = await api.lessorSign(contractInfo.id, signature)
       } else {
         // 乙方签署
-        const res = await api.tenantSign(contractInfo.id, signature)
-        if (res.code === 200) {
-          this.showSuccessPage()
-        } else {
-          throw new Error(res.message || '签署失败')
-        }
+        res = await api.tenantSign(contractInfo.id, signature)
+      }
+
+      if (res.code === 200) {
+        this.setData({
+          showResultDialog: true,
+          resultType: 'success',
+          resultTitle: '签署成功',
+          resultMessage: isPartyA ? '甲方签署已完成，请等待乙方签署' : '乙方签署已完成，合同正式生效'
+        })
+      } else {
+        throw new Error(res.message || '签署失败')
       }
     } catch (err) {
       console.error('签署请求失败', err)
       this.setData({
-        showResult: true,
+        showResultDialog: true,
         resultType: 'error',
         resultTitle: '签署失败',
-        resultMessage: err.message || '签署过程出现错误，请稍后重试。'
+        resultMessage: err.message || '签署过程出现错误，请稍后重试'
       })
     } finally {
       this.setData({
@@ -374,29 +351,43 @@ Page({
     }
   },
 
-  // 显示成功弹窗
-  showSuccessPage() {
+  // 关闭结果弹窗
+  closeResultDialog() {
     this.setData({
-      showResult: true,
-      resultType: 'success',
-      resultTitle: '签署成功',
-      resultMessage: '合同签署已完成！'
+      showResultDialog: false
+    })
+    wx.navigateBack()
+  },
+
+  // 查看详情（从结果弹窗）
+  viewContractDetail() {
+    this.setData({
+      showResultDialog: false
+    })
+    wx.navigateTo({
+      url: `/pages/contract-detail/index?id=${this.data.contractInfo.id}`
     })
   },
 
-  // 关闭结果弹窗并退出
-  closeResultPopup() {
-    this.setData({ showResult: false })
-    wx.navigateBack()
+  // 重新签署（从结果弹窗）
+  reSignFromResult() {
+    this.setData({
+      showResultDialog: false
+    })
+    this.clearSign()
   },
 
-  // 查看详情
-  goToResult() {
-    this.setData({ showResult: false })
-    wx.navigateBack()
+  // 返回首页
+  goHome() {
+    this.setData({
+      showResultDialog: false
+    })
+    wx.switchTab({
+      url: '/pages/index/index'
+    })
   },
 
-  // 点击清除签名
+  // 清除签名确认
   showClearConfirmDialog() {
     if (!this.data.hasSigned) return
 
@@ -413,27 +404,16 @@ Page({
     })
   },
 
-  // 重新签署
-  reSignFromResult() {
-    this.setData({ showResult: false })
-    this.clearSign()
-  },
-
-  // 返回首页
-  goHome() {
-    this.setData({ showResult: false })
-    wx.redirectTo({
-      url: '/pages/index/index'
-    })
-  },
-
   // 计算状态文本
   get statusText() {
     const statusMap = {
+      'draft': '草稿',
       'pending': '待签署',
-      'pending_sign': '待乙方签署',
+      'pending_tenant': '待乙方签署',
       'signed': '已签署',
-      'completed': '已完成'
+      'rejected': '已拒绝',
+      'cancelled': '已取消',
+      'expired': '已到期'
     }
     return statusMap[this.data.contractInfo.status] || '待签署'
   }

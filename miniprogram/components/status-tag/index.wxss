@@ -1,0 +1,37 @@
+:host {
+  display: inline-block;
+}
+
+/* 使用CSS变量统一状态标签样式 */
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* 不同状态的颜色方案 */
+.status-pending { 
+  color: var(--warning-color-dark); 
+  background-color: var(--warning-color-light); 
+}
+.status-signed { 
+  color: var(--success-color-dark); 
+  background-color: var(--success-color-light); 
+}
+.status-rejected { 
+  color: var(--danger-color-dark); 
+  background-color: var(--danger-color-light); 
+}
+.status-cancelled { 
+  color: var(--text-color-tertiary); 
+  background-color: var(--background-color-light); 
+}
+.status-draft { 
+  color: var(--text-color-secondary); 
+  background-color: var(--background-color-light); 
+}

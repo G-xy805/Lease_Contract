@@ -1,167 +1,170 @@
 <view class="container">
-  <!-- 顶部步骤指示器 -->
-  <view class="steps-wrapper" wx:if="{{certificationStatus === 'none' || certificationStatus === 'pending'}}">
-    <van-steps steps="{{ steps }}" current="{{ currentStep }}" active-color="#07c160" />
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <view class="header-content">
+      <view class="header-icon-wrapper">
+        <van-icon name="shield" size="48rpx" />
+      </view>
+      <view class="header-text-wrapper">
+        <text class="page-title">实名认证</text>
+        <text class="page-subtitle">为保障合同法律效力，请完成实名认证</text>
+      </view>
+    </view>
   </view>
 
-  <!-- 未认证：显示认证表单 -->
-  <view class="content" wx:if="{{certificationStatus === 'none'}}">
-    <view class="section">
-      <view class="section-title">身份信息</view>
-      <van-field
-        label="真实姓名"
-        placeholder="请输入您的真实姓名"
-        value="{{ formData.realName }}"
-        bind:change="onFieldChange"
-        data-field="realName"
-        size="large"
-      />
-      <van-field
-        label="身份证号"
-        placeholder="请输入18位身份证号码"
-        value="{{ formData.idCard }}"
-        bind:change="onFieldChange"
-        data-field="idCard"
-        size="large"
-      />
+  <!-- 认证状态卡片 -->
+  <view class="auth-status-card card">
+    <view class="status-icon-wrapper {{certificationStatus === 1 ? 'status-success' : certificationStatus === 2 ? 'status-pending' : 'status-default'}}">
+      <van-icon name="{{certificationStatus === 1 ? 'checked' : certificationStatus === 2 ? 'clock-o' : 'idcard'}}" class="status-icon" />
     </view>
+    <view class="status-info">
+      <text class="status-title">{{certificationStatus === 1 ? '已认证' : certificationStatus === 2 ? '认证中' : '未认证'}}</text>
+      <text class="status-desc">{{certificationStatus === 1 ? '您的身份信息已通过认证' : certificationStatus === 2 ? '认证审核中，请耐心等待' : '请填写并提交您的身份信息'}}</text>
+    </view>
+  </view>
 
-    <view class="section">
-      <view class="section-title">身份证上传</view>
-      <view class="id-card-upload">
-        <view class="upload-item">
-          <view class="upload-label">身份证正面</view>
-          <view class="upload-box" bindtap="chooseImage" data-type="front">
-            <image wx:if="{{idCardFront}}" src="{{idCardFront}}" class="preview-image" mode="aspectFill" />
-            <view wx:else class="upload-placeholder">
-              <van-icon name="photograph" size="48rpx" color="#999" />
-              <text class="upload-text">点击上传</text>
-            </view>
-          </view>
-          <view class="upload-tip">请上传身份证正面（人像面）</view>
+  <!-- 已认证状态 -->
+  <block wx:if="{{certificationStatus === 1}}">
+    <view class="card user-info-card">
+      <view class="info-header">
+        <view class="header-icon-wrapper">
+          <van-icon name="user-o" size="36rpx" />
         </view>
-        <view class="upload-item">
-          <view class="upload-label">身份证背面</view>
-          <view class="upload-box" bindtap="chooseImage" data-type="back">
-            <image wx:if="{{idCardBack}}" src="{{idCardBack}}" class="preview-image" mode="aspectFill" />
-            <view wx:else class="upload-placeholder">
-              <van-icon name="photograph" size="48rpx" color="#999" />
-              <text class="upload-text">点击上传</text>
-            </view>
+        <text class="header-title">认证信息</text>
+      </view>
+      <view class="info-list">
+        <view class="info-row">
+          <view class="info-label-wrapper">
+            <van-icon name="manager-o" size="28rpx" class="row-icon" />
+            <text class="info-label">姓名</text>
           </view>
-          <view class="upload-tip">请上传身份证背面（国徽面）</view>
+          <text class="info-value">{{userInfo.realName}}</text>
         </view>
+        <view class="info-row">
+          <view class="info-label-wrapper">
+            <van-icon name="idcard" size="28rpx" class="row-icon" />
+            <text class="info-label">身份证号</text>
+          </view>
+          <text class="info-value idcard-value">{{idCardMasked}}</text>
+        </view>
+      </view>
+      <view class="verified-badge">
+        <van-icon name="passed" size="24rpx" />
+        <text>身份信息已认证</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 未认证/认证中 -->
+  <block wx:if="{{certificationStatus !== 1}}">
+    <!-- 认证表单 -->
+    <view class="card auth-form">
+      <view class="form-header">
+        <view class="header-icon-wrapper">
+          <van-icon name="idcard" size="36rpx" />
+        </view>
+        <text class="header-title">身份信息</text>
+      </view>
+
+      <!-- 姓名 -->
+      <view class="form-item">
+        <view class="form-label-wrapper">
+          <van-icon name="manager-o" size="28rpx" class="form-icon" />
+          <text class="form-label">姓名 <text class="required">*</text></text>
+        </view>
+        <van-field
+          value="{{realName}}"
+          placeholder="请输入真实姓名"
+          bind:change="onRealNameChange"
+          disabled="{{certificationStatus === 2}}"
+          custom-class="form-input"
+        />
+      </view>
+
+      <!-- 身份证号 -->
+      <view class="form-item">
+        <view class="form-label-wrapper">
+          <van-icon name="idcard" size="28rpx" class="form-icon" />
+          <text class="form-label">身份证号 <text class="required">*</text></text>
+        </view>
+        <van-field
+          value="{{idCard}}"
+          placeholder="请输入18位身份证号"
+          type="idcard"
+          maxlength="18"
+          bind:change="onIdCardChange"
+          disabled="{{certificationStatus === 2}}"
+          custom-class="form-input"
+        />
       </view>
     </view>
 
-    <view class="section">
-      <view class="section-title">人脸核身</view>
-      <view class="face-verification">
-        <view class="face-box {{faceVerified ? 'verified' : ''}}" bindtap="startFaceVerification">
-          <van-icon wx:if="{{!faceVerified}}" name="user-o" size="80rpx" color="#999" />
-          <van-icon wx:else name="checked" size="80rpx" color="#07c160" />
-          <text class="face-text">{{faceVerified ? '已认证' : '点击进行人脸核身'}}</text>
+    <!-- 身份证照片 -->
+    <view class="card photo-upload">
+      <view class="form-header">
+        <view class="header-icon-wrapper">
+          <van-icon name="photograph" size="36rpx" />
         </view>
-        <view class="upload-tip">请在光线充足的环境下进行人脸核身</view>
+        <text class="header-title">证件照片</text>
+      </view>
+
+      <view class="photo-grid">
+        <!-- 身份证正面 -->
+        <view class="photo-item">
+          <view class="photo-label-wrapper">
+            <van-icon name="idcard" size="24rpx" class="photo-icon" />
+            <text class="photo-label">身份证正面</text>
+          </view>
+          <view class="photo-upload-area {{idCardFront ? 'has-image' : ''}}" bindtap="uploadIdCardFront">
+            <image wx:if="{{idCardFront}}" src="{{idCardFront}}" mode="aspectFill" class="photo-preview" />
+            <view wx:else class="photo-placeholder">
+              <van-icon name="plus" size="56rpx" />
+              <text class="placeholder-text">点击上传</text>
+              <text class="placeholder-hint">人像面</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 身份证反面 -->
+        <view class="photo-item">
+          <view class="photo-label-wrapper">
+            <van-icon name="idcard" size="24rpx" class="photo-icon" />
+            <text class="photo-label">身份证反面</text>
+          </view>
+          <view class="photo-upload-area {{idCardBack ? 'has-image' : ''}}" bindtap="uploadIdCardBack">
+            <image wx:if="{{idCardBack}}" src="{{idCardBack}}" mode="aspectFill" class="photo-preview" />
+            <view wx:else class="photo-placeholder">
+              <van-icon name="plus" size="56rpx" />
+              <text class="placeholder-text">点击上传</text>
+              <text class="placeholder-hint">国徽面</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="photo-tip">
+        <van-icon name="info-o" size="28rpx" />
+        <text>请确保照片清晰，信息可辨认</text>
       </view>
     </view>
 
-    <view class="agreement">
-      <van-checkbox value="{{ agreed }}" bind:change="onAgreeChange" shape="square" icon-size="36rpx">
-        <text class="agreement-text">我已阅读并同意</text>
-      </van-checkbox>
-      <text class="link" bindtap="showAgreement">《实名认证服务协议》</text>
-    </view>
-
-    <view class="submit-btn">
+    <!-- 提交按钮 -->
+    <view class="submit-section">
       <van-button
         type="primary"
         size="large"
         round
-        loading="{{ submitting }}"
-        disabled="{{ !canSubmit }}"
+        block
         bind:click="submitCertification"
-      >
-        提交认证
+        loading="{{submitting}}"
+        disabled="{{!canSubmit}}"
+        class="submit-btn">
+        <van-icon name="certificate" class="btn-icon" wx:if="{{certificationStatus !== 2}}" />
+        {{certificationStatus === 2 ? '审核中...' : '提交认证'}}
       </van-button>
     </view>
-  </view>
+  </block>
 
-  <!-- 认证中：显示审核中提示 -->
-  <view class="content" wx:if="{{certificationStatus === 'pending'}}">
-    <view class="status-card pending">
-      <view class="status-icon">
-        <van-loading type="spinner" size="80rpx" color="#1989fa" />
-      </view>
-      <view class="status-title">认证审核中</view>
-      <view class="status-desc">您的实名认证信息已提交，正在审核中，请耐心等待</view>
-      <view class="status-info">
-        <view class="info-item">
-          <text class="info-label">提交时间：</text>
-          <text class="info-value">{{ submittedAt }}</text>
-        </view>
-        <view class="info-item">
-          <text class="info-label">预计审核时间：</text>
-          <text class="info-value">1-3个工作日</text>
-        </view>
-      </view>
-    </view>
-
-    <view class="tips-card">
-      <view class="tips-title">温馨提示</view>
-      <view class="tips-list">
-        <text>审核结果将通过短信通知您</text>
-        <text>如有疑问可联系客服咨询</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 已认证：显示认证成功 -->
-  <view class="content" wx:if="{{certificationStatus === 'certified'}}">
-    <view class="status-card success">
-      <view class="status-icon success-icon">
-        <van-icon name="checked" size="80rpx" color="#fff" />
-      </view>
-      <view class="status-title">实名认证成功</view>
-      <view class="status-desc">您已完成实名认证，可以享受更多服务</view>
-      <view class="certified-info">
-        <view class="info-item">
-          <text class="info-label">真实姓名：</text>
-          <text class="info-value">{{ certifiedInfo.realName }}</text>
-        </view>
-        <view class="info-item">
-          <text class="info-label">身份证号：</text>
-          <text class="info-value">{{ certifiedInfo.idCard }}</text>
-        </view>
-        <view class="info-item">
-          <text class="info-label">认证时间：</text>
-          <text class="info-value">{{ certifiedInfo.certifiedAt }}</text>
-        </view>
-      </view>
-    </view>
-
-    <view class="action-btns">
-      <van-button type="primary" size="large" round bind:click="goBack">返回</van-button>
-    </view>
-  </view>
-
-  <!-- 认证失败：显示失败原因和重新认证 -->
-  <view class="content" wx:if="{{certificationStatus === 'failed'}}">
-    <view class="status-card failed">
-      <view class="status-icon failed-icon">
-        <van-icon name="close" size="80rpx" color="#fff" />
-      </view>
-      <view class="status-title">实名认证失败</view>
-      <view class="status-desc">很抱歉，您的实名认证未通过审核</view>
-      <view class="failed-reason">
-        <view class="reason-title">失败原因：</view>
-        <view class="reason-content">{{ failedReason }}</view>
-      </view>
-    </view>
-
-    <view class="action-btns">
-      <van-button type="primary" size="large" round bind:click="retryCertification">重新认证</van-button>
-      <van-button size="large" round plain bind:click="contactSupport" style="margin-top: 24rpx;">联系客服</van-button>
-    </view>
-  </view>
+  <!-- 底部占位 -->
+  <view class="bottom-placeholder"></view>
 </view>

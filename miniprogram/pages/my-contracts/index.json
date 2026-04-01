@@ -1,4 +1,15 @@
 {
+  "usingComponents": {
+    "van-tabs": "@vant/weapp/tabs/index",
+    "van-tab": "@vant/weapp/tab/index",
+    "van-tag": "@vant/weapp/tag/index",
+    "van-empty": "@vant/weapp/empty/index",
+    "van-loading": "@vant/weapp/loading/index",
+    "van-loading-dots": "@vant/weapp/loading/index",
+    "van-icon": "@vant/weapp/icon/index",
+    "van-skeleton": "@vant/weapp/skeleton/index"
+  },
   "navigationBarTitleText": "我的合同",
-  "usingComponents": {}
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 50
 }

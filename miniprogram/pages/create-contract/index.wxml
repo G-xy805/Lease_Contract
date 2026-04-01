@@ -1,93 +1,100 @@
 <wxs module="utils">
-module.exports = {
-  formatDate: function(dateStr) {
-    if (!dateStr) return ''
-    var date = dateStr
-    if (typeof date === 'string' && date.indexOf('-') > -1) {
-      var parts = date.split('-')
-      if (parts.length === 3) {
-        return parts[0] + '年' + parseInt(parts[1]) + '月' + parseInt(parts[2]) + '日'
-      }
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  var date = dateStr
+  if (typeof date === 'string' && date.indexOf('-') > -1) {
+    var parts = date.split('-')
+    if (parts.length === 3) {
+      return parts[0] + '年' + parseInt(parts[1]) + '月' + parseInt(parts[2]) + '日'
     }
-    return dateStr
   }
+  return dateStr
+}
+
+function getPaymentMethodText(value) {
+  var map1 = '月付'
+  var map3 = '季付'
+  var map6 = '半年付'
+  var map12 = '年付'
+  if (value === 1) return map1
+  if (value === 3) return map3
+  if (value === 6) return map6
+  if (value === 12) return map12
+  return map1
+}
+
+module.exports = {
+  formatDate: formatDate,
+  getPaymentMethodText: getPaymentMethodText
 }
 </wxs>
 
 <!-- pages/create-contract/index.wxml -->
 <view class="container">
-  <!-- 未保存提示 -->
-  <view class="unsaved-tip" wx:if="{{showUnsavedTip}}">
-    <text>有未保存的更改</text>
-    <view class="save-btn" bindtap="autoSaveToStorage">保存</view>
-  </view>
-
-  <!-- 自动保存提示 -->
-  <view class="auto-save-indicator {{autoSaveVisible ? 'show' : ''}}">
-    <van-icon name="clock-o" size="24rpx" />
-    <text>正在保存...</text>
-  </view>
-
   <van-notice-bar text="请填写完整的合同信息，带*号为必填项" />
 
   <scroll-view scroll-y class="form-scroll">
-    <!-- 进度指示器 -->
+    <!-- 步骤指示器 -->
     <view class="steps-wrapper">
-      <view class="custom-steps">
-        <view wx:for="{{steps}}" wx:key="index" class="step-item">
-          <view class="step-icon-wrap {{index < currentStep ? 'completed' : (index === currentStep ? 'current' : 'pending')}}">
-            <van-icon wx:if="{{index < currentStep}}" name="checked" size="28rpx" />
-            <text wx:else>{{index + 1}}</text>
+      <view class="steps-custom">
+        <view
+          wx:for="{{steps}}"
+          wx:key="index"
+          class="step-item {{index < currentStep ? 'completed' : index === currentStep ? 'active' : ''}}"
+        >
+          <view class="step-connector" wx:if="{{index > 0}}"></view>
+          <view class="step-dot-wrapper">
+            <view class="step-dot">
+              <van-icon wx:if="{{index < currentStep}}" name="passed" size="28rpx" color="#ffffff" />
+              <text wx:else>{{index + 1}}</text>
+            </view>
           </view>
-          <text class="step-desc {{index < currentStep ? 'completed' : (index === currentStep ? 'current' : '')}}">{{item.desc}}</text>
-          <view class="step-line {{index < currentStep ? 'completed' : ''}}" wx:if="{{index < steps.length - 1}}"></view>
+          <text class="step-label">{{item.title}}</text>
         </view>
       </view>
     </view>
 
-    <!-- 第一部分：甲乙双方信息 -->
-    <view class="section {{errors.partyB_name || errors.partyB_phone || errors.partyB_idCard ? 'error' : ''}}">
-      <view class="section-title">一、甲乙双方信息</view>
-
-      <view class="info-card">
-        <view class="info-row">
-          <text class="info-label">甲方（出租方）</text>
-          <text class="info-value company">{{formData.partyA_company || userInfo.name || '内蒙古恒之寓酒店管理有限公司'}}</text>
+    <!-- ========== Step 1: 甲方信息 ========== -->
+    <view class="section {{currentStep === 0 ? 'active' : ''}}" wx:if="{{currentStep === 0}}">
+      <view class="section-header">
+        <view class="section-icon">
+          <van-icon name="user-o" size="40rpx" color="var(--primary-color)" />
         </view>
-        <view class="info-row">
-          <text class="info-label">甲方公司</text>
-          <text class="info-value">{{formData.partyA_company || userInfo.company || '内蒙古恒之寓酒店管理有限公司'}}</text>
-        </view>
-        <view class="info-row">
-          <text class="info-label">甲方电话</text>
-          <text class="info-value">{{formData.partyA_phone || userInfo.phone}}</text>
-        </view>
-        <view class="info-row" wx:if="{{formData.partyA_phone2}}">
-          <text class="info-label">甲方电话2</text>
-          <text class="info-value">{{formData.partyA_phone2}}</text>
-        </view>
-        <view class="info-row" wx:if="{{formData.partyA_contact}}">
-          <text class="info-label">甲方代理人</text>
-          <text class="info-value">{{formData.partyA_contact}}</text>
-        </view>
+        <view class="section-title">一、甲方信息</view>
+        <view class="section-subtitle">出租方信息</view>
       </view>
 
-      <!-- 新增：甲方公司名称字段 -->
       <van-field
-        label="甲方公司名称"
-        placeholder="请输入甲方公司名称"
+        label="甲方名称"
+        placeholder="请输入甲方公司/个人名称"
         value="{{formData.partyA_company}}"
         data-field="partyA_company"
         bind:change="onFieldChange"
         bind:blur="onFieldBlur"
+        required
         size="large"
         error="{{errors.partyA_company ? true : false}}"
         error-message="{{errors.partyA_company}}"
+        class="form-field"
       />
-      <!-- 新增：甲方第二个电话 -->
       <van-field
-        label="甲方电话2"
-        placeholder="请输入甲方第二个联系电话"
+        label="甲方电话"
+        placeholder="请输入甲方联系电话"
+        value="{{formData.partyA_phone}}"
+        data-field="partyA_phone"
+        bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
+        required
+        size="large"
+        type="number"
+        maxlength="11"
+        error="{{errors.partyA_phone ? true : false}}"
+        error-message="{{errors.partyA_phone}}"
+        class="form-field"
+      />
+      <van-field
+        label="甲方备用电话"
+        placeholder="请输入备用联系电话（选填）"
         value="{{formData.partyA_phone2}}"
         data-field="partyA_phone2"
         bind:change="onFieldChange"
@@ -95,24 +102,60 @@ module.exports = {
         size="large"
         type="number"
         maxlength="11"
-        error="{{errors.partyA_phone2 ? true : false}}"
-        error-message="{{errors.partyA_phone2}}"
+        class="form-field"
       />
-      <!-- 新增：甲方委托代理人 -->
       <van-field
         label="甲方委托代理人"
-        placeholder="请输入甲方委托代理人姓名"
+        placeholder="请输入代理人姓名（选填）"
         value="{{formData.partyA_contact}}"
         data-field="partyA_contact"
         bind:change="onFieldChange"
         bind:blur="onFieldBlur"
         size="large"
-        error="{{errors.partyA_contact ? true : false}}"
-        error-message="{{errors.partyA_contact}}"
+        class="form-field"
       />
+      <van-field
+        label="甲方收款账户"
+        placeholder="请输入收款账户（选填）"
+        value="{{formData.partyA_account}}"
+        data-field="partyA_account"
+        bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
+        size="large"
+        class="form-field"
+      />
+      <van-field
+        label="甲方身份证"
+        placeholder="请输入甲方身份证号（选填）"
+        value="{{formData.partyA_idcard}}"
+        data-field="partyA_idcard"
+        bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
+        size="large"
+        type="idcard"
+        maxlength="18"
+        error="{{errors.partyA_idcard ? true : false}}"
+        error-message="{{errors.partyA_idcard}}"
+        class="form-field"
+      />
+      <view class="info-tip">
+        <van-icon name="info-o" size="28rpx" class="tip-icon" />
+        <text>甲方信息将自动填充当前用户信息</text>
+      </view>
+    </view>
+
+    <!-- ========== Step 2: 乙方信息 ========== -->
+    <view class="section {{currentStep === 1 ? 'active' : ''}}" wx:if="{{currentStep === 1}}">
+      <view class="section-header">
+        <view class="section-icon">
+          <van-icon name="friends-o" size="40rpx" color="var(--primary-color)" />
+        </view>
+        <view class="section-title">二、乙方信息</view>
+        <view class="section-subtitle">承租方信息</view>
+      </view>
 
       <van-field
-        label="乙方姓名 *"
+        label="乙方姓名"
         placeholder="请输入承租方姓名"
         value="{{formData.partyB_name}}"
         data-field="partyB_name"
@@ -122,23 +165,25 @@ module.exports = {
         size="large"
         error="{{errors.partyB_name ? true : false}}"
         error-message="{{errors.partyB_name}}"
+        class="form-field"
       />
       <van-field
-        label="乙方电话 *"
-        placeholder="请输入承租方电话"
+        label="乙方电话"
+        placeholder="请输入承租方联系电话"
         value="{{formData.partyB_phone}}"
         data-field="partyB_phone"
         bind:change="onFieldChange"
         bind:blur="onFieldBlur"
         required
         size="large"
-        type="text"
+        type="number"
         maxlength="11"
         error="{{errors.partyB_phone ? true : false}}"
         error-message="{{errors.partyB_phone}}"
+        class="form-field"
       />
       <van-field
-        label="乙方身份证 *"
+        label="乙方身份证"
         placeholder="请输入18位身份证号"
         value="{{formData.partyB_idCard}}"
         data-field="partyB_idCard"
@@ -146,19 +191,36 @@ module.exports = {
         bind:blur="onFieldBlur"
         required
         size="large"
-        type="text"
+        type="idcard"
         maxlength="18"
         error="{{errors.partyB_idCard ? true : false}}"
         error-message="{{errors.partyB_idCard}}"
+        class="form-field"
+      />
+      <van-field
+        label="乙方联系人"
+        placeholder="请输入联系人姓名（选填）"
+        value="{{formData.partyB_contact}}"
+        data-field="partyB_contact"
+        bind:change="onFieldChange"
+        bind:blur="onFieldBlur"
+        size="large"
+        class="form-field"
       />
     </view>
 
-    <!-- 第二部分：房屋基本情况 -->
-    <view class="section {{errors.house_address ? 'error' : ''}}">
-      <view class="section-title">二、房屋基本情况</view>
+    <!-- ========== Step 3: 房屋信息 ========== -->
+    <view class="section {{currentStep === 2 ? 'active' : ''}}" wx:if="{{currentStep === 2}}">
+      <view class="section-header">
+        <view class="section-icon">
+          <van-icon name="home-o" size="40rpx" color="var(--primary-color)" />
+        </view>
+        <view class="section-title">三、房屋信息</view>
+        <view class="section-subtitle">租赁房屋详情</view>
+      </view>
 
       <van-field
-        label="房产位置 *"
+        label="房屋地址"
         placeholder="请输入房屋详细地址"
         value="{{formData.house_address}}"
         data-field="house_address"
@@ -168,9 +230,10 @@ module.exports = {
         size="large"
         error="{{errors.house_address ? true : false}}"
         error-message="{{errors.house_address}}"
+        class="form-field"
       />
       <van-field
-        label="建筑面积"
+        label="房屋面积"
         placeholder="请输入面积（平方米）"
         value="{{formData.house_area}}"
         data-field="house_area"
@@ -179,35 +242,46 @@ module.exports = {
         size="large"
         type="digit"
         suffix="㎡"
-        error="{{errors.house_area ? true : false}}"
-        error-message="{{errors.house_area}}"
+        class="form-field"
       />
-      <view class="date-cell" bindtap="showPurposePicker">
-        <text class="date-label">租赁用途</text>
-        <text class="{{formData.rent_purpose ? 'date-value' : 'date-value placeholder'}}">{{formData.rent_purpose || '请选择'}}</text>
-        <van-icon name="arrow" class="date-arrow" />
+      <view class="picker-cell {{errors.rent_purpose ? 'error' : ''}}" bindtap="showPurposePicker">
+        <text class="picker-label">租赁用途</text>
+        <view class="picker-value-wrapper">
+          <text class="{{formData.rent_purpose ? 'picker-value' : 'picker-placeholder'}}">{{formData.rent_purpose || '请选择'}}</text>
+          <van-icon name="arrow" class="picker-arrow" />
+        </view>
       </view>
     </view>
 
-    <!-- 第三部分：租赁期限 -->
-    <view class="section {{errors.lease_start || errors.lease_end ? 'error' : ''}}">
-      <view class="section-title">三、租赁期限</view>
-
-      <view class="date-cell {{errors.lease_start ? 'error' : ''}}" bindtap="showStartDatePickerModal">
-        <text class="date-label {{errors.lease_start ? 'error' : 'required'}}">租赁开始日期</text>
-        <text class="{{formData.lease_start ? 'date-value' : 'date-value placeholder'}}">{{formData.lease_start || '请选择'}}</text>
-        <van-icon name="arrow" class="date-arrow" />
+    <!-- ========== Step 4: 租赁期限 ========== -->
+    <view class="section {{currentStep === 3 ? 'active' : ''}}" wx:if="{{currentStep === 3}}">
+      <view class="section-header">
+        <view class="section-icon">
+          <van-icon name="clock-o" size="40rpx" color="var(--primary-color)" />
+        </view>
+        <view class="section-title">四、租赁期限</view>
+        <view class="section-subtitle">合同时间范围</view>
       </view>
 
-      <view class="date-cell {{errors.lease_end ? 'error' : ''}}" bindtap="showEndDatePickerModal">
-        <text class="date-label {{errors.lease_end ? 'error' : 'required'}}">租赁结束日期</text>
-        <text class="{{formData.lease_end ? 'date-value' : 'date-value placeholder'}}">{{formData.lease_end || '请选择'}}</text>
-        <van-icon name="arrow" class="date-arrow" />
+      <view class="picker-cell {{errors.lease_start ? 'error' : ''}}" bindtap="showStartDatePickerModal">
+        <text class="picker-label required">租赁开始日期</text>
+        <view class="picker-value-wrapper">
+          <text class="{{formData.lease_start ? 'picker-value' : 'picker-placeholder'}}">{{formData.lease_start || '请选择'}}</text>
+          <van-icon name="arrow" class="picker-arrow" />
+        </view>
+      </view>
+
+      <view class="picker-cell {{errors.lease_end ? 'error' : ''}}" bindtap="showEndDatePickerModal">
+        <text class="picker-label required">租赁结束日期</text>
+        <view class="picker-value-wrapper">
+          <text class="{{formData.lease_end ? 'picker-value' : 'picker-placeholder'}}">{{formData.lease_end || '请选择'}}</text>
+          <van-icon name="arrow" class="picker-arrow" />
+        </view>
       </view>
 
       <van-field
-        label="租赁月数 *"
-        placeholder="请手动填写租赁月数"
+        label="租赁月数"
+        placeholder="请输入租赁月数"
         value="{{formData.lease_months}}"
         data-field="lease_months"
         bind:change="onFieldChange"
@@ -215,10 +289,13 @@ module.exports = {
         required
         size="large"
         type="number"
+        error="{{errors.lease_months ? true : false}}"
+        error-message="{{errors.lease_months}}"
+        class="form-field"
       />
 
       <van-field
-        label="提前告知天数"
+        label="提前通知天数"
         placeholder="如：30天"
         value="{{formData.advance_notice_days}}"
         data-field="advance_notice_days"
@@ -227,16 +304,22 @@ module.exports = {
         size="large"
         type="number"
         suffix="天"
+        class="form-field"
       />
-      <view class="notice-tip">提示：乙方应提前{{formData.advance_notice_days || 30}}天告知甲方是否续租</view>
     </view>
 
-    <!-- 第四部分：租金和交付方式 -->
-    <view class="section {{errors.monthly_rent || errors.deposit ? 'error' : ''}}">
-      <view class="section-title">四、租金和交付方式</view>
+    <!-- ========== Step 5: 租金信息 ========== -->
+    <view class="section {{currentStep === 4 ? 'active' : ''}}" wx:if="{{currentStep === 4}}">
+      <view class="section-header">
+        <view class="section-icon">
+          <van-icon name="cash-o" size="40rpx" color="var(--primary-color)" />
+        </view>
+        <view class="section-title">五、租金信息</view>
+        <view class="section-subtitle">费用及支付方式</view>
+      </view>
 
       <van-field
-        label="月租金 *"
+        label="月租金"
         placeholder="请输入每月租金"
         value="{{formData.monthly_rent}}"
         data-field="monthly_rent"
@@ -248,119 +331,20 @@ module.exports = {
         suffix="元/月"
         error="{{errors.monthly_rent ? true : false}}"
         error-message="{{errors.monthly_rent}}"
+        class="form-field"
       />
 
-      <van-field
-        label="合同总租金"
-        placeholder="请输入合同总租金"
-        value="{{formData.year_rent}}"
-        data-field="year_rent"
-        bind:change="onFieldChange"
-        bind:blur="onFieldBlur"
-        size="large"
-        type="digit"
-        suffix="元"
-      />
-
-      <view class="date-cell" bindtap="showPaymentCyclePicker">
-        <text class="date-label">付款周期</text>
-        <text class="{{formData.payment_cycle ? 'date-value' : 'date-value placeholder'}}">{{formData.payment_cycle_text || '请选择'}}</text>
-        <van-icon name="arrow" class="date-arrow" />
+      <view class="picker-cell" bindtap="showPaymentMethodPicker">
+        <text class="picker-label">支付方式</text>
+        <view class="picker-value-wrapper">
+          <text class="{{formData.payment_method ? 'picker-value' : 'picker-placeholder'}}">{{utils.getPaymentMethodText(formData.payment_method)}}</text>
+          <van-icon name="arrow" class="picker-arrow" />
+        </view>
       </view>
 
       <van-field
-        label="租金交付方式"
-        value="银行转账"
-        placeholder="转账"
-        size="large"
-        disabled
-      />
-
-      <!-- 租金支付计划 -->
-      <view class="sub-section-title">租金支付计划</view>
-      <van-field
-        label="支付次数 *"
-        placeholder="如：2"
-        value="{{formData.payment_count}}"
-        data-field="payment_count"
-        bind:change="onFieldChange"
-        bind:blur="onFieldBlur"
-        size="large"
-        type="number"
-      />
-
-      <van-field
-        wx:if="{{formData.payment_count >= 1}}"
-        label="第一次支付金额"
-        placeholder="金额"
-        value="{{formData.first_payment_amount}}"
-        data-field="first_payment_amount"
-        bind:change="onFieldChange"
-        bind:blur="onFieldBlur"
-        size="large"
-        type="digit"
-        suffix="元"
-      />
-      <view class="date-cell" wx:if="{{formData.payment_count >= 1}}" bindtap="showFirstPaymentDatePickerModal">
-        <text class="date-label">第一次支付日期</text>
-        <text class="{{formData.first_payment_date ? 'date-value' : 'date-value placeholder'}}">{{formData.first_payment_date || '请选择'}}</text>
-        <van-icon name="arrow" class="date-arrow" />
-      </view>
-
-      <van-field
-        wx:if="{{formData.payment_count >= 2}}"
-        label="第二次支付金额"
-        placeholder="金额"
-        value="{{formData.second_payment_amount}}"
-        data-field="second_payment_amount"
-        bind:change="onFieldChange"
-        bind:blur="onFieldBlur"
-        size="large"
-        type="digit"
-        suffix="元"
-      />
-      <view class="date-cell" wx:if="{{formData.payment_count >= 2}}" bindtap="showSecondPaymentDatePickerModal">
-        <text class="date-label">第二次支付日期</text>
-        <text class="{{formData.second_payment_date ? 'date-value' : 'date-value placeholder'}}">{{formData.second_payment_date || '请选择'}}</text>
-        <van-icon name="arrow" class="date-arrow" />
-      </view>
-
-      <van-field
-        wx:if="{{formData.payment_count >= 3}}"
-        label="第三次支付金额"
-        placeholder="金额"
-        value="{{formData.third_payment_amount}}"
-        data-field="third_payment_amount"
-        bind:change="onFieldChange"
-        bind:blur="onFieldBlur"
-        size="large"
-        type="digit"
-        suffix="元"
-      />
-      <view class="date-cell" wx:if="{{formData.payment_count >= 3}}" bindtap="showThirdPaymentDatePickerModal">
-        <text class="date-label">第三次支付日期</text>
-        <text class="{{formData.third_payment_date ? 'date-value' : 'date-value placeholder'}}">{{formData.third_payment_date || '请选择'}}</text>
-        <van-icon name="arrow" class="date-arrow" />
-      </view>
-
-      <van-field
-        label="甲方收款账户"
-        placeholder="请输入甲方银行账户"
-        value="{{formData.lessor_account}}"
-        data-field="lessor_account"
-        bind:change="onFieldChange"
-        bind:blur="onFieldBlur"
-        size="large"
-      />
-    </view>
-
-    <!-- 第五部分：押金 -->
-    <view class="section {{errors.deposit ? 'error' : ''}}">
-      <view class="section-title">五、押金</view>
-
-      <van-field
-        label="押金金额 *"
-        placeholder="请输入押金"
+        label="押金"
+        placeholder="请输入押金金额"
         value="{{formData.deposit}}"
         data-field="deposit"
         bind:change="onFieldChange"
@@ -371,66 +355,182 @@ module.exports = {
         suffix="元"
         error="{{errors.deposit ? true : false}}"
         error-message="{{errors.deposit}}"
+        class="form-field"
       />
       <van-field
-        label="押金金额（大写）"
+        label="押金（大写）"
         placeholder="自动转换"
         value="{{formData.deposit_chinese}}"
         disabled
         size="large"
+        class="form-field disabled-field"
       />
-      <view class="deposit-note">
-        <text>押金作为保证金，合同期满如无损坏则全额退还</text>
+
+      <van-field
+        label="合同总金额"
+        placeholder="自动计算"
+        value="{{formData.total_amount}}"
+        disabled
+        size="large"
+        type="digit"
+        suffix="元"
+        class="form-field disabled-field total-field"
+      />
+      <view class="calc-tip">
+        <van-icon name="info-o" size="24rpx" />
+        <text>合同总金额 = 月租金 x 租赁月数</text>
       </view>
-      <view class="deposit-warning">
-        <text>重要：若甲方提前解除合同需退还乙方双倍押金；若乙方提前退租，押金不退</text>
+
+      <view class="section-divider">
+        <text class="divider-text">付款详情</text>
+      </view>
+
+      <view class="payment-hint">
+        <van-icon name="info-o" size="28rpx" />
+        <text>根据合同模板，最多支持分四次支付。填写"分几次支付"后，系统将自动显示对应的输入框。</text>
+      </view>
+
+      <van-field
+        label="分几次支付"
+        placeholder="请输入次数（1-4次）"
+        value="{{formData.payment_count}}"
+        data-field="payment_count"
+        bind:change="onPaymentCountChange"
+        size="large"
+        type="number"
+        suffix="次"
+        class="form-field"
+      />
+
+      <van-field
+        label="每几月支付"
+        placeholder="每几个月支付一次"
+        value="{{formData.payment_cycle}}"
+        data-field="payment_cycle"
+        bind:change="onFieldChange"
+        size="large"
+        type="number"
+        suffix="月"
+        class="form-field"
+      />
+
+      <!-- 第一次支付（始终显示） -->
+      <view class="payment-item">
+        <view class="payment-item-header">
+          <text class="payment-item-title">第一次支付</text>
+          <text class="payment-item-tip">签合同当日支付</text>
+        </view>
+        <van-field
+          placeholder="首次支付金额"
+          value="{{formData.first_payment_amount}}"
+          data-field="first_payment_amount"
+          bind:change="onFieldChange"
+          size="large"
+          type="digit"
+          suffix="元"
+          class="form-field"
+        />
+      </view>
+
+      <!-- 第二次支付（payment_count >= 2 时显示） -->
+      <view class="payment-item" wx:if="{{formData.payment_count >= 2}}">
+        <view class="payment-item-header">
+          <text class="payment-item-title">第二次支付</text>
+          <text class="payment-item-tip">填写支付日期和金额</text>
+        </view>
+        <view class="picker-cell" bindtap="showSecondPaymentDatePicker">
+          <text class="picker-label">第二次日期</text>
+          <view class="picker-value-wrapper">
+            <text class="{{formData.second_payment_date ? 'picker-value' : 'picker-placeholder'}}">{{formData.second_payment_date || '请选择日期'}}</text>
+            <van-icon name="arrow" class="picker-arrow" />
+          </view>
+        </view>
+        <van-field
+          label="第二次金额"
+          placeholder="第二次支付金额"
+          value="{{formData.second_payment_amount}}"
+          data-field="second_payment_amount"
+          bind:change="onFieldChange"
+          size="large"
+          type="digit"
+          suffix="元"
+          class="form-field"
+        />
+      </view>
+
+      <!-- 第三次支付（payment_count >= 3 时显示） -->
+      <view class="payment-item" wx:if="{{formData.payment_count >= 3}}">
+        <view class="payment-item-header">
+          <text class="payment-item-title">第三次支付</text>
+          <text class="payment-item-tip">以此类推每 N 月支付一次</text>
+        </view>
+        <van-field
+          placeholder="第三次支付金额"
+          value="{{formData.third_payment_amount}}"
+          data-field="third_payment_amount"
+          bind:change="onFieldChange"
+          size="large"
+          type="digit"
+          suffix="元"
+          class="form-field"
+        />
+      </view>
+
+      <!-- 第四次支付（payment_count >= 4 时显示） -->
+      <view class="payment-item" wx:if="{{formData.payment_count >= 4}}">
+        <view class="payment-item-header">
+          <text class="payment-item-title">第四次支付</text>
+          <text class="payment-item-tip">最后一次支付</text>
+        </view>
+        <van-field
+          placeholder="第四次支付金额"
+          value="{{formData.fourth_payment_amount}}"
+          data-field="fourth_payment_amount"
+          bind:change="onFieldChange"
+          size="large"
+          type="digit"
+          suffix="元"
+          class="form-field"
+        />
       </view>
     </view>
 
-    <!-- 第六部分：费用约定 -->
-    <view class="section">
-      <view class="section-title">六、费用约定</view>
+    <!-- ========== Step 6: 费用约定 ========== -->
+    <view class="section {{currentStep === 5 ? 'active' : ''}}" wx:if="{{currentStep === 5}}">
+      <view class="section-header">
+        <view class="section-icon">
+          <van-icon name="bill-o" size="40rpx" color="var(--primary-color)" />
+        </view>
+        <view class="section-title">六、费用约定</view>
+        <view class="section-subtitle">水、电、燃气等费用</view>
+      </view>
+      <view class="fee-tip">请勾选约定由乙方承担的费用：</view>
 
       <view class="fee-list">
-        <view class="fee-item">
-          <van-checkbox value="{{formData.fee_water}}" bind:change="onFeeChange" data-fee="fee_water">水费</van-checkbox>
-          <text class="fee-note">乙方承担</text>
-        </view>
-        <view class="fee-item">
-          <van-checkbox value="{{formData.fee_electric}}" bind:change="onFeeChange" data-fee="fee_electric">电费</van-checkbox>
-          <text class="fee-note">乙方承担</text>
-        </view>
-        <view class="fee-item">
-          <van-checkbox value="{{formData.fee_gas}}" bind:change="onFeeChange" data-fee="fee_gas">燃气费</van-checkbox>
-          <text class="fee-note">乙方承担</text>
-        </view>
-        <view class="fee-item">
-          <van-checkbox value="{{formData.fee_tv}}" bind:change="onFeeChange" data-fee="fee_tv">有线电视</van-checkbox>
-          <text class="fee-note">乙方承担</text>
-        </view>
-        <view class="fee-item">
-          <van-checkbox value="{{formData.fee_network}}" bind:change="onFeeChange" data-fee="fee_network">网络费</van-checkbox>
-          <text class="fee-note">乙方承担</text>
-        </view>
-        <view class="fee-item">
-          <van-checkbox value="{{formData.fee_property}}" bind:change="onFeeChange" data-fee="fee_property">物业费</van-checkbox>
-          <text class="fee-note owner">甲方承担</text>
-        </view>
-        <view class="fee-item">
-          <van-checkbox value="{{formData.fee_heating}}" bind:change="onFeeChange" data-fee="fee_heating">暖气费</van-checkbox>
-          <text class="fee-note owner">甲方承担</text>
+        <view class="fee-item interactive" wx:for="{{feeOptions}}" wx:key="name">
+          <view class="fee-item-left">
+            <van-icon name="{{item.icon}}" size="36rpx" class="fee-icon" />
+            <text class="fee-name">{{item.name}}</text>
+          </view>
+          <van-checkbox value="{{item.checked}}" bind:change="onFeeChange" data-index="{{index}}"></van-checkbox>
         </view>
       </view>
-      <view class="fee-tip">以上费用均不包含在租金内，由乙方另行支付</view>
     </view>
 
-    <!-- 第七部分：居间服务 -->
-    <view class="section">
-      <view class="section-title">七、居间服务（可选）</view>
+    <!-- ========== Step 7: 居间服务费 ========== -->
+    <view class="section {{currentStep === 6 ? 'active' : ''}}" wx:if="{{currentStep === 6}}">
+      <view class="section-header">
+        <view class="section-icon">
+          <van-icon name="balance-o" size="40rpx" color="var(--primary-color)" />
+        </view>
+        <view class="section-title">七、居间服务费</view>
+        <view class="section-subtitle">如有中介服务</view>
+      </view>
+      <view class="fee-tip">请填写居间服务佣金（如有）：</view>
 
       <van-field
         label="甲方佣金"
-        placeholder="如无可不填"
+        placeholder="请输入甲方佣金金额（选填）"
         value="{{formData.partyA_commission}}"
         data-field="partyA_commission"
         bind:change="onFieldChange"
@@ -438,17 +538,20 @@ module.exports = {
         size="large"
         type="digit"
         suffix="元"
+        class="form-field"
       />
       <van-field
-        label="甲方佣金大写"
+        label="甲方佣金（大写）"
         placeholder="自动转换"
         value="{{formData.partyA_commission_chinese}}"
         disabled
         size="large"
+        class="form-field disabled-field"
       />
+
       <van-field
         label="乙方佣金"
-        placeholder="如无可不填"
+        placeholder="请输入乙方佣金金额（选填）"
         value="{{formData.partyB_commission}}"
         data-field="partyB_commission"
         bind:change="onFieldChange"
@@ -456,138 +559,123 @@ module.exports = {
         size="large"
         type="digit"
         suffix="元"
+        class="form-field"
       />
       <van-field
-        label="乙方佣金大写"
+        label="乙方佣金（大写）"
         placeholder="自动转换"
         value="{{formData.partyB_commission_chinese}}"
         disabled
         size="large"
+        class="form-field disabled-field"
       />
     </view>
 
-    <!-- 物品清单 -->
-    <view class="section">
-      <view class="section-title">八、租赁房屋物品清单</view>
-      <view class="items-note">以下为房屋固定设施，请清点确认：</view>
-
-      <!-- 卡片式物品列表 -->
-      <view class="items-card-list">
-        <view wx:for="{{fixedItems}}" wx:key="index" class="item-card {{item.deleted ? 'deleted' : ''}}" wx:if="{{!item.deleted || index < 3}}">
-          <view class="item-card-header">
-            <text class="item-card-name">{{item.name}}</text>
-            <view class="item-card-actions">
-              <van-checkbox value="{{item.confirmed}}" data-index="{{index}}" bind:change="onItemConfirm" size="36rpx"></van-checkbox>
-              <view class="item-card-delete" bindtap="deleteFixedItem" data-index="{{index}}">
-                <van-icon name="delete-o" size="32rpx" />
-              </view>
-            </view>
-          </view>
-          <view class="item-card-body">
-            <view class="item-quantity-wrap">
-              <text class="item-quantity-label">数量</text>
-              <van-stepper
-                value="{{item.quantity}}"
-                data-index="{{index}}"
-                bind:change="onItemQuantityChange"
-                size="36rpx"
-                min="0"
-                max="99"
-                integer
-              />
-            </view>
-            <text class="item-unit">{{item.unit}}</text>
-          </view>
+    <!-- ========== Step 8: 水电表读数 ========== -->
+    <view class="section {{currentStep === 7 ? 'active' : ''}}" wx:if="{{currentStep === 7}}">
+      <view class="section-header">
+        <view class="section-icon">
+          <van-icon name="chart-trending-o" size="40rpx" color="var(--primary-color)" />
         </view>
+        <view class="section-title">八、水电表读数</view>
+        <view class="section-subtitle">租赁开始时的表数</view>
       </view>
-
-      <!-- 已删除物品恢复区 -->
-      <view wx:if="{{deletedItemsCount > 0}}" style="margin-top: 24rpx;">
-        <view class="sub-section-title">已删除物品（点击恢复）</view>
-        <view class="items-card-list">
-          <view wx:for="{{fixedItems}}" wx:key="index" class="item-card deleted" bindtap="restoreFixedItem" data-index="{{index}}" wx:if="{{item.deleted}}">
-            <view class="item-card-header">
-              <text class="item-card-name">{{item.name}}</text>
-              <view class="item-card-actions">
-                <van-icon name="replay" size="32rpx" color="#1989fa" />
-              </view>
-            </view>
-          </view>
-        </view>
-      </view>
-
-      <!-- 自定义物品 -->
-      <view class="sub-section-title">其他物品（如有）</view>
-      <view class="items-card-list">
-        <view wx:for="{{customItems}}" wx:key="index" class="custom-item-card">
-          <van-field
-            placeholder="物品名称"
-            value="{{item.name}}"
-            data-index="{{index}}"
-            data-field="name"
-            bind:change="onCustomItemChange"
-            size="small"
-            custom-class="item-input"
-          />
-          <van-field
-            placeholder="数量"
-            value="{{item.quantity}}"
-            data-index="{{index}}"
-            data-field="quantity"
-            bind:change="onCustomItemChange"
-            size="small"
-            type="number"
-            custom-class="item-qty"
-          />
-          <view class="delete-btn" catchtap="deleteCustomItem" data-index="{{index}}">
-            <van-icon name="cross" />
-          </view>
-        </view>
-      </view>
-      <van-button size="small" icon="plus" type="default" block bind:click="addCustomItem" class="add-item-btn">
-        添加其他物品
-      </van-button>
-    </view>
-
-    <!-- 水电表读数 -->
-    <view class="section">
-      <view class="section-title">九、水电表读数（入住时）</view>
+      <view class="fee-tip">请填写租赁开始时的水电燃气表读数：</view>
 
       <van-field
-        label="电表数"
-        placeholder="当前电表读数"
+        label="电表读数"
+        placeholder="请输入电表读数（选填）"
         value="{{formData.electricity_meter}}"
         data-field="electricity_meter"
         bind:change="onFieldChange"
         bind:blur="onFieldBlur"
         size="large"
         type="digit"
+        suffix="度"
+        class="form-field"
       />
+
       <van-field
-        label="水表数"
-        placeholder="当前水表读数"
+        label="水表读数"
+        placeholder="请输入水表读数（选填）"
         value="{{formData.water_meter}}"
         data-field="water_meter"
         bind:change="onFieldChange"
         bind:blur="onFieldBlur"
         size="large"
         type="digit"
+        suffix="吨"
+        class="form-field"
       />
+
       <van-field
-        label="燃气表数"
-        placeholder="当前燃气表读数"
+        label="燃气表读数"
+        placeholder="请输入燃气表读数（选填）"
         value="{{formData.gas_meter}}"
         data-field="gas_meter"
         bind:change="onFieldChange"
         bind:blur="onFieldBlur"
         size="large"
         type="digit"
+        suffix="方"
+        class="form-field"
       />
     </view>
 
-    <!-- 备注 -->
-    <view class="section">
-      <view class="section-title">十、备注说明</view>
+    <!-- ========== Step 9: 物品清单 ========== -->
+    <view class="section {{currentStep === 8 ? 'active' : ''}}" wx:if="{{currentStep === 8}}">
+      <view class="section-header">
+        <view class="section-icon">
+          <van-icon name="orders-o" size="40rpx" color="var(--primary-color)" />
+        </view>
+        <view class="section-title">九、物品清单</view>
+        <view class="section-subtitle">房屋内设施设备</view>
+      </view>
+      <view class="fee-tip">请填写租赁房屋内的物品数量（数量为0或不填则不显示在合同中）：</view>
+
+      <!-- 预定义物品列表 -->
+      <view class="inventory-grid">
+        <view class="inventory-grid-item" wx:for="{{inventoryOptions}}" wx:key="name">
+          <view class="inventory-grid-info">
+            <text class="inventory-grid-name">{{item.name}}</text>
+            <text class="inventory-grid-unit">单位: {{item.unit}}</text>
+          </view>
+          <view class="inventory-grid-input">
+            <van-stepper
+              value="{{inventoryQuantities[item.templateField] || 0}}"
+              min="0"
+              max="99"
+              data-field="{{item.templateField}}"
+              data-name="{{item.name}}"
+              data-unit="{{item.unit}}"
+              bind:change="onInventoryStepperChange"
+              theme="round"
+            />
+          </view>
+        </view>
+      </view>
+
+      <!-- 已添加的物品摘要 -->
+      <view class="inventory-summary" wx:if="{{inventorySummary.length > 0}}">
+        <view class="inventory-summary-title">已添加物品 ({{inventorySummary.length}}项)</view>
+        <view class="inventory-summary-list">
+          <view class="inventory-summary-item" wx:for="{{inventorySummary}}" wx:key="name">
+            <text class="summary-item-name">{{item.name}}</text>
+            <text class="summary-item-qty">{{item.quantity}} {{item.unit}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- ========== Step 10: 备注 ========== -->
+    <view class="section {{currentStep === 9 ? 'active' : ''}}" wx:if="{{currentStep === 9}}">
+      <view class="section-header">
+        <view class="section-icon">
+          <van-icon name="edit-o" size="40rpx" color="var(--primary-color)" />
+        </view>
+        <view class="section-title">十、备注说明</view>
+        <view class="section-subtitle">其他约定事项</view>
+      </view>
 
       <van-field
         type="textarea"
@@ -604,28 +692,45 @@ module.exports = {
     <view class="bottom-space"></view>
   </scroll-view>
 
-  <!-- 底部按钮 -->
-  <view class="bottom-bar">
-    <van-button type="default" size="large" round bind:click="previewContract" class="bottom-bar-preview" disabled="{{loading}}">
-      预览
-    </van-button>
-    <van-button type="primary" size="large" round bind:click="submitContract" class="bottom-bar-submit" loading="{{loading}}" loading-text="提交中...">
-      {{loading ? '提交中...' : '创建合同'}}
-    </van-button>
-  </view>
+<!-- 底部按钮 -->
+<view class="bottom-bar">
+  <van-button type="default" size="small" round bind:click="onSaveDraft" class="bottom-bar-btn draft-btn">
+    <van-icon name="draft" class="btn-icon" />
+    保存草稿
+  </van-button>
+  <van-button type="default" size="small" round bind:click="onPreview" class="bottom-bar-btn preview-btn">
+    <van-icon name="eye-o" class="btn-icon" />
+    预览
+  </van-button>
+  <van-button type="default" size="small" round bind:click="onNextStep" class="bottom-bar-btn next-step-btn">
+    <van-icon name="arrow-right" class="btn-icon" />
+    {{currentStep < steps.length - 1 ? '下一步' : '创建合同'}}
+  </van-button>
+</view>
 
   <!-- 添加物品弹窗 -->
   <van-popup show="{{showAddItemPopup}}" position="bottom" bind:close="closeAddItemPopup" round>
     <view class="add-item-popup">
-      <view class="add-item-popup-title">添加物品</view>
+      <view class="add-item-popup-header">
+        <text class="add-item-popup-title">添加物品</text>
+        <view class="close-btn interactive" bindtap="closeAddItemPopup">
+          <van-icon name="cross" size="32rpx" />
+        </view>
+      </view>
       <view class="add-item-form">
+        <view class="select-from-list-btn">
+          <van-button size="small" icon="list-switch" type="primary" plain bind:click="showInventoryPicker" block>
+            从预定义列表选择
+          </van-button>
+        </view>
         <van-field
           label="物品名称"
-          placeholder="请输入物品名称"
+          placeholder="请输入物品名称或从列表选择"
           value="{{newItemName}}"
           bind:change="onNewItemNameChange"
           size="large"
           required
+          class="popup-field"
         />
         <view class="add-item-row">
           <van-field
@@ -635,6 +740,7 @@ module.exports = {
             bind:change="onNewItemQuantityChange"
             size="large"
             type="number"
+            class="popup-field"
           />
           <van-field
             label="单位"
@@ -642,13 +748,41 @@ module.exports = {
             value="{{newItemUnit}}"
             bind:change="onNewItemUnitChange"
             size="large"
+            class="popup-field"
           />
         </view>
         <view class="add-item-actions">
-          <van-button size="large" round bind:click="closeAddItemPopup">取消</van-button>
-          <van-button type="primary" size="large" round bind:click="confirmAddItem">确定</van-button>
+          <van-button size="large" round bind:click="closeAddItemPopup" class="cancel-btn">取消</van-button>
+          <van-button type="primary" size="large" round bind:click="confirmAddItem" class="confirm-btn">确定</van-button>
         </view>
       </view>
+    </view>
+  </van-popup>
+
+  <!-- 物品选择器弹窗 -->
+  <van-popup show="{{showInventoryPicker}}" position="bottom" bind:close="closeInventoryPicker" round>
+    <view class="inventory-picker-popup">
+      <view class="inventory-picker-header">
+        <text class="inventory-picker-title">选择物品</text>
+        <view class="close-btn interactive" bindtap="closeInventoryPicker">
+          <van-icon name="cross" size="32rpx" />
+        </view>
+      </view>
+      <scroll-view scroll-y class="inventory-picker-list">
+        <view 
+          wx:for="{{inventoryOptions}}" 
+          wx:key="name" 
+          class="inventory-picker-item interactive {{selectedInventoryIndex === index ? 'selected' : ''}}"
+          data-index="{{index}}"
+          bindtap="onInventoryPickerConfirm"
+        >
+          <view class="inventory-picker-item-info">
+            <text class="inventory-picker-item-name">{{item.name}}</text>
+            <text class="inventory-picker-item-unit">单位: {{item.unit}}</text>
+          </view>
+          <van-icon wx:if="{{selectedInventoryIndex === index}}" name="success" color="var(--primary-color)" size="32rpx" />
+        </view>
+      </scroll-view>
     </view>
   </van-popup>
 
@@ -668,54 +802,22 @@ module.exports = {
     <van-datetime-picker
       type="date"
       value="{{endDate}}"
-      min-date="{{startDate}}"
+      min-date="{{minDate}}"
       bind:confirm="onEndDateConfirm"
       bind:cancel="closeEndDatePicker"
       title="选择结束日期"
     />
   </van-popup>
 
-  <van-popup show="{{showFirstPaymentDatePicker}}" position="bottom" bind:close="closeFirstPaymentDatePicker">
-    <van-datetime-picker
-      type="date"
-      value="{{firstPaymentDate}}"
-      min-date="{{startDate}}"
-      bind:confirm="onFirstPaymentDateConfirm"
-      bind:cancel="closeFirstPaymentDatePicker"
-      title="选择第一次支付日期"
-    />
-  </van-popup>
-
+  <!-- 第二次付款日期选择 -->
   <van-popup show="{{showSecondPaymentDatePicker}}" position="bottom" bind:close="closeSecondPaymentDatePicker">
     <van-datetime-picker
       type="date"
       value="{{secondPaymentDate}}"
-      min-date="{{startDate}}"
+      min-date="{{minDate}}"
       bind:confirm="onSecondPaymentDateConfirm"
       bind:cancel="closeSecondPaymentDatePicker"
-      title="选择第二次支付日期"
-    />
-  </van-popup>
-
-  <van-popup show="{{showThirdPaymentDatePicker}}" position="bottom" bind:close="closeThirdPaymentDatePicker">
-    <van-datetime-picker
-      type="date"
-      value="{{thirdPaymentDate}}"
-      min-date="{{startDate}}"
-      bind:confirm="onThirdPaymentDateConfirm"
-      bind:cancel="closeThirdPaymentDatePicker"
-      title="选择第三次支付日期"
-    />
-  </van-popup>
-
-  <!-- 付款周期选择 -->
-  <van-popup show="{{showPaymentCyclePicker}}" position="bottom" bind:close="closePaymentCyclePicker">
-    <van-picker
-      show-toolbar
-      columns="{{paymentCycleColumns}}"
-      bind:confirm="onPaymentCycleConfirm"
-      bind:cancel="closePaymentCyclePicker"
-      title="选择付款周期"
+      title="选择第二次付款日期"
     />
   </van-popup>
 
@@ -727,6 +829,17 @@ module.exports = {
       bind:confirm="onPurposeConfirm"
       bind:cancel="closePurposePicker"
       title="选择租赁用途"
+    />
+  </van-popup>
+
+  <!-- 支付方式选择 -->
+  <van-popup show="{{showPaymentMethodPicker}}" position="bottom" bind:close="closePaymentMethodPicker">
+    <van-picker
+      show-toolbar
+      columns="{{paymentMethodColumns}}"
+      bind:confirm="onPaymentMethodConfirm"
+      bind:cancel="closePaymentMethodPicker"
+      title="选择支付方式"
     />
   </van-popup>
 </view>

@@ -1,354 +1,434 @@
 <view class="container">
-  <block wx:if="{{loading}}">
-    <view class="loading-container">
-      <van-loading size="48px" type="spinner" vertical>加载中...</van-loading>
-    </view>
-  </block>
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-center">
+    <van-loading type="spinner" size="72rpx" color="var(--primary-color)" />
+    <text class="loading-text">加载合同数据...</text>
+  </view>
 
-  <block wx:elif="{{contractInfo}}">
-    <!-- 合同标题 -->
-    <view class="contract-header">
-      <view class="contract-title">房屋租赁合同</view>
-      <view class="contract-no">合同编号：{{contractInfo.contractNo}}</view>
-      <view class="contract-meta">
-        <van-tag type="{{statusTagType}}" size="medium">{{statusText}}</van-tag>
+  <block wx:if="{{!loading && contractInfo}}">
+    <!-- 状态横幅 -->
+    <view class="status-banner status-bg-{{contractStatus}}">
+      <view class="status-icon-wrapper">
+        <van-icon name="{{statusIcon}}" class="status-icon" />
+      </view>
+      <view class="status-content">
+        <text class="status-text">{{statusText}}</text>
       </view>
     </view>
 
-    <!-- 合同正文 -->
-    <view class="contract-body">
-      <!-- 甲乙双方信息 -->
-      <view class="article">
-        <view class="preamble">为保障租赁双方的合法权益，根据《中华人民共和国民法典》及有关法律、法规，甲乙双方在平等自愿的前提下，经协商一致，签定本合同。</view>
-      </view>
-
-      <!-- 第一条：房屋基本情况 -->
-      <view class="article">
-        <view class="article-title">第一条：房屋基本情况</view>
-        <view class="article-content">
-          <view class="sub-item">1、房产位置：{{contractInfo.property.address}}。</view>
-          <view class="sub-item">2、建筑面积：{{contractInfo.property.area}}平方米。</view>
+    <!-- 主内容区域 -->
+    <scroll-view scroll-y class="content-scroll">
+      <!-- 合同信息卡片 -->
+      <view class="card contract-info-card">
+        <view class="contract-icon-wrapper">
+          <van-icon name="document-text" size="64rpx" color="var(--primary-color)" />
+        </view>
+        <text class="card-title">{{contractInfo.title}}</text>
+        <view class="contract-no-wrapper">
+          <van-icon name="qr" size="28rpx" class="contract-no-icon" />
+          <text class="contract-no">No. {{contractNo}}</text>
         </view>
       </view>
 
-      <!-- 第二条：租赁期限及用途 -->
-      <view class="article">
-        <view class="article-title">第二条：租赁期限及用途</view>
-        <view class="article-content">
-          <view class="sub-item">从{{contractInfo.lease.startDate}}起至{{contractInfo.lease.endDate}}止，共计{{contractInfo.lease.months}}个月。甲乙双方应于签合同当日办理房屋交付手续，甲方应按合同约定的条件将房屋交付乙方，经甲乙双方交验签字盖章并移交房门钥匙及水卡、电卡、视为交付完成。</view>
-          <view class="sub-item">乙方租赁该房屋用途为：{{contractInfo.property.purpose}}</view>
+      <!-- 甲方信息 -->
+      <view class="card party-card party-a-card">
+        <view class="party-header">
+          <view class="party-badge-wrapper">
+            <view class="party-badge party-a">甲方</view>
+            <text class="party-company">{{contractInfo.partyA.company}}</text>
+          </view>
+          <van-icon name="user-o" size="40rpx" class="party-header-icon" />
         </view>
-      </view>
-
-      <!-- 第三条：租金和租金交付方式 -->
-      <view class="article">
-        <view class="article-title">第三条：租金和租金交付方式</view>
-        <view class="article-content">
-          <view class="sub-item">1、租金交付方式为：转账，每月租金¥{{contractInfo.rent.monthly}}元，合同总租金共计¥{{contractInfo.rent.yearly}}元（共{{contractInfo.lease.months}}个月）；租金按每{{contractInfo.rent.paymentCycle}}结算，乙方应提前{{contractInfo.lease.advanceNoticeDays}}日告知甲方是否续租，租期内乙方提前退租，押金不退，若甲方提前解除合同需退还乙方双倍押金。</view>
-          <view class="sub-item">2、租金分{{contractInfo.rent.paymentCount}}次支付：
-            <text wx:if="{{contractInfo.rent.firstPaymentAmount}}">第一次于签合同当日支付¥{{contractInfo.rent.firstPaymentAmount}}元；</text>
-            <text wx:if="{{contractInfo.rent.secondPaymentAmount}}">第二次支付¥{{contractInfo.rent.secondPaymentAmount}}元，时间为{{contractInfo.rent.secondPaymentDate}}；</text>
-            <text wx:if="{{contractInfo.rent.thirdPaymentAmount}}">第三次支付¥{{contractInfo.rent.thirdPaymentAmount}}元；</text>
-            以此类推每{{contractInfo.rent.paymentCycle}}月支付一次房租，若未按期支付房款甲方有权解除合同，租金及押金不予退还。</view>
-          <view class="sub-item">3、乙方以银行转账方式支付租金，甲方指定如下账户作为收款账户：{{contractInfo.partyA.account}}</view>
-          <view class="sub-item">（房屋租金的交付与数额以收条或转账明细为准）。</view>
-          <view class="sub-item">4、若合同到期续租，没有签订新合同时则延续原合同。</view>
-        </view>
-      </view>
-
-      <!-- 第四条：押金及押金的退还 -->
-      <view class="article">
-        <view class="article-title">第四条：押金及押金的退还</view>
-        <view class="article-content">
-          <view class="sub-item">本合同签订时，乙方向甲方交纳押金（大写）{{contractInfo.rent.depositChinese}}（小写¥{{contractInfo.rent.deposit}}元）。该押金作为保证金。如乙方在租赁期间未发生损坏房屋设施，拖欠水、电、租金等费用，合同期满时，甲方应在合同到期之日三个工作日内一次性退还给乙方。如有上述情况发生，甲方有权从押金中等额扣除，不足部分乙方另行承担。</view>
-        </view>
-      </view>
-
-      <!-- 第五条：费用名称及支付方式 -->
-      <view class="article">
-        <view class="article-title">第五条：费用名称及支付方式</view>
-        <view class="article-content">
-          <view class="sub-item">1、费用名称：水费、电费、燃气费、有线电视费、网络费等，以上费用乙方应按要求及时付清。</view>
-          <view class="sub-item">2、以上费用均不包含在租金内，乙方需直接缴付给物业管理机构或另行支付给甲方代缴。</view>
-          <view class="sub-item">3、物业管理费、暖气费由甲方承担。</view>
-          <view class="sub-item">4、本合同内签订的金额不含税费，房屋租赁期间产生的一切税费均由乙方自理。</view>
-          <view class="fees-summary" wx:if="{{contractInfo.fees && contractInfo.fees.length > 0}}">
-            <view class="fees-row">
-              <view class="fees-label">水费：</view>
-              <view class="fees-value">{{contractInfo.feesMap.water || '甲方承担'}}</view>
-            </view>
-            <view class="fees-row">
-              <view class="fees-label">电费：</view>
-              <view class="fees-value">{{contractInfo.feesMap.electric || '甲方承担'}}</view>
-            </view>
-            <view class="fees-row">
-              <view class="fees-label">燃气费：</view>
-              <view class="fees-value">{{contractInfo.feesMap.gas || '甲方承担'}}</view>
-            </view>
-            <view class="fees-row">
-              <view class="fees-label">电视费：</view>
-              <view class="fees-value">{{contractInfo.feesMap.tv || '甲方承担'}}</view>
-            </view>
-            <view class="fees-row">
-              <view class="fees-label">网络费：</view>
-              <view class="fees-value">{{contractInfo.feesMap.network || '甲方承担'}}</view>
-            </view>
-            <view class="fees-row">
-              <view class="fees-label">物业费：</view>
-              <view class="fees-value landlord">{{contractInfo.feesMap.property || '甲方承担'}}</view>
-            </view>
-            <view class="fees-row">
-              <view class="fees-label">暖气费：</view>
-              <view class="fees-value landlord">{{contractInfo.feesMap.heating || '甲方承担'}}</view>
-            </view>
+        <view class="info-grid">
+          <view class="info-item">
+            <text class="info-label">联系人</text>
+            <text class="info-value">{{contractInfo.partyA.contact || '-'}}</text>
+          </view>
+          <view class="info-item">
+            <text class="info-label">联系电话</text>
+            <text class="info-value phone-value">{{contractInfo.partyA.phone}}</text>
           </view>
         </view>
       </view>
 
-      <!-- 第六条：居间服务 -->
-      <view class="article" wx:if="{{contractInfo.intermediary.name}}">
-        <view class="article-title">第六条：居间服务</view>
-        <view class="article-content">
-          <view class="sub-item-bracket">（一）、丙方应为甲、乙双方订立房屋租赁合同提供机会或媒介服务</view>
-          <view class="sub-item-bracket">（二）、丙方提供的居间服务自接受甲乙双方委托时起，到甲、乙双方应于本合同成立时，向丙方支付佣金：</view>
-          <view class="sub-item-bracket2" wx:if="{{contractInfo.intermediary.partyACommission}}">甲方应支付佣金人民币（大写）{{contractInfo.intermediary.partyACommissionChinese}}元整（¥{{contractInfo.intermediary.partyACommission}}）；</view>
-          <view class="sub-item-bracket2" wx:if="{{contractInfo.intermediary.partyBCommission}}">乙方应支付佣金人民币（大写）{{contractInfo.intermediary.partyBCommissionChinese}}元整（¥{{contractInfo.intermediary.partyBCommission}}）；</view>
-          <view class="sub-item-bracket">（三）、本合同签订后，甲、乙双方解除、变更或终止租赁关系的，仍应向丙方支付约定的佣金且丙方不承担任何责任。</view>
+      <!-- 乙方信息 -->
+      <view class="card party-card party-b-card">
+        <view class="party-header">
+          <view class="party-badge-wrapper">
+            <view class="party-badge party-b">乙方</view>
+            <text class="party-company">{{contractInfo.partyB.name}}</text>
+          </view>
+          <van-icon name="user-o" size="40rpx" class="party-header-icon" />
+        </view>
+        <view class="info-grid">
+          <view class="info-item">
+            <text class="info-label">联系电话</text>
+            <text class="info-value phone-value">{{contractInfo.partyB.phone || '-'}}</text>
+          </view>
+          <view class="info-item">
+            <text class="info-label">身份证号</text>
+            <text class="info-value idcard-value">{{contractInfo.partyB.idCard || '-'}}</text>
+          </view>
         </view>
       </view>
 
-      <!-- 第七条：双方权利及义务 -->
-      <view class="article">
-        <view class="article-title">第七条：双方权利及义务</view>
-        <view class="article-content">
-          <view class="sub-item">1、甲方保证出租房屋的产权清晰，没有纠纷。若发生与甲方有关的产权纠纷或债权债务，概由甲方负责，并承担相应的法律责任，因此给乙方造成经济损失的，甲方负责赔偿。</view>
-          <view class="sub-item">2、甲、乙双方在签订合同时，甲方有权掌握了解乙方的基本状况。</view>
-          <view class="sub-item">3、乙方如需对房屋进行改建、扩建、装修或增扩设备时，应征得甲方同意后再行处理，双方应明确约定租客在租赁期间未经房东书面许可，不得擅自饲养任何宠物，（如因养宠物造成房屋内设施损坏乙方需原价赔偿）。</view>
-          <view class="sub-item">4、租赁期间乙方为承租方，承租方为该房屋实际管理人，在租赁期间不得从事不道德或违法犯罪活动，且在承租期间房屋内发生的任何安全事故，以及人身财产安全，均由乙方自行承担全部责任，甲方概不负责。</view>
-          <view class="sub-item">5、乙方自行购置电器及设备应合格且符合安全要求，禁止使用高负荷高危型设备物品，如发生任何意外均由乙方个人承担，甲方概不负责。</view>
-          <view class="sub-item">6、甲方已确认房屋设施的安全性，要求乙方对房屋及设备的使用安全自行负责，发生任何安全事故与甲方无关。</view>
-          <view class="sub-item">7、甲方延迟交付房屋达10日，且不承担约定的维修义务，致使乙方无法使用房屋乙方有权单方面解除合同。</view>
-          <view class="sub-item">8、租赁期内乙方如发现该房屋及其附属物品、设备设施因自然属性或合理使用导致的损耗，乙方应及时通知甲方修复，甲方应在接到乙方通知后5日内予以维修，逾期不维修的，乙方可代为维修，费用由甲方承担，因乙方保管不当或不合理使用，致使该房屋以及附属物品、设备设施发生损坏或故障的，乙方应负责维修或承担赔偿责任，否则甲方有权在乙方交付的押金中抵扣相应费用，不足部分由乙方补交。</view>
-          <view class="sub-item">9、租赁期内，甲方需提前收回该房屋的，应提前30日通知乙方，扣除乙方应承担的各项费用后，将剩余租金及押金退还乙方，并按月租金的100%向乙方支付违约金。</view>
-          <view class="sub-item">10、如因甲方未按约定履行修缮义务造成乙方人身、财产损失的，甲方应承担赔偿责任；甲方未按约定时间交付该房屋或乙方未按约定支付租金但未达到解除合同条件的，以及乙方未按约定时间返还房屋的，每逾期一天，由违约方按日租金额的200%支付违约金。</view>
+      <!-- 房屋信息 -->
+      <view class="card">
+        <view class="card-header">
+          <view class="card-title-wrapper">
+            <van-icon name="location-o" class="card-icon" />
+            <text class="card-title">房屋信息</text>
+          </view>
+        </view>
+        <view class="info-list">
+          <view class="info-row">
+            <view class="info-label-wrapper">
+              <van-icon name="location" size="28rpx" class="row-icon" />
+              <text class="info-label">房产位置</text>
+            </view>
+            <text class="info-value address-value">{{contractInfo.property.address}}</text>
+          </view>
+          <view class="info-row">
+            <view class="info-label-wrapper">
+              <van-icon name="cluster-o" size="28rpx" class="row-icon" />
+              <text class="info-label">建筑面积</text>
+            </view>
+            <text class="info-value">{{contractInfo.property.area}} ㎡</text>
+          </view>
+          <view class="info-row">
+            <view class="info-label-wrapper">
+              <van-icon name="shop-o" size="28rpx" class="row-icon" />
+              <text class="info-label">租赁用途</text>
+            </view>
+            <text class="info-value">{{contractInfo.property.purpose}}</text>
+          </view>
         </view>
       </view>
 
-      <!-- 第八条：转租、续租及转让 -->
-      <view class="article">
-        <view class="article-title">第八条：转租、续租及转让</view>
-        <view class="article-content">
-          <view class="sub-item-bracket">（一）、租赁期内，未经甲方同意，乙方不得将该房屋部分分租、转借、转借给他人，不得将本合同项下的权利义务转让给他人或设定担保。</view>
-          <view class="sub-item-bracket">（二）、若乙方拟续租该房屋，应于租赁期届满提前一个月向甲方发出续租申请；甲乙双方就续租事宜进行协商，重新签订租赁合同；若乙方未按上述约定向甲方发出续租申请，将视为放弃同等条件下的优先承租权；甲方有权将该房屋出租给他人，并引领他人看房。</view>
-          <view class="sub-item-bracket">（三）、租赁期内，甲方有权将该房屋出卖或抵押，为此甲方无须征得乙方同意，但应事先提前1个月通知乙方，甲方承诺该房屋的出卖或抵押，不影响乙方对该房屋的使用。</view>
+      <!-- 租赁信息 -->
+      <view class="card rent-card">
+        <view class="card-header">
+          <view class="card-title-wrapper">
+            <van-icon name="calendar-o" class="card-icon" />
+            <text class="card-title">租赁信息</text>
+          </view>
+        </view>
+        <view class="rent-summary">
+          <view class="rent-main">
+            <text class="rent-label">月租金</text>
+            <text class="rent-value">¥{{contractInfo.rent.monthly}}</text>
+          </view>
+          <view class="rent-divider"></view>
+          <view class="rent-secondary">
+            <text class="rent-label">押金</text>
+            <text class="rent-value secondary">¥{{contractInfo.rent.deposit}}</text>
+          </view>
+          <view class="rent-divider" wx:if="{{contractInfo.rent.totalAmount > 0}}"></view>
+          <view class="rent-secondary" wx:if="{{contractInfo.rent.totalAmount > 0}}">
+            <text class="rent-label">总租金</text>
+            <text class="rent-value secondary">¥{{contractInfo.rent.totalAmount}}</text>
+          </view>
+        </view>
+        <view class="info-list">
+          <view class="info-row">
+            <view class="info-label-wrapper">
+              <van-icon name="clock-o" size="28rpx" class="row-icon" />
+              <text class="info-label">租赁期限</text>
+            </view>
+            <text class="info-value">{{contractInfo.lease.startDate}} 至 {{contractInfo.lease.endDate}}</text>
+          </view>
+          <view class="info-row">
+            <view class="info-label-wrapper">
+              <van-icon name="calendar" size="28rpx" class="row-icon" />
+              <text class="info-label">租赁月数</text>
+            </view>
+            <text class="info-value">{{contractInfo.lease.months}} 个月</text>
+          </view>
+          <view class="info-row">
+            <view class="info-label-wrapper">
+              <van-icon name="shop-o" size="28rpx" class="row-icon" />
+              <text class="info-label">租赁用途</text>
+            </view>
+            <text class="info-value">{{contractInfo.property.purpose}}</text>
+          </view>
+          <view class="info-row" wx:if="{{contractInfo.lease.advanceNoticeDays}}">
+            <view class="info-label-wrapper">
+              <van-icon name="warning-o" size="28rpx" class="row-icon" />
+              <text class="info-label">提前通知</text>
+            </view>
+            <text class="info-value">提前 {{contractInfo.lease.advanceNoticeDays}} 日告知是否续租</text>
+          </view>
+        </view>
+        <view class="deposit-chinese">
+          <van-icon name="info-o" size="24rpx" class="deposit-info-icon" />
+          <text class="deposit-chinese-text">押金大写：{{contractInfo.rent.depositChinese}}</text>
         </view>
       </view>
 
-      <!-- 第九条：房屋交还 -->
-      <view class="article">
-        <view class="article-title">第九条：房屋交还</view>
-        <view class="article-content">
-          <view class="sub-item-bracket">（一）、乙方应于租赁期满，合同解除或终止后当日内将屋内的自有物品搬出，按原状返还房屋及其附属物品、设备设施。若乙方未按约定时间将自有物品搬出视为乙方放弃权利，甲方有权自行或委托第三人将乙方物品予以处理无须支付乙方赔偿和补偿。</view>
-          <view class="sub-item-bracket">（二）、甲乙双方应对房屋及附属物品、设备设施及水电等使用情况进行验收，结清各自应承担的费用。如甲方发现该房屋或原固有装修、设备设施被损坏或遗失（自然损耗除外）有权要求乙方修复或赔偿损失，并可从押金中扣除。</view>
-          <view class="sub-item-bracket">（三）、乙方如经甲方同意对该房屋进行装修、增建或改建，新增的装修及不可以动的设备设施归甲方所有。</view>
-          <view class="sub-item-bracket">（四）、乙方退房时，房屋应恢复至入住时的状态，保持整洁干净（日常保洁除外）。如退房时房屋未打扫干净或存在严重污渍，甲方有权扣除相应保洁费从押金中扣除。</view>
+       <!-- 付款详情 -->
+       <view class="card payment-card">
+         <view class="card-header">
+           <view class="card-title-wrapper">
+             <van-icon name="gold-coin-o" size="32rpx" color="var(--primary-color)" />
+             <text class="card-title">付款详情</text>
+           </view>
+         </view>
+         <view class="info-list">
+           <view class="info-row">
+             <view class="info-label-wrapper">
+               <text class="info-label">付款方式</text>
+             </view>
+             <text class="info-value">{{contractInfo.rent.paymentMethod}}</text>
+           </view>
+           <view class="info-row" wx:if="{{contractInfo.rent.paymentCycle}}">
+             <view class="info-label-wrapper">
+               <text class="info-label">支付周期</text>
+             </view>
+             <text class="info-value">每 {{contractInfo.rent.paymentCycle}} 月支付一次</text>
+           </view>
+           <view class="info-row" wx:if="{{contractInfo.rent.paymentCount > 1}}">
+             <view class="info-label-wrapper">
+               <text class="info-label">分期次数</text>
+             </view>
+             <text class="info-value">{{contractInfo.rent.paymentCount}} 次</text>
+           </view>
+         </view>
+
+         <!-- 分次付款详情 -->
+         <view class="payment-split-list">
+           <view class="payment-split-item">
+             <view class="payment-split-header">
+               <text class="payment-split-title">第一次支付</text>
+               <text class="payment-split-tip">签合同当日</text>
+             </view>
+             <view class="payment-split-amount">¥{{contractInfo.rent.firstPaymentAmount}}</view>
+           </view>
+
+           <view class="payment-split-item" wx:if="{{contractInfo.rent.paymentCount >= 2}}">
+             <view class="payment-split-header">
+               <text class="payment-split-title">第二次支付</text>
+               <text class="payment-split-tip" wx:if="{{contractInfo.rent.secondPaymentDate}}">{{contractInfo.rent.secondPaymentDate}}</text>
+             </view>
+             <view class="payment-split-amount">¥{{contractInfo.rent.secondPaymentAmount}}</view>
+           </view>
+
+           <view class="payment-split-item" wx:if="{{contractInfo.rent.paymentCount >= 3}}">
+             <view class="payment-split-header">
+               <text class="payment-split-title">第三次支付</text>
+             </view>
+             <view class="payment-split-amount">¥{{contractInfo.rent.thirdPaymentAmount}}</view>
+           </view>
+
+           <view class="payment-split-item" wx:if="{{contractInfo.rent.paymentCount >= 4}}">
+             <view class="payment-split-header">
+               <text class="payment-split-title">第四次支付</text>
+             </view>
+             <view class="payment-split-amount">¥{{contractInfo.rent.fourthPaymentAmount}}</view>
+           </view>
+         </view>
+
+         <view class="info-list" wx:if="{{contractInfo.partyA.account}}">
+           <view class="info-row">
+             <view class="info-label-wrapper">
+               <van-icon name="credit-card" size="28rpx" class="row-icon" />
+               <text class="info-label">收款账户</text>
+             </view>
+             <text class="info-value account-value">{{contractInfo.partyA.account}}</text>
+           </view>
+         </view>
+       </view>
+
+       <!-- 费用承担 -->
+       <view class="card" wx:if="{{contractInfo.fees.length > 0}}">
+         <view class="card-header">
+           <view class="card-title-wrapper">
+             <van-icon name="balance-list-o" size="32rpx" color="var(--primary-color)" />
+             <text class="card-title">费用承担</text>
+           </view>
+         </view>
+         <view class="info-list">
+           <view class="info-row" wx:for="{{contractInfo.fees}}" wx:key="label">
+             <view class="info-label-wrapper">
+               <text class="info-label">{{item.label}}</text>
+             </view>
+             <text class="info-value {{item.tenant === '乙方承担' ? 'tenant-b' : 'tenant-a'}}">{{item.tenant}}</text>
+           </view>
+         </view>
+       </view>
+
+       <!-- 表读数 -->
+       <view class="card" wx:if="{{contractInfo.meters.length > 0}}">
+         <view class="card-header">
+           <view class="card-title-wrapper">
+             <van-icon name="bar-chart-o" size="32rpx" color="var(--primary-color)" />
+             <text class="card-title">表读数</text>
+           </view>
+         </view>
+         <view class="info-list">
+           <view class="info-row" wx:for="{{contractInfo.meters}}" wx:key="label">
+             <view class="info-label-wrapper">
+               <text class="info-label">{{item.label}}</text>
+             </view>
+             <text class="info-value meter-value">{{item.value}}</text>
+           </view>
+         </view>
+       </view>
+
+       <!-- 物品清单 -->
+       <view class="card" wx:if="{{contractInfo.items.length > 0}}">
+         <view class="card-header">
+           <view class="card-title-wrapper">
+             <van-icon name="apps-o" size="32rpx" color="var(--primary-color)" />
+             <text class="card-title">租赁房屋物品清单</text>
+           </view>
+         </view>
+         <view class="items-grid">
+           <view class="item-card" wx:for="{{contractInfo.items}}" wx:key="name">
+             <text class="item-name">{{item.name}}</text>
+             <text class="item-qty">{{item.quantity}}</text>
+           </view>
+         </view>
+       </view>
+
+       <!-- 中介信息 -->
+      <view class="card" wx:if="{{contractInfo.intermediary.name}}">
+        <view class="card-header">
+          <view class="card-title-wrapper">
+            <van-icon name="friends-o" size="32rpx" color="var(--primary-color)" />
+            <text class="card-title">居间服务（中介）</text>
+          </view>
+        </view>
+        <view class="info-list">
+          <view class="info-row">
+            <view class="info-label-wrapper">
+              <text class="info-label">中介名称</text>
+            </view>
+            <text class="info-value">{{contractInfo.intermediary.name}}</text>
+          </view>
+          <view class="info-row" wx:if="{{contractInfo.intermediary.partyACommission}}">
+            <view class="info-label-wrapper">
+              <text class="info-label">甲方佣金</text>
+            </view>
+            <text class="info-value">¥{{contractInfo.intermediary.partyACommission}}（{{contractInfo.intermediary.partyACommissionChinese}}）</text>
+          </view>
+          <view class="info-row" wx:if="{{contractInfo.intermediary.partyBCommission}}">
+            <view class="info-label-wrapper">
+              <text class="info-label">乙方佣金</text>
+            </view>
+            <text class="info-value">¥{{contractInfo.intermediary.partyBCommission}}（{{contractInfo.intermediary.partyBCommissionChinese}}）</text>
+          </view>
         </view>
       </view>
 
-      <!-- 第十条：违约责任 -->
-      <view class="article">
-        <view class="article-title">第十条：违约责任</view>
-        <view class="article-content">
-          <view class="sub-item">1、租赁前甲方未及时履行修缮义务，致使乙方不能正常使用的，租赁期限依法顺延，乙方不承担此其间费用；如对乙方造成损失甲方负有赔偿责任。</view>
-          <view class="sub-item">2、如乙方未按约定支付租金及本合同第五条应由乙方承担的其他费用，甲方有权单方终止合同，乙方承担一个月房屋租金作为违约金并收回房屋且给予乙方5个工作日的时间搬出个人物品，如逾期视为乙方放弃，甲方有权直接处理。</view>
-          <view class="sub-item">3、乙方未经甲方同意不能擅自将房屋、转借、进行非法活动，若有以上行为甲方有权单方终止合同，乙方承担一个月房租的违约金，并恢复房屋原状。</view>
+      <!-- 备注 -->
+      <view class="card" wx:if="{{contractInfo.remark}}">
+        <view class="card-header">
+          <view class="card-title-wrapper">
+            <van-icon name="comment-o" size="32rpx" color="var(--primary-color)" />
+            <text class="card-title">备注</text>
+          </view>
         </view>
-      </view>
-
-      <!-- 第十一条：合同终止 -->
-      <view class="article">
-        <view class="article-title">第十一条：合同终止</view>
-        <view class="article-content">
-          <view class="sub-item">1、因甲、乙任何一方违约导致本合同终止，丙方不承担任何责任；因一方主观原因导致本合同终止，应赔偿对方实际损失。</view>
-          <view class="sub-item">2、因不可抗力导致本合同终止的，三方互不承担责任。</view>
-        </view>
-      </view>
-
-      <!-- 第十二条：合同争议解决方式 -->
-      <view class="article">
-        <view class="article-title">第十二条：合同争议解决方式</view>
-        <view class="article-content">
-          <view class="sub-item">1、本合同在履行中如发生争议，由当事人协商解决；</view>
-          <view class="sub-item">2、协商不成的依法向该房屋所在地人民法院起诉。</view>
-        </view>
-      </view>
-
-      <!-- 第十三条：合同效力 -->
-      <view class="article">
-        <view class="article-title">第十三条：合同效力</view>
-        <view class="article-content">
-          <view class="sub-item">1、本合同一式二份，甲、乙各执一份，自双方签字（盖章）后生效，丙方留存备案一份；</view>
-          <view class="sub-item">2、如甲乙双方所留存合同内容不一致，则甲乙双方以丙方所留存合同文本为见证标准；</view>
-          <view class="sub-item">3、甲、乙两方各执一份，具有同等法律效力；</view>
-          <view class="sub-item">4、本合同未尽事宜，甲、乙双方可签订补充协议，与本合同具备同等法律效力，本合同补充条款与正文条款不一致的，以补充条款为准。</view>
-        </view>
-      </view>
-
-      <!-- 第十四条：其他约定事项 -->
-      <view class="article">
-        <view class="article-title">第十四条：其他约定事项</view>
-        <view class="article-content">
-          <view class="sub-item remark-text" wx:if="{{contractInfo.remark}}">{{contractInfo.remark}}</view>
-          <view class="sub-item remark-text" wx:else>（无）</view>
+        <view class="remark-content">
+          <text class="remark-text">{{contractInfo.remark}}</text>
         </view>
       </view>
 
       <!-- 签署信息 -->
-      <view class="article sign-section">
-        <view class="sign-table">
-          <view class="sign-cell">
-            <view class="sign-label">甲方（出租方）</view>
-            <view class="sign-value">{{contractInfo.partyA.company || contractInfo.partyA.name}}</view>
-            <view class="sign-info">联系电话：{{contractInfo.partyA.phone}}</view>
-            <view class="sign-info" wx:if="{{contractInfo.partyA.contact}}">委托代理人：{{contractInfo.partyA.contact}}</view>
-            <view class="sign-info" wx:if="{{contractInfo.partyA.phone2}}">备用电话：{{contractInfo.partyA.phone2}}</view>
-          </view>
-          <view class="sign-cell">
-            <view class="sign-label">乙方（承租方）</view>
-            <view class="sign-value">{{contractInfo.partyB.name}}</view>
-            <view class="sign-info">联系电话：{{contractInfo.partyB.phone}}</view>
-            <view class="sign-info" wx:if="{{contractInfo.partyB.contact}}">委托代理人：{{contractInfo.partyB.contact}}</view>
-          </view>
-        </view>
-        <view class="sign-date">
-          <view class="sign-date-item">
-            <text>签约日期：</text>
-            <text class="sign-date-value">{{contractInfo.signedAt || '待签署'}}</text>
-          </view>
-        </view>
-      </view>
+       <view class="card signature-card" wx:if="{{partyASignature || partyBSignature}}">
+         <view class="card-header">
+           <view class="card-title-wrapper">
+             <van-icon name="edit" class="card-icon" />
+             <text class="card-title">签署信息</text>
+           </view>
+         </view>
+         <view class="signature-area">
+           <view class="signature-item" wx:if="{{partyASignature}}">
+             <view class="signature-badge-wrapper">
+               <view class="signature-badge">已签署</view>
+             </view>
+             <view class="signature-label">甲方签名</view>
+             <image class="signature-img" src="{{partyASignature}}" mode="aspectFit" />
+             <text class="signature-time" wx:if="{{partyASignTime}}">
+               <van-icon name="clock-o" size="24rpx" />
+               {{partyASignTime}}
+             </text>
+           </view>
+           <view class="signature-divider" wx:if="{{partyASignature && partyBSignature}}"></view>
+           <view class="signature-item" wx:if="{{partyBSignature}}">
+             <view class="signature-badge-wrapper">
+               <view class="signature-badge">已签署</view>
+             </view>
+             <view class="signature-label">乙方签名</view>
+             <image class="signature-img" src="{{partyBSignature}}" mode="aspectFit" />
+             <text class="signature-time" wx:if="{{partyBSignTime}}">
+               <van-icon name="clock-o" size="24rpx" />
+               {{partyBSignTime}}
+             </text>
+           </view>
+         </view>
+       </view>
 
-      <!-- 物品清单 -->
-      <view class="article" wx:if="{{contractInfo.items && contractInfo.items.length > 0}}">
-        <view class="article-title">租赁房屋物品清单</view>
-        <view class="items-grid">
-          <view class="item-row header">
-            <view class="item-cell name">名称</view>
-            <view class="item-cell qty">数量</view>
-            <view class="item-cell name">名称</view>
-            <view class="item-cell qty">数量</view>
-          </view>
-          <block wx:for="{{contractInfo.items}}" wx:key="index" wx:for-index="idx">
-            <block wx:if="{{idx % 2 === 0}}">
-              <view class="item-row">
-                <view class="item-cell name">{{contractInfo.items[idx].name}}</view>
-                <view class="item-cell qty">{{contractInfo.items[idx].quantity}}</view>
-                <view class="item-cell name" wx:if="{{contractInfo.items[idx + 1]}}">{{contractInfo.items[idx + 1].name}}</view>
-                <view class="item-cell name" wx:else></view>
-                <view class="item-cell qty" wx:if="{{contractInfo.items[idx + 1]}}">{{contractInfo.items[idx + 1].quantity}}</view>
-                <view class="item-cell qty" wx:else></view>
-              </view>
-            </block>
-          </block>
-        </view>
-        <view class="meter-info" wx:if="{{contractInfo.meters && contractInfo.meters.length > 0}}">
-          <text wx:for="{{contractInfo.meters}}" wx:key="index">{{item.label}}：{{item.value}}    </text>
-        </view>
-      </view>
+       <!-- 合同全文 -->
+       <view wx:if="{{contractInfo.content}}" class="contract-full-content">
+         <view class="card-header">
+           <view class="card-title-wrapper">
+             <van-icon name="description" size="32rpx" color="var(--primary-color)" />
+             <text class="card-title">合同全文</text>
+           </view>
+         </view>
+         <view class="contract-content-body">
+           <rich-text nodes="{{contractInfo.content}}" />
+         </view>
+       </view>
 
-      <!-- 签署状态 -->
-      <view class="article sign-status">
-        <view class="article-title">签署状态</view>
-        <view class="sign-record">
-          <view class="record-item {{partyASigned ? 'signed' : ''}}">
-            <view class="record-icon">
-              <van-icon name="{{partyASigned ? 'passed' : 'clock-o'}}" size="20px" />
-            </view>
-            <view class="record-info">
-              <view class="record-label">甲方签署</view>
-              <view class="record-time">{{contractInfo.lessorSignedAt || '待签署'}}</view>
-            </view>
-          </view>
-          <view class="record-item {{partyBSigned ? 'signed' : ''}}">
-            <view class="record-icon">
-              <van-icon name="{{partyBSigned ? 'passed' : 'clock-o'}}" size="20px" />
-            </view>
-            <view class="record-info">
-              <view class="record-label">乙方签署</view>
-              <view class="record-time">{{contractInfo.lesseeSignedAt || '待签署'}}</view>
-            </view>
-          </view>
-        </view>
-      </view>
-    </view>
+       <!-- 底部占位 -->
+       <view class="bottom-placeholder"></view>
+    </scroll-view>
 
     <!-- 操作按钮区域 -->
-    <view class="action-section">
-      <view class="action-card">
-        <view class="primary-actions" wx:if="{{(isPartyA && needPartyASign) || (!isPartyA && needPartyBSign)}}">
-          <van-button type="primary" block round size="large" bind:click="{{isPartyA ? 'onPartyASign' : 'onPartyBSign'}}">
-            <van-icon name="sign" class="btn-icon" />确认签署
-          </van-button>
-        </view>
+    <view class="action-bar" wx:if="{{showSignBtn || showEditBtn || showDeleteBtn || showShareBtn || showCancelBtn || showRejectBtn || showDownloadBtn}}">
+      <view class="primary-action" wx:if="{{showSignBtn}}">
+        <van-button type="primary" size="large" round block bind:click="onSign" class="action-btn primary-btn">
+          <van-icon name="sign" class="btn-icon" />
+          确认签署
+        </van-button>
+      </view>
 
-        <view class="primary-actions" wx:if="{{isPartyA && needShare}}">
-          <van-button type="primary" block round size="large" bind:click="onGenerateShare">
-            <van-icon name="share" class="btn-icon" />生成分享链接
-          </van-button>
-        </view>
+      <view class="action-row" wx:if="{{showEditBtn || showDeleteBtn}}">
+        <van-button wx:if="{{showEditBtn}}" type="default" size="large" round block bind:click="onEditContract" class="action-btn-half edit-btn">
+          <van-icon name="edit-o" class="btn-icon" />
+          编辑
+        </van-button>
+        <van-button wx:if="{{showDeleteBtn}}" type="danger" plain size="large" round block bind:click="onDeleteContract" class="action-btn-half delete-btn">
+          <van-icon name="delete-o" class="btn-icon" />
+          删除
+        </van-button>
+      </view>
 
-        <view class="invite-code-section" wx:if="{{inviteCode && partyASigned && !partyBSigned}}">
-          <view class="invite-code-box">
-            <view class="invite-code-label">邀请码</view>
-            <view class="invite-code-value">{{inviteCode}}</view>
-            <van-button size="small" type="primary" plain bind:click="onCopyInviteCode">复制</van-button>
-          </view>
-        </view>
+      <view class="action-row" wx:if="{{showShareBtn || showCancelBtn}}">
+        <van-button wx:if="{{showShareBtn}}" type="primary" plain size="large" round block bind:click="onGenerateShare" class="action-btn-half share-btn">
+          <van-icon name="link-o" class="btn-icon" />
+          生成分享链接
+        </van-button>
+        <van-button wx:if="{{showCancelBtn}}" type="default" plain size="large" round block bind:click="onCancelContract" class="action-btn-half cancel-btn">
+          <van-icon name="cross" class="btn-icon" />
+          取消合同
+        </van-button>
+      </view>
 
-        <view class="secondary-actions">
-          <van-button type="info" block round plain size="large" bind:click="onShare" wx:if="{{inviteCode}}">
-            <van-icon name="share" class="btn-icon" />分享合同
-          </van-button>
-          <van-button type="success" block round plain size="large" bind:click="onDownloadPdf" wx:if="{{contractInfo.status === 3}}">
-            <van-icon name="description" class="btn-icon" />下载合同PDF
-          </van-button>
-          <van-button type="warning" block round size="large" bind:click="onSendReminder" wx:if="{{canRemind}}">
-            <van-icon name="bell" class="btn-icon" />发送签署提醒
-          </van-button>
-          <van-button type="primary" block round plain size="large" bind:click="onEditContract" wx:if="{{canEdit}}">
-            <van-icon name="edit" class="btn-icon" />编辑合同
-          </van-button>
-          <van-button type="danger" block round plain size="large" bind:click="onDeleteContract" wx:if="{{isPartyA && canDelete}}">
-            <van-icon name="delete-o" class="btn-icon" />删除合同
-          </van-button>
-        </view>
+      <view class="primary-action" wx:if="{{showRejectBtn}}">
+        <van-button type="warning" size="large" round block bind:click="onRejectContract" class="action-btn reject-btn">
+          <van-icon name="warning-o" class="btn-icon" />
+          拒绝签署
+        </van-button>
+      </view>
+
+      <view class="secondary-action" wx:if="{{showDownloadBtn}}">
+        <van-button type="default" size="large" round block bind:click="onDownloadPdf" class="action-btn download-btn">
+          <van-icon name="down" class="btn-icon" />
+          下载合同PDF
+        </van-button>
       </view>
     </view>
-
-    <!-- 分享弹窗 -->
-    <van-popup show="{{showShareModal}}" position="bottom" round bind:close="onCloseShareModal">
-      <view class="share-modal">
-        <view class="share-modal-title">分享合同</view>
-        <view class="share-modal-content">
-          <view class="invite-code-display">
-            <text class="label">邀请码：</text>
-            <text class="code">{{inviteCode}}</text>
-          </view>
-          <view class="qr-code-box" wx:if="{{shareQrCode}}">
-            <image src="{{shareQrCode}}" mode="aspectFit" class="qr-code" />
-            <text class="qr-tip">扫描二维码查看合同</text>
-          </view>
-          <view class="share-tip">将邀请码或二维码发送给乙方，乙方即可查看并签署合同</view>
-        </view>
-        <view class="share-modal-actions">
-          <van-button type="default" block round bind:click="onCopyInviteCode">复制邀请码</van-button>
-          <van-button type="primary" block round bind:click="onSaveQrCode" wx:if="{{shareQrCode}}">保存二维码</van-button>
-        </view>
-      </view>
-    </van-popup>
-  </block>
-
-  <block wx:else>
-    <van-empty description="合同不存在" />
   </block>
 </view>

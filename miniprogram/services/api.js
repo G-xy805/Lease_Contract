@@ -3,20 +3,28 @@
  * 封装 wx.request，统一处理认证、错误、超时等
  */
 
-const app = getApp()
 const BASE_URL = 'http://localhost:3000/api'
+
+// 请求缓存
+const requestCache = new Map()
+// 缓存默认有效期（5分钟）
+const CACHE_DURATION = 5 * 60 * 1000
 
 /**
  * 统一请求封装
  * @param {string} url - 请求路径
  * @param {object} options - 请求选项
- * @param {string} options.method - HTTP方法，默认GET
- * @param {object} options.data - 请求数据
- * @param {object} options.header - 请求头
- * @param {boolean} options.showLoading - 是否显示加载提示，默认true
- * @param {string} options.loadingText - 加载提示文本
  */
 function request(url, options = {}) {
+  // 为GET请求实现简单缓存（不显示loading的请求）
+  if (options.method === 'GET' && !options.showLoading) {
+    const cacheKey = url + JSON.stringify(options.data)
+    const cached = requestCache.get(cacheKey)
+    if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
+      return Promise.resolve(cached.data)
+    }
+  }
+
   return new Promise((resolve, reject) => {
     const token = wx.getStorageSync('token')
     const {
@@ -45,8 +53,16 @@ function request(url, options = {}) {
           wx.hideLoading()
         }
 
-        if (res.statusCode === 200) {
-          if (res.data.code === 200) {
+        if (res.statusCode === 200 || res.statusCode === 201) {
+          if (res.data.code === 200 || res.data.code === 201) {
+            // 成功时缓存GET请求结果（不显示loading的请求）
+            if (options.method === 'GET' && !options.showLoading) {
+              const cacheKey = url + JSON.stringify(options.data)
+              requestCache.set(cacheKey, {
+                data: res.data,
+                timestamp: Date.now()
+              })
+            }
             resolve(res.data)
           } else if (res.data.code === 401) {
             handleUnauthorized()
@@ -89,6 +105,7 @@ function request(url, options = {}) {
 function handleUnauthorized() {
   wx.removeStorageSync('token')
   wx.removeStorageSync('userInfo')
+  wx.removeStorageSync('loginExpiresAt')
   wx.showToast({
     title: '登录已过期，请重新登录',
     icon: 'none'
@@ -99,10 +116,10 @@ function handleUnauthorized() {
 }
 
 /**
- * 上传文件（图片/文件）
+ * 上传文件
  * @param {string} url - 上传路径
  * @param {string} filePath - 文件路径
- * @param {string} fileName - 文件字段名
+ * @param {string} fileName - 文件字段名，默认 'file'
  */
 function uploadFile(url, filePath, fileName = 'file') {
   return new Promise((resolve, reject) => {
@@ -154,6 +171,7 @@ function uploadFile(url, filePath, fileName = 'file') {
 
 /**
  * 发送验证码
+ * POST /api/users/send-code
  * @param {string} phone - 手机号
  */
 function sendCode(phone) {
@@ -166,7 +184,8 @@ function sendCode(phone) {
 
 /**
  * 手机号登录
- * @param {object} data - { phone, code, role }
+ * POST /api/users/phone-login
+ * @param {object} data - { phone, code }
  */
 function phoneLogin(data) {
   return request('/users/phone-login', {
@@ -179,7 +198,8 @@ function phoneLogin(data) {
 
 /**
  * 微信登录
- * @param {object} data - { openid, role }
+ * POST /api/users/wechat-login
+ * @param {object} data - { openid }
  */
 function wechatLogin(data) {
   return request('/users/wechat-login', {
@@ -192,14 +212,16 @@ function wechatLogin(data) {
 
 /**
  * 获取用户信息
+ * GET /api/users/profile
  */
-function getUserProfile() {
+function getProfile() {
   return request('/users/profile')
 }
 
 /**
  * 更新用户信息
- * @param {object} data - { name?, idcard_front?, idcard_back? }
+ * PUT /api/users/profile
+ * @param {object} data - { name?, avatar?, phone? }
  */
 function updateProfile(data) {
   return request('/users/profile', {
@@ -210,6 +232,7 @@ function updateProfile(data) {
 
 /**
  * 实名认证
+ * POST /api/users/real-name/verify
  * @param {object} data - { name, idcard, idcard_front?, idcard_back? }
  */
 function realNameVerify(data) {
@@ -220,58 +243,12 @@ function realNameVerify(data) {
   })
 }
 
-// ==================== 管理员模块 ====================
-
-/**
- * 申请成为甲方
- */
-function applyLessor() {
-  return request('/users/apply-lessor', {
-    method: 'POST',
-    loadingText: '申请中...'
-  })
-}
-
-/**
- * 审核甲方申请
- * @param {number} userId - 用户ID
- * @param {boolean} approved - 是否通过
- */
-function auditLessor(userId, approved) {
-  return request('/users/audit-lessor', {
-    method: 'POST',
-    data: { userId, approved },
-    loadingText: '审核中...'
-  })
-}
-
-/**
- * 封禁用户
- * @param {number} userId - 用户ID
- */
-function banUser(userId) {
-  return request(`/users/${userId}/ban`, {
-    method: 'POST',
-    loadingText: '封禁中...'
-  })
-}
-
-/**
- * 解封用户
- * @param {number} userId - 用户ID
- */
-function unbanUser(userId) {
-  return request(`/users/${userId}/unban`, {
-    method: 'POST',
-    loadingText: '解封中...'
-  })
-}
-
-// ==================== 合同模块（甲方） ====================
+// ==================== 合同模块 ====================
 
 /**
  * 获取甲方合同列表
- * @param {object} params - { status?, keyword?, start_date?, end_date?, page?, page_size? }
+ * GET /api/contracts/landlord
+ * @param {object} params - { status?, keyword?, page?, page_size? }
  */
 function getLandlordContracts(params = {}) {
   return request('/contracts/landlord', { data: params })
@@ -279,7 +256,8 @@ function getLandlordContracts(params = {}) {
 
 /**
  * 获取乙方合同列表
- * @param {object} params - { status?, keyword?, start_date?, end_date?, page?, page_size? }
+ * GET /api/contracts/tenant
+ * @param {object} params - { status?, keyword?, page?, page_size? }
  */
 function getTenantContracts(params = {}) {
   return request('/contracts/tenant', { data: params })
@@ -287,6 +265,7 @@ function getTenantContracts(params = {}) {
 
 /**
  * 获取合同详情
+ * GET /api/contracts/:id
  * @param {number} id - 合同ID
  */
 function getContractDetail(id) {
@@ -295,6 +274,7 @@ function getContractDetail(id) {
 
 /**
  * 创建合同
+ * POST /api/contracts
  * @param {object} data - 合同数据
  */
 function createContract(data) {
@@ -307,6 +287,7 @@ function createContract(data) {
 
 /**
  * 更新合同
+ * PUT /api/contracts/:id
  * @param {number} id - 合同ID
  * @param {object} data - 更新的数据
  */
@@ -320,6 +301,7 @@ function updateContract(id, data) {
 
 /**
  * 删除合同
+ * DELETE /api/contracts/:id
  * @param {number} id - 合同ID
  */
 function deleteContract(id) {
@@ -329,8 +311,11 @@ function deleteContract(id) {
   })
 }
 
+// ==================== 签署模块 ====================
+
 /**
  * 甲方签署合同
+ * POST /api/contracts/:id/sign
  * @param {number} id - 合同ID
  * @param {string} signature - 签名图片Base64
  */
@@ -343,30 +328,8 @@ function lessorSign(id, signature) {
 }
 
 /**
- * 生成分享链接
- * @param {number} id - 合同ID
- */
-function shareContract(id) {
-  return request(`/contracts/${id}/share`, {
-    method: 'POST',
-    loadingText: '生成中...'
-  })
-}
-
-/**
- * 验证邀请码
- * @param {string} code - 邀请码
- */
-function verifyInviteCode(code) {
-  return request(`/contracts/invite-verify/${code}`, {
-    showLoading: false
-  })
-}
-
-// ==================== 合同模块（乙方） ====================
-
-/**
  * 乙方签署合同
+ * POST /api/contracts/:id/tenant-sign
  * @param {number} id - 合同ID
  * @param {string} signature - 签名图片Base64
  */
@@ -380,6 +343,7 @@ function tenantSign(id, signature) {
 
 /**
  * 拒绝签署
+ * POST /api/contracts/:id/reject
  * @param {number} id - 合同ID
  * @param {string} reason - 拒绝原因
  */
@@ -393,6 +357,7 @@ function rejectContract(id, reason) {
 
 /**
  * 取消合同
+ * POST /api/contracts/:id/cancel
  * @param {number} id - 合同ID
  */
 function cancelContract(id) {
@@ -402,75 +367,34 @@ function cancelContract(id) {
   })
 }
 
-// ==================== 合同PDF与验证 ====================
-
 /**
- * 生成合同PDF
+ * 生成分享链接
+ * POST /api/contracts/:id/share
  * @param {number} id - 合同ID
  */
-function generateContractPdf(id) {
-  return request(`/contracts/${id}/pdf`)
+function shareContract(id) {
+  return request(`/contracts/${id}/share`, {
+    method: 'POST',
+    loadingText: '生成中...'
+  })
 }
 
+// ==================== 验证模块 ====================
+
 /**
- * 下载合同PDF
- * @param {number} id - 合同ID
- * @returns {Promise<string>} 返回本地文件路径
+ * 验证邀请码
+ * GET /api/contracts/invite-verify/:code
+ * @param {string} code - 邀请码
  */
-function downloadContractPdf(id) {
-  return new Promise((resolve, reject) => {
-    const token = wx.getStorageSync('token')
-    const staticBase = getApp().globalData.baseUrl || 'http://localhost:3000'
-
-    // 先调用 API 获取 PDF URL
-    wx.request({
-      url: `${BASE_URL}/contracts/${id}/pdf`,
-      method: 'GET',
-      header: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      success: (res) => {
-        if (res.data.code === 200 && res.data.data?.url) {
-          // 拼接 PDF 下载地址（uploads 在根路径 /uploads）
-          const pdfUrl = `${staticBase}${res.data.data.url}`
-          console.log('PDF下载地址:', pdfUrl)
-
-          // 下载文件到本地
-          wx.downloadFile({
-            url: pdfUrl,
-            header: {
-              'Authorization': `Bearer ${token}`
-            },
-            success: (downloadRes) => {
-              console.log('downloadFile响应:', downloadRes)
-              if (downloadRes.statusCode === 200 && downloadRes.tempFilePath) {
-                console.log('下载成功, tempFilePath:', downloadRes.tempFilePath)
-                resolve(downloadRes.tempFilePath)
-              } else {
-                console.error('下载失败, statusCode:', downloadRes.statusCode)
-                reject(new Error(`下载失败, statusCode: ${downloadRes.statusCode}`))
-              }
-            },
-            fail: (err) => {
-              console.error('下载PDF失败:', err)
-              reject(err)
-            }
-          })
-        } else {
-          reject(new Error(res.data.message || '获取PDF失败'))
-        }
-      },
-      fail: (err) => {
-        console.error('请求PDF失败:', err)
-        reject(err)
-      }
-    })
+function verifyInviteCode(code) {
+  return request(`/contracts/invite-verify/${code}`, {
+    showLoading: false
   })
 }
 
 /**
  * 验证合同真伪
+ * GET /api/contracts/verify/:code
  * @param {string} code - 合同编号
  */
 function verifyContract(code) {
@@ -479,10 +403,68 @@ function verifyContract(code) {
   })
 }
 
+// ==================== PDF模块 ====================
+
+/**
+ * 生成合同PDF
+ * GET /api/contracts/:id/pdf
+ * @param {number} id - 合同ID
+ */
+function generateContractPdf(id) {
+  return request(`/contracts/${id}/pdf`)
+}
+
+/**
+ * 下载合同PDF到本地
+ * @param {number} id - 合同ID
+ * @returns {Promise<string>} 返回本地文件路径
+ */
+function downloadContractPdf(id) {
+  return new Promise((resolve, reject) => {
+    const token = wx.getStorageSync('token')
+    const staticBase = 'http://localhost:3000'
+
+    request(`/contracts/${id}/pdf`).then((res) => {
+      if (res.data?.url) {
+        const pdfUrl = `${staticBase}${res.data.url}`
+
+        wx.downloadFile({
+          url: pdfUrl,
+          header: {
+            'Authorization': `Bearer ${token}`
+          },
+          success: (downloadRes) => {
+            if (downloadRes.statusCode === 200 && downloadRes.tempFilePath) {
+              resolve(downloadRes.tempFilePath)
+            } else {
+              reject(new Error(`下载失败, statusCode: ${downloadRes.statusCode}`))
+            }
+          },
+          fail: reject
+        })
+      } else {
+        reject(new Error('获取PDF失败'))
+      }
+    }).catch(reject)
+  })
+}
+
+// ==================== 文件上传模块 ====================
+
+/**
+ * 上传图片
+ * POST /api/upload/image
+ * @param {string} filePath - 图片路径
+ */
+function uploadImage(filePath) {
+  return uploadFile('/upload/image', filePath, 'file')
+}
+
 // ==================== 邀请模块 ====================
 
 /**
  * 获取收到的签署邀请列表
+ * GET /api/invitations
  */
 function getInvitations() {
   return request('/invitations')
@@ -490,6 +472,7 @@ function getInvitations() {
 
 /**
  * 通过邀请码获取合同信息（乙方）
+ * GET /api/invitations/:code
  * @param {string} code - 邀请码
  */
 function getContractByInviteCode(code) {
@@ -499,7 +482,8 @@ function getContractByInviteCode(code) {
 }
 
 /**
- * 接受签署邀请
+ * 接受签署邀请（乙方）
+ * POST /api/invitations/:code/accept
  * @param {string} code - 邀请码
  * @param {string} phone - 乙方手机号
  */
@@ -512,7 +496,8 @@ function acceptInvitation(code, phone) {
 }
 
 /**
- * 拒绝签署邀请
+ * 拒绝签署邀请（乙方）
+ * POST /api/invitations/:code/reject
  * @param {string} code - 邀请码
  * @param {string} phone - 乙方手机号
  * @param {string} reason - 拒绝原因
@@ -525,10 +510,11 @@ function rejectInvitation(code, phone, reason) {
   })
 }
 
-// ==================== 签名模块 ====================
+// ==================== 签名记录模块 ====================
 
 /**
  * 创建签名记录
+ * POST /api/signatures
  * @param {object} data - { contract_id, sign_type, sign_role, sign_image, sign_data?, sign_location? }
  */
 function createSignature(data) {
@@ -540,6 +526,7 @@ function createSignature(data) {
 
 /**
  * 获取合同签名记录
+ * GET /api/signatures/:contract_id
  * @param {number} contractId - 合同ID
  */
 function getSignatures(contractId) {
@@ -548,34 +535,18 @@ function getSignatures(contractId) {
 
 /**
  * 获取签名详情
+ * GET /api/signatures/detail/:id
  * @param {number} id - 签名ID
  */
 function getSignatureDetail(id) {
   return request(`/signatures/detail/${id}`)
 }
 
-// ==================== 文件上传模块 ====================
-
-/**
- * 上传图片
- * @param {string} filePath - 图片路径
- */
-function uploadImage(filePath) {
-  return uploadFile('/upload/image', filePath, 'file')
-}
-
-/**
- * 上传文件
- * @param {string} filePath - 文件路径
- */
-function uploadGeneralFile(filePath) {
-  return uploadFile('/upload/file', filePath, 'file')
-}
-
 // ==================== 模板模块 ====================
 
 /**
  * 获取模板列表
+ * GET /api/templates
  */
 function getTemplates() {
   return request('/templates')
@@ -583,17 +554,55 @@ function getTemplates() {
 
 /**
  * 获取模板详情
+ * GET /api/templates/:id
  * @param {number} id - 模板ID
  */
 function getTemplateDetail(id) {
   return request(`/templates/${id}`)
 }
 
+// ==================== 测试数据模块 ====================
+
 /**
- * 获取模板字段映射
+ * 获取测试用户列表
+ * GET /api/test-data/users
  */
-function getFieldMappings() {
-  return request('/templates/fields/mapping')
+function getTestUsers() {
+  return request('/test-data/users', {
+    showLoading: false
+  })
+}
+
+/**
+ * 获取测试合同列表
+ * GET /api/test-data/contracts
+ */
+function getTestContracts() {
+  return request('/test-data/contracts', {
+    showLoading: false
+  })
+}
+
+/**
+ * 获取测试合同详情
+ * GET /api/test-data/contracts/:id
+ * @param {number} id - 合同ID
+ */
+function getTestContractById(id) {
+  return request(`/test-data/contracts/${id}`, {
+    showLoading: false
+  })
+}
+
+/**
+ * 重置测试数据
+ * GET /api/test-data/reset
+ */
+function resetTestData() {
+  return request('/test-data/reset', {
+    showLoading: true,
+    loadingText: '重置测试数据...'
+  })
 }
 
 // ==================== 导出 ====================
@@ -607,15 +616,9 @@ module.exports = {
   sendCode,
   phoneLogin,
   wechatLogin,
-  getUserProfile,
+  getProfile,
   updateProfile,
   realNameVerify,
-
-  // 管理员模块
-  applyLessor,
-  auditLessor,
-  banUser,
-  unbanUser,
 
   // 合同模块
   getLandlordContracts,
@@ -624,15 +627,21 @@ module.exports = {
   createContract,
   updateContract,
   deleteContract,
+
+  // 签署模块
   lessorSign,
-  shareContract,
-  verifyInviteCode,
   tenantSign,
   rejectContract,
   cancelContract,
+  shareContract,
+
+  // 验证模块
+  verifyInviteCode,
+  verifyContract,
+
+  // PDF模块
   generateContractPdf,
   downloadContractPdf,
-  verifyContract,
 
   // 邀请模块
   getInvitations,
@@ -640,7 +649,7 @@ module.exports = {
   acceptInvitation,
   rejectInvitation,
 
-  // 签名模块
+  // 签名记录模块
   createSignature,
   getSignatures,
   getSignatureDetail,
@@ -648,5 +657,13 @@ module.exports = {
   // 模板模块
   getTemplates,
   getTemplateDetail,
-  getFieldMappings
+
+  // 测试数据模块
+  getTestUsers,
+  getTestContracts,
+  getTestContractById,
+  resetTestData,
+
+  // 配置
+  BASE_URL
 }

@@ -7,16 +7,16 @@
     "pages/my-contracts/index",
     "pages/create-contract/index",
     "pages/preview-contract/index",
-    "pages/sign-contract/index",
     "pages/contract-detail/index",
-    "pages/profile/index",
-    "pages/verify-invite/index"
+    "pages/sign-contract/index",
+    "pages/verify-invite/index",
+    "pages/profile/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "租赁合同",
-    "backgroundColor": "#f5f5f5",
+    "backgroundColor": "#f7f8fa",
     "backgroundTextStyle": "dark",
     "enablePullDownRefresh": false
   },

@@ -20,6 +20,12 @@ import {
   getPaymentMethodText
 } from '../models/Contract';
 import { validateIdCard, validatePhone, validateAmount } from '../utils/validation';
+import { UserRole } from '../models/User';
+
+const isAdminUser = async (userId: number): Promise<boolean> => {
+  const users = await query<RowDataPacket[]>('SELECT role FROM users WHERE id = ?', [userId]);
+  return users.length > 0 && users[0].role === UserRole.ADMIN;
+};
 
 /**
  * 生成合同编号
@@ -88,8 +94,17 @@ export const getLandlordContracts = async (req: AuthRequest, res: Response): Pro
     const params: any[] = [userId];
 
     if (status) {
-      whereClause += ' AND status = ?';
-      params.push(parseInt(status as string, 10));
+      const statusStr = status as string;
+      if (statusStr.includes(',')) {
+        const statusList = statusStr.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+        if (statusList.length > 0) {
+          whereClause += ` AND status IN (${statusList.map(() => '?').join(',')})`;
+          params.push(...statusList);
+        }
+      } else {
+        whereClause += ' AND status = ?';
+        params.push(parseInt(statusStr, 10));
+      }
     }
 
     if (keyword) {
@@ -167,12 +182,21 @@ export const getTenantContracts = async (req: AuthRequest, res: Response): Promi
     const pageSize = parseInt(page_size as string, 10) || 10;
     const offset = (pageNum - 1) * pageSize;
 
-    let whereClause = 'WHERE partyB_phone = ?';
-    const params: any[] = [userPhone];
+    let whereClause = 'WHERE (partyB_phone = ? OR created_by = ?)';
+    const params: any[] = [userPhone, userId];
 
     if (status) {
-      whereClause += ' AND status = ?';
-      params.push(parseInt(status as string, 10));
+      const statusStr = status as string;
+      if (statusStr.includes(',')) {
+        const statusList = statusStr.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+        if (statusList.length > 0) {
+          whereClause += ` AND status IN (${statusList.map(() => '?').join(',')})`;
+          params.push(...statusList);
+        }
+      } else {
+        whereClause += ' AND status = ?';
+        params.push(parseInt(statusStr, 10));
+      }
     }
 
     if (keyword) {
@@ -251,15 +275,102 @@ export const getContractById = async (req: AuthRequest, res: Response): Promise<
 
     const contract = contracts[0];
 
-    if (contract.created_by !== userId && contract.partyB_phone !== userPhone) {
+    const isAdmin = await isAdminUser(userId);
+    if (!isAdmin && contract.created_by !== userId && contract.partyB_phone !== userPhone) {
       res.status(403).json({ code: 403, message: '无权查看此合同' });
       return;
     }
 
+    let renderedContent = '';
+    try {
+      let itemsArray: Array<{ name: string; quantity?: string; unit?: string }> = [];
+      if (contract.inventory_items) {
+        try {
+          const parsed = typeof contract.inventory_items === 'string'
+            ? JSON.parse(contract.inventory_items)
+            : contract.inventory_items;
+          if (Array.isArray(parsed)) {
+            itemsArray = parsed.map((item: any) => ({
+              name: item.name || '',
+              quantity: item.quantity?.toString() || '0',
+              unit: item.unit || ''
+            }));
+          }
+        } catch (e) {
+          console.error('解析 inventory_items 失败:', e);
+        }
+      }
+
+      const contractData: ContractData = {
+        id: contract.id.toString(),
+        contractNumber: contract.contract_no,
+        title: contract.title,
+        partyA: {
+          name: '甲方（出租方）',
+          company: contract.partyA_company || contractConfig.partyACompany,
+          contact: contract.partyA_contact || '',
+          phone: contract.partyA_phone || '',
+          address: contract.house_address,
+          idCard: contract.partyA_idcard || '',
+          account: contract.partyA_account || ''
+        },
+        partyB: {
+          name: contract.partyB_name || '',
+          contact: contract.partyB_contact || '',
+          phone: contract.partyB_phone || '',
+          address: '-',
+          idCard: contract.partyB_idCard || ''
+        },
+        property: {
+          address: contract.house_address,
+          area: (contract.house_area || 0).toString(),
+          roomType: '-'
+        },
+        rent: {
+          amount: contract.monthly_rent,
+          paymentCycle: contract.payment_method?.toString() || '1',
+          deposit: contract.deposit,
+          paymentDate: '每月1日',
+          purpose: contract.rent_purpose || '居住使用'
+        },
+        duration: {
+          startDate: contract.lease_start ? new Date(contract.lease_start).toISOString().split('T')[0] : '',
+          endDate: contract.lease_end ? new Date(contract.lease_end).toISOString().split('T')[0] : '',
+          totalMonths: contract.lease_months || 0
+        },
+        terms: [],
+        createdAt: new Date(contract.created_at).toLocaleDateString('zh-CN'),
+        advanceNoticeDays: contract.advance_notice_days || 30,
+        paymentTimes: contract.payment_count || 1,
+        firstPaymentAmount: contract.first_payment_amount || contract.monthly_rent,
+        firstPaymentDate: contract.first_payment_date || '',
+        secondPaymentAmount: contract.second_payment_amount || contract.monthly_rent,
+        secondPaymentDate: contract.second_payment_date ? new Date(contract.second_payment_date).toISOString().split('T')[0] : '',
+        thirdPaymentAmount: contract.third_payment_amount || 0,
+        thirdPaymentDate: '',
+        electricityMeter: contract.electricity_meter ?? '',
+        waterMeter: contract.water_meter ?? '',
+        gasMeter: contract.gas_meter ?? '',
+        remark: contract.remark || '',
+        lessorAccount: contract.partyA_account || '',
+        intermediaryName: contract.intermediary_name || '',
+        partyACommission: contract.partyA_commission || 0,
+        partyBCommission: contract.partyB_commission || 0,
+        depositChinese: contract.deposit_chinese || '',
+        partyBSignature: contract.partyB_signature || '',
+        items: itemsArray
+      };
+
+      renderedContent = htmlPdfService.renderContractHtml(contractData);
+    } catch (renderError) {
+      console.error('渲染合同模板失败:', renderError);
+    }
+
     const response: IContractDetailResponse = {
       contract: {
-        ...contract
-      }
+        ...contract,
+        rendered_content: renderedContent
+      } as IContract
     };
 
     res.json({
@@ -314,13 +425,10 @@ export const createContract = async (req: AuthRequest, res: Response): Promise<v
       second_payment_amount,
       second_payment_date,
       third_payment_amount,
+      fourth_payment_amount,
       deposit,
       deposit_chinese,
-      fee_water,
-      fee_electric,
-      fee_gas,
-      fee_property,
-      fee_heating,
+      fee_items,
       partyA_commission,
       partyA_commission_chinese,
       partyB_commission,
@@ -401,13 +509,15 @@ export const createContract = async (req: AuthRequest, res: Response): Promise<v
       'first_payment_amount', 'first_payment_date', 'second_payment_amount', 'second_payment_date',
       'third_payment_amount',
       'deposit', 'deposit_chinese',
-      'fee_water', 'fee_electric', 'fee_gas', 'fee_property', 'fee_heating',
+      'fee_items',
       'partyA_commission', 'partyA_commission_chinese', 'partyB_commission', 'partyB_commission_chinese',
       'electricity_meter', 'water_meter', 'gas_meter',
       'remark', 'intermediary_name', 'inventory_items',
       'status', 'created_by', 'created_at', 'updated_at',
       'partyA_sign_status', 'partyB_sign_status'
     ];
+
+    const feeItemsJson = fee_items && Array.isArray(fee_items) ? JSON.stringify(fee_items) : null;
 
     const insertValues = [
       contract_no, title, userId,
@@ -420,11 +530,7 @@ export const createContract = async (req: AuthRequest, res: Response): Promise<v
       first_payment_amount || null, first_payment_date || null, second_payment_amount || null, second_payment_date || null,
       third_payment_amount || null,
       deposit || monthly_rent, deposit_chinese || null,
-      fee_water !== undefined ? (fee_water ? 1 : 0) : 1,
-      fee_electric !== undefined ? (fee_electric ? 1 : 0) : 1,
-      fee_gas !== undefined ? (fee_gas ? 1 : 0) : 1,
-      fee_property !== undefined ? (fee_property ? 1 : 0) : 0,
-      fee_heating !== undefined ? (fee_heating ? 1 : 0) : 0,
+      feeItemsJson,
       partyA_commission || null, partyA_commission_chinese || null, partyB_commission || null, partyB_commission_chinese || null,
       electricity_meter || null, water_meter || null, gas_meter || null,
       remark || null, intermediary_name || null, inventoryItemsJson,
@@ -490,7 +596,8 @@ export const updateContract = async (req: AuthRequest, res: Response): Promise<v
 
     const contract = contracts[0];
 
-    if (contract.created_by !== userId) {
+    const isAdmin = await isAdminUser(userId);
+    if (!isAdmin && contract.created_by !== userId) {
       res.status(403).json({ code: 403, message: '无权修改此合同' });
       return;
     }
@@ -514,7 +621,7 @@ export const updateContract = async (req: AuthRequest, res: Response): Promise<v
       'first_payment_amount', 'first_payment_date', 'second_payment_amount', 'second_payment_date',
       'third_payment_amount',
       'deposit', 'deposit_chinese',
-      'fee_water', 'fee_electric', 'fee_gas', 'fee_property', 'fee_heating',
+      'fee_items',
       'partyA_commission', 'partyA_commission_chinese', 'partyB_commission', 'partyB_commission_chinese',
       'electricity_meter', 'water_meter', 'gas_meter',
       'remark', 'intermediary_name', 'inventory_items'
@@ -523,7 +630,13 @@ export const updateContract = async (req: AuthRequest, res: Response): Promise<v
     for (const field of allowedFields) {
       if (updateData[field] !== undefined) {
         updates.push(`${field} = ?`);
-        values.push(updateData[field]);
+        if (field === 'inventory_items' && Array.isArray(updateData[field])) {
+          values.push(JSON.stringify(updateData[field]));
+        } else if (field === 'fee_items' && Array.isArray(updateData[field])) {
+          values.push(JSON.stringify(updateData[field]));
+        } else {
+          values.push(updateData[field]);
+        }
       }
     }
 
@@ -591,13 +704,17 @@ export const deleteContract = async (req: AuthRequest, res: Response): Promise<v
 
     const contract = contracts[0];
 
-    if (contract.created_by !== userId) {
+    const isAdmin = await isAdminUser(userId);
+    if (!isAdmin && contract.created_by !== userId) {
       res.status(403).json({ code: 403, message: '无权删除此合同' });
       return;
     }
 
-    if (contract.status !== ContractStatus.PENDING_LESSOR_SIGN) {
-      res.status(400).json({ code: 400, message: '只有待签署状态的合同可以删除' });
+    if (contract.status !== ContractStatus.PENDING_LESSOR_SIGN && 
+        contract.status !== ContractStatus.PENDING_LESSEE_SIGN &&
+        contract.status !== ContractStatus.REJECTED &&
+        contract.status !== ContractStatus.CANCELLED) {
+      res.status(400).json({ code: 400, message: '只有未生效的合同可以删除' });
       return;
     }
 
@@ -650,7 +767,8 @@ export const lessorSign = async (req: AuthRequest, res: Response): Promise<void>
 
     const contract = contracts[0];
 
-    if (contract.created_by !== userId) {
+    const isAdmin = await isAdminUser(userId);
+    if (!isAdmin && contract.created_by !== userId) {
       res.status(403).json({ code: 403, message: '无权操作此合同' });
       return;
     }
@@ -744,7 +862,8 @@ export const shareContract = async (req: AuthRequest, res: Response): Promise<vo
 
     const contract = contracts[0];
 
-    if (contract.created_by !== userId) {
+    const isAdmin = await isAdminUser(userId);
+    if (!isAdmin && contract.created_by !== userId) {
       res.status(403).json({ code: 403, message: '无权操作此合同' });
       return;
     }
@@ -817,23 +936,15 @@ export const verifyInviteCode = async (req: Request, res: Response): Promise<voi
 
     const contract = contracts[0];
 
-    // 检查邀请码是否过期
+    let expired = false;
     if (contract.invite_expires_at) {
       const expiresAt = new Date(contract.invite_expires_at);
       if (expiresAt < new Date()) {
-        res.status(400).json({ code: 400, message: '邀请码已过期' });
-        return;
+        expired = true;
       }
     }
 
-    // 检查合同状态是否为待乙方签署
-    if (contract.status !== ContractStatus.PENDING_LESSEE_SIGN) {
-      res.status(400).json({
-        code: 400,
-        message: `当前合同状态为[${getStatusText(contract.status)}]，无法签署`
-      });
-      return;
-    }
+    const isNotPending = contract.status !== ContractStatus.PENDING_LESSEE_SIGN;
 
     res.json({
       code: 200,
@@ -852,7 +963,10 @@ export const verifyInviteCode = async (req: Request, res: Response): Promise<voi
         monthly_rent: contract.monthly_rent,
         deposit: contract.deposit,
         status: contract.status,
-        expires_at: contract.invite_expires_at
+        status_text: getStatusText(contract.status),
+        expires_at: contract.invite_expires_at,
+        expired: expired,
+        invalid: isNotPending
       }
     });
   } catch (error) {
@@ -1070,7 +1184,8 @@ export const cancelContract = async (req: AuthRequest, res: Response): Promise<v
 
     const contract = contracts[0];
 
-    if (contract.created_by !== userId && contract.partyB_phone !== userPhone) {
+    const isAdmin = await isAdminUser(userId);
+    if (!isAdmin && contract.created_by !== userId && contract.partyB_phone !== userPhone) {
       res.status(403).json({ code: 403, message: '无权操作此合同' });
       return;
     }
@@ -1141,7 +1256,8 @@ export const generateContractPdf = async (req: AuthRequest, res: Response): Prom
 
     const contract = contracts[0];
 
-    if (contract.created_by !== userId && contract.partyB_phone !== userPhone) {
+    const isAdmin = await isAdminUser(userId);
+    if (!isAdmin && contract.created_by !== userId && contract.partyB_phone !== userPhone) {
       res.status(403).json({ code: 403, message: '无权查看此合同' });
       return;
     }

@@ -28,6 +28,15 @@ export interface IInventoryItem {
 // 物品清单JSON格式
 export type InventoryItems = IInventoryItem[];
 
+// 费用约定项接口
+export interface IFeeItem {
+  name: string;      // 费用名称
+  checked: boolean;  // 是否勾选（由乙方承担）
+}
+
+// 费用约定JSON格式
+export type FeeItems = IFeeItem[];
+
 // 合同数据接口
 export interface IContract {
   id: number;
@@ -72,18 +81,15 @@ export interface IContract {
   second_payment_amount: number | null;
   second_payment_date: Date | null;
   third_payment_amount: number | null;
+  fourth_payment_amount: number | null;
   total_amount: number;
 
   // 押金
   deposit: number;
   deposit_chinese: string | null;
 
-  // 费用约定
-  fee_water: boolean;
-  fee_electric: boolean;
-  fee_gas: boolean;
-  fee_property: boolean;
-  fee_heating: boolean;
+  // 费用约定（JSON格式）
+  fee_items: FeeItems;
 
   // 居间服务
   intermediary_name: string | null;
@@ -172,16 +178,13 @@ export interface IContractCreate {
   second_payment_amount?: number;
   second_payment_date?: string;
   third_payment_amount?: number;
+  fourth_payment_amount?: number;
   deposit?: number;
   deposit_chinese?: string;
   total_amount?: number;
 
-  // 费用约定
-  fee_water?: boolean;
-  fee_electric?: boolean;
-  fee_gas?: boolean;
-  fee_property?: boolean;
-  fee_heating?: boolean;
+  // 费用约定（JSON格式）
+  fee_items?: FeeItems;
 
   // 居间服务
   intermediary_name?: string;
@@ -243,16 +246,13 @@ export interface IContractUpdate {
   second_payment_amount?: number;
   second_payment_date?: string;
   third_payment_amount?: number;
+  fourth_payment_amount?: number;
   deposit?: number;
   deposit_chinese?: string;
   total_amount?: number;
 
-  // 费用约定
-  fee_water?: boolean;
-  fee_electric?: boolean;
-  fee_gas?: boolean;
-  fee_property?: boolean;
-  fee_heating?: boolean;
+  // 费用约定（JSON格式）
+  fee_items?: FeeItems;
 
   // 居间服务
   intermediary_name?: string;

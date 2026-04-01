@@ -1,0 +1,8 @@
+<van-tag
+  color="{{tagColor}}"
+  size="{{size}}"
+  plain="{{false}}"
+  round="{{true}}"
+>
+  {{tagText}}
+</van-tag>
