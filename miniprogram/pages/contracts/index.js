@@ -2,6 +2,7 @@
 const app = getApp()
 const api = require('../../services/api')
 const { CONTRACT_STATUS, CONTRACT_STATUS_TEXT, CONTRACT_STATUS_COLOR } = require('../../utils/constants')
+const navigation = require('../../utils/navigation')
 
 Page({
   data: {
@@ -32,10 +33,7 @@ Page({
   onLoad(options) {
     const token = wx.getStorageSync('token')
     if (!token) {
-      wx.showToast({ title: '请先登录', icon: 'none' })
-      setTimeout(() => {
-        wx.navigateTo({ url: '/pages/login/login' })
-      }, 1500)
+      navigation.navigateTo('/pages/login/index', { delay: 1500, showToast: '请先登录' })
       return
     }
     this.loadContracts(true)
@@ -154,10 +152,16 @@ Page({
         title: '网络错误，请稍后重试',
         icon: 'none'
       })
-      this.setData({
-        contracts: [],
-        hasMore: false
-      })
+      if (isRefresh) {
+        this.setData({ hasMore: false })
+      } else if (isLoadMore) {
+        this.setData({ page: this.data.page - 1 })
+      } else {
+        this.setData({
+          contracts: [],
+          hasMore: false
+        })
+      }
     }).finally(() => {
       this.setData({
         loading: false,

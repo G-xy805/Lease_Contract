@@ -13,16 +13,22 @@ App({
     loginExpiresAt: null
   },
 
+  _tokenTimer: null,
+
   onLaunch() {
     this.checkLoginStatus()
   },
 
   onShow() {
     console.log('小程序启动')
+    if (this.globalData.token && this.globalData.loginExpiresAt) {
+      this.scheduleTokenRefresh()
+    }
   },
 
   onHide() {
     console.log('小程序隐藏')
+    this.clearTokenTimer()
   },
 
   checkLoginStatus() {
@@ -43,6 +49,8 @@ App({
   },
 
   scheduleTokenRefresh() {
+    this.clearTokenTimer()
+
     const expiresAt = this.globalData.loginExpiresAt
     if (!expiresAt) return
 
@@ -53,9 +61,16 @@ App({
       this.refreshToken()
     } else if (remainingTime > refreshThreshold) {
       const timeout = remainingTime - refreshThreshold
-      setTimeout(() => {
+      this._tokenTimer = setTimeout(() => {
         this.refreshToken()
       }, timeout)
+    }
+  },
+
+  clearTokenTimer() {
+    if (this._tokenTimer) {
+      clearTimeout(this._tokenTimer)
+      this._tokenTimer = null
     }
   },
 

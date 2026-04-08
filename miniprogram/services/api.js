@@ -3,12 +3,37 @@
  * 封装 wx.request，统一处理认证、错误、超时等
  */
 
-const BASE_URL = 'http://localhost:3000/api'
+const config = require('../config/index')
+const BASE_URL = config.apiBaseUrl
+const app = getApp()
+const { escapeHtml } = require('../utils/sanitize')
 
 // 请求缓存
 const requestCache = new Map()
 // 缓存默认有效期（5分钟）
 const CACHE_DURATION = 5 * 60 * 1000
+// 防止重复跳转登录页
+let isRedirectingToLogin = false
+
+function sanitizeData(data) {
+  if (!data) return data
+  if (typeof data === 'string') {
+    return escapeHtml(data)
+  }
+  if (Array.isArray(data)) {
+    return data.map(item => sanitizeData(item))
+  }
+  if (typeof data === 'object') {
+    const sanitized = {}
+    for (const key in data) {
+      if (data.hasOwnProperty(key)) {
+        sanitized[key] = sanitizeData(data[key])
+      }
+    }
+    return sanitized
+  }
+  return data
+}
 
 /**
  * 统一请求封装
@@ -35,13 +60,15 @@ function request(url, options = {}) {
       loadingText = '加载中...'
     } = options
 
+    const sanitizedData = sanitizeData(data)
+
     if (showLoading) {
       wx.showLoading({ title: loadingText, mask: true })
     }
 
     wx.request({
       url: BASE_URL + url,
-      data,
+      data: sanitizedData,
       method,
       header: {
         'Content-Type': 'application/json',
@@ -52,10 +79,8 @@ function request(url, options = {}) {
         if (showLoading) {
           wx.hideLoading()
         }
-
         if (res.statusCode === 200 || res.statusCode === 201) {
           if (res.data.code === 200 || res.data.code === 201) {
-            // 成功时缓存GET请求结果（不显示loading的请求）
             if (options.method === 'GET' && !options.showLoading) {
               const cacheKey = url + JSON.stringify(options.data)
               requestCache.set(cacheKey, {
@@ -79,10 +104,10 @@ function request(url, options = {}) {
           reject(res.data)
         } else {
           wx.showToast({
-            title: '网络请求失败',
+            title: res.data?.message || '网络请求失败',
             icon: 'none'
           })
-          reject(res.data)
+          reject(res.data || { message: '网络请求失败' })
         }
       },
       fail: (err) => {
@@ -103,15 +128,26 @@ function request(url, options = {}) {
  * 处理未授权情况
  */
 function handleUnauthorized() {
-  wx.removeStorageSync('token')
-  wx.removeStorageSync('userInfo')
-  wx.removeStorageSync('loginExpiresAt')
+  if (isRedirectingToLogin) return
+  isRedirectingToLogin = true
+
+  if (app && typeof app.logout === 'function') {
+    app.logout()
+  } else {
+    wx.removeStorageSync('token')
+    wx.removeStorageSync('userInfo')
+    wx.removeStorageSync('loginExpiresAt')
+  }
+
   wx.showToast({
     title: '登录已过期，请重新登录',
     icon: 'none'
   })
   setTimeout(() => {
     wx.navigateTo({ url: '/pages/login/index' })
+    setTimeout(() => {
+      isRedirectingToLogin = false
+    }, 2000)
   }, 1500)
 }
 

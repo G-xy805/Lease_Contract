@@ -281,27 +281,28 @@ export const getContractById = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    let renderedContent = '';
-    try {
-      let itemsArray: Array<{ name: string; quantity?: string; unit?: string }> = [];
-      if (contract.inventory_items) {
-        try {
-          const parsed = typeof contract.inventory_items === 'string'
-            ? JSON.parse(contract.inventory_items)
-            : contract.inventory_items;
-          if (Array.isArray(parsed)) {
-            itemsArray = parsed.map((item: any) => ({
-              name: item.name || '',
-              quantity: item.quantity?.toString() || '0',
-              unit: item.unit || ''
-            }));
-          }
-        } catch (e) {
-          console.error('解析 inventory_items 失败:', e);
-        }
-      }
+    const partyASignature = contract.partyA_signature || '';
 
-      const contractData: ContractData = {
+    let renderedContent = '';
+    let itemsArray: Array<{ name: string; quantity?: string; unit?: string }> = [];
+    if (contract.inventory_items) {
+      try {
+        const parsed = typeof contract.inventory_items === 'string'
+          ? JSON.parse(contract.inventory_items)
+          : contract.inventory_items;
+        if (Array.isArray(parsed)) {
+          itemsArray = parsed.map((item: any) => ({
+            name: item.name || '',
+            quantity: item.quantity?.toString() || '0',
+            unit: item.unit || ''
+          }));
+        }
+      } catch (e) {
+        console.error('解析 inventory_items 失败:', e);
+      }
+    }
+
+    const contractData: ContractData = {
         id: contract.id.toString(),
         contractNumber: contract.contract_no,
         title: contract.title,
@@ -355,15 +356,19 @@ export const getContractById = async (req: AuthRequest, res: Response): Promise<
         lessorAccount: contract.partyA_account || '',
         intermediaryName: contract.intermediary_name || '',
         partyACommission: contract.partyA_commission || 0,
+        partyACommissionChinese: contract.partyA_commission_chinese || '',
         partyBCommission: contract.partyB_commission || 0,
+        partyBCommissionChinese: contract.partyB_commission_chinese || '',
         depositChinese: contract.deposit_chinese || '',
         partyBSignature: contract.partyB_signature || '',
         items: itemsArray
-      };
+    };
 
+    try {
       renderedContent = htmlPdfService.renderContractHtml(contractData);
     } catch (renderError) {
       console.error('渲染合同模板失败:', renderError);
+      renderedContent = '';
     }
 
     const response: IContractDetailResponse = {
@@ -1345,7 +1350,9 @@ export const generateContractPdf = async (req: AuthRequest, res: Response): Prom
       lessorAccount: contract.partyA_account || '',
       intermediaryName: contract.intermediary_name || '',
       partyACommission: contract.partyA_commission || 0,
+      partyACommissionChinese: contract.partyA_commission_chinese || '',
       partyBCommission: contract.partyB_commission || 0,
+      partyBCommissionChinese: contract.partyB_commission_chinese || '',
       depositChinese: contract.deposit_chinese || '',
       partyBSignature: partyBSignature,
       items: itemsArray

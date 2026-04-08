@@ -663,3 +663,86 @@
   max-width: 100%;
   height: auto;
 }
+
+/* ========== Mode Tabs (展示模式切换) ========== */
+.mode-tabs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--card-background);
+  margin: 0 var(--spacing-md);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid var(--border-color);
+}
+
+.mode-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-md);
+  color: var(--text-color-secondary);
+  background: transparent;
+  transition: all var(--transition-fast) var(--ease-out);
+}
+
+.mode-tab.active {
+  color: var(--text-color-inverse);
+  background: var(--primary-color);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ========== Full Contract Scroll (完整合同滚动容器) ========== */
+.full-contract-scroll {
+  flex: 1;
+  padding: var(--spacing-md);
+  padding-bottom: 280rpx;
+}
+
+/* ========== Full Contract Container (完整合同内容容器) ========== */
+.full-contract-container {
+  background: var(--card-background);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid var(--border-color);
+  min-height: 400rpx;
+}
+
+.full-contract-container rich-text {
+  font-size: 26rpx;
+  line-height: 2;
+  color: var(--text-color-primary);
+}
+
+/* ========== Empty Full Content (空状态提示) ========== */
+.empty-full-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx var(--spacing-xl);
+  gap: var(--spacing-lg);
+  min-height: 500rpx;
+}
+
+.empty-tip {
+  text-align: center;
+  max-width: 500rpx;
+}
+
+.empty-tip text {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
+  line-height: 1.6;
+}
+
+.try-download-btn {
+  margin-top: var(--spacing-sm);
+}

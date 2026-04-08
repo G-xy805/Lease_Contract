@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth';
+import { rateLimit } from '../middleware/rateLimit';
 import {
   wechatLogin,
   phoneLogin,
@@ -10,6 +11,12 @@ import {
 } from '../controllers/usersController';
 
 const router = Router();
+
+const sendCodeRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  maxRequests: 3,
+  message: '发送验证码过于频繁，请60秒后再试'
+});
 
 /**
  * 微信登录
@@ -27,7 +34,7 @@ router.post('/phone-login', phoneLogin);
  * 发送验证码（本地开发用模拟）
  * POST /api/users/send-code
  */
-router.post('/send-code', sendCode);
+router.post('/send-code', sendCodeRateLimit, sendCode);
 
 /**
  * 获取用户信息（需认证）

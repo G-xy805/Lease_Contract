@@ -78,10 +78,15 @@ export const getTemplateList = async (req: Request, res: Response): Promise<void
 
     res.json(response);
   } catch (error) {
-    console.error('获取模板列表失败:', error);
+    console.error('[模板模块] 获取模板列表失败:', error);
+    console.error('[模板模块] 错误详情:', {
+      message: error instanceof Error ? error.message : '未知错误',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     res.status(500).json({
       code: 500,
-      message: '服务器内部错误'
+      message: '获取模板列表失败，请稍后重试',
+      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : '未知错误' : undefined
     });
   }
 };
@@ -102,6 +107,8 @@ export const getTemplateById = async (req: Request, res: Response): Promise<void
       return;
     }
 
+    console.log(`[模板模块] 正在查询模板ID: ${id}`);
+
     const sql = `
       SELECT id, name, code, description, html_content, field_mapping,
              category, status, version, created_at, updated_at, created_by
@@ -112,6 +119,7 @@ export const getTemplateById = async (req: Request, res: Response): Promise<void
     const results = await query<ContractTemplateRow[]>(sql, [id]);
 
     if (results.length === 0) {
+      console.warn(`[模板模块] 模板不存在，ID: ${id}`);
       res.status(404).json({
         code: 404,
         message: '模板不存在'
@@ -120,15 +128,17 @@ export const getTemplateById = async (req: Request, res: Response): Promise<void
     }
 
     const template = results[0];
+    console.log(`[模板模块] 成功获取模板: ${template.name} (ID: ${id})`);
 
     // 如果有字段映射配置，合并默认配置
     if (template.field_mapping) {
       try {
-        const storedMapping = typeof template.field_mapping === 'string' 
-          ? JSON.parse(template.field_mapping) 
+        const storedMapping = typeof template.field_mapping === 'string'
+          ? JSON.parse(template.field_mapping)
           : template.field_mapping;
         template.field_mapping = { ...templateFieldMappings, ...storedMapping };
       } catch (e) {
+        console.warn(`[模板模块] 解析字段映射配置失败，使用默认配置。模板ID: ${id}`, e);
         template.field_mapping = templateFieldMappings;
       }
     } else {
@@ -143,10 +153,16 @@ export const getTemplateById = async (req: Request, res: Response): Promise<void
 
     res.json(response);
   } catch (error) {
-    console.error('获取模板详情失败:', error);
+    console.error('[模板模块] 获取模板详情失败:', error);
+    console.error('[模板模块] 错误详情:', {
+      message: error instanceof Error ? error.message : '未知错误',
+      stack: error instanceof Error ? error.stack : undefined,
+      templateId: req.params.id
+    });
     res.status(500).json({
       code: 500,
-      message: '服务器内部错误'
+      message: '获取模板详情失败，请稍后重试',
+      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : '未知错误' : undefined
     });
   }
 };

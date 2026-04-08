@@ -36,7 +36,10 @@ Page({
     shareQrCode: '',
     shareUrl: '',
     qrCode: '',
-    showVerifyInfo: false
+    showVerifyInfo: false,
+    // 展示模式
+    displayMode: 'overview',  // 展示模式: 'overview' | 'full'
+    hasFullContent: false     // 是否有完整合同内容
   },
 
   onLoad(options) {
@@ -132,9 +135,7 @@ transformContractData(rawContract) {
     }
     const fees = []
     for (const [key, label] of Object.entries(feeLabels)) {
-        if (rawContract[key] !== undefined) {
-            fees.push({ label, tenant: rawContract[key] ? '乙方承担' : '甲方承担' })
-        }
+        fees.push({ label, tenant: rawContract[key] ? '乙方承担' : '甲方承担' })
     }
 
     const meters = []
@@ -147,7 +148,7 @@ transformContractData(rawContract) {
         return rawContract[newField] || rawContract[oldField] || ''
     }
 
-    return {
+    const result = {
         id: rawContract.id,
         title: rawContract.title || '房屋租赁合同',
         contractNo: rawContract.contract_no || '',
@@ -240,6 +241,10 @@ transformContractData(rawContract) {
         inviteCode: rawContract.invite_code || '',
         rejectReason: rawContract.reject_reason || ''
     }
+
+    // 判断是否有有意义的完整合同内容（降低阈值以确保能显示）
+    const hasFullContent = !!(result.content && result.content.trim().length > 10)
+    return { ...result, hasFullContent }
   },
 
   async loadContractInfo(id) {
@@ -250,7 +255,10 @@ transformContractData(rawContract) {
     const isPartyA = userRole === USER_ROLE.LESSOR
 
     try {
-      const contractRes = await api.getContractDetail(id).catch(() => null)
+      const contractRes = await api.getContractDetail(id).catch(err => {
+        console.error('获取合同详情失败:', err);
+        wx.showToast({ title: '操作失败，请重试', icon: 'none' });
+      });
       const rawContract = contractRes?.data?.contract
       const contractInfo = this.transformContractData(rawContract)
 
@@ -281,7 +289,12 @@ transformContractData(rawContract) {
         })
       }
 
-      this.setData({ contractInfo, loading: false })
+      this.setData({
+        contractInfo,
+        loading: false,
+        displayMode: this.data.displayMode || 'overview',
+        hasFullContent: contractInfo.hasFullContent || false
+      })
     } catch (err) {
       console.error('加载合同详情失败', err)
       this.setData({ contractInfo: null, loading: false })
@@ -429,7 +442,10 @@ transformContractData(rawContract) {
         if (res.confirm) {
           wx.showLoading({ title: '删除中...' })
           try {
-            await api.deleteContract(this.data.contractId).catch(() => null)
+            await api.deleteContract(this.data.contractId).catch(err => {
+              console.error('删除合同失败:', err);
+              wx.showToast({ title: '操作失败，请重试', icon: 'none' });
+            });
             wx.hideLoading()
             wx.showToast({ title: '已删除', icon: 'success' })
             setTimeout(() => {
@@ -533,7 +549,10 @@ transformContractData(rawContract) {
         if (res.confirm) {
           wx.showLoading({ title: '取消中...' })
           try {
-            await api.cancelContract(this.data.contractId).catch(() => null)
+            await api.cancelContract(this.data.contractId).catch(err => {
+              console.error('取消合同失败:', err);
+              wx.showToast({ title: '操作失败，请重试', icon: 'none' });
+            });
             wx.hideLoading()
             wx.showToast({ title: '已取消', icon: 'success' })
             setTimeout(() => {
@@ -562,7 +581,10 @@ transformContractData(rawContract) {
           const reason = res.content?.trim() || ''
           wx.showLoading({ title: '提交中...' })
           try {
-            await api.rejectContract(this.data.contractId, reason).catch(() => null)
+            await api.rejectContract(this.data.contractId, reason).catch(err => {
+              console.error('拒绝合同失败:', err);
+              wx.showToast({ title: '操作失败，请重试', icon: 'none' });
+            });
             wx.hideLoading()
             wx.showToast({ title: '已拒绝', icon: 'success' })
             setTimeout(() => {
@@ -588,7 +610,10 @@ transformContractData(rawContract) {
         if (res.confirm) {
           wx.showLoading({ title: '取消中...' })
           try {
-            await api.cancelContract(this.data.contractId).catch(() => null)
+            await api.cancelContract(this.data.contractId).catch(err => {
+              console.error('取消签署失败:', err);
+              wx.showToast({ title: '操作失败，请重试', icon: 'none' });
+            });
             wx.hideLoading()
             wx.showToast({ title: '已取消签署', icon: 'success' })
             setTimeout(() => {
@@ -652,5 +677,17 @@ transformContractData(rawContract) {
 
   onToggleVerifyInfo() {
     this.setData({ showVerifyInfo: !this.data.showVerifyInfo })
+  },
+
+  // ==================== 展示模式切换 ====================
+
+  // 切换到概览模式
+  switchToOverview() {
+    this.setData({ displayMode: 'overview' })
+  },
+
+  // 切换到完整合同模式
+  switchToFull() {
+    this.setData({ displayMode: 'full' })
   }
 })

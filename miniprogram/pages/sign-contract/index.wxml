@@ -119,8 +119,9 @@
     <!-- 签名画布 -->
     <view class="canvas-wrapper">
       <canvas
+        id="signCanvas"
+        type="2d"
         class="sign-canvas"
-        canvas-id="signCanvas"
         bindtouchstart="handleTouchStart"
         bindtouchmove="handleTouchMove"
         bindtouchend="handleTouchEnd"

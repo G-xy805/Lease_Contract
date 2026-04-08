@@ -72,7 +72,9 @@ export interface ContractData {
   lessorIdcard?: string;
   intermediaryName?: string;
   partyACommission?: number;
+  partyACommissionChinese?: string;
   partyBCommission?: number;
+  partyBCommissionChinese?: string;
   depositChinese?: string;
   paymentMethod?: number;
   paymentCycle?: string;

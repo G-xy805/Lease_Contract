@@ -5,6 +5,7 @@ import https from 'https';
 import { testConnection } from './database';
 import { authMiddleware } from './middleware/auth';
 import corsMiddleware from './middleware/cors';
+import { errorHandler } from './middleware/errorHandler';
 import uploadRoutes from './routes/upload';
 import usersRouter from './routes/users';
 import templatesRouter from './routes/templates';
@@ -112,13 +113,7 @@ app.get('/api/contracts/invite-qrcode/:code', (req: Request, res: Response) => {
   }
 });
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('错误:', err);
-  res.status(500).json({
-    code: 500,
-    message: process.env.NODE_ENV === 'development' ? err.message : '服务器内部错误'
-  });
-});
+app.use(errorHandler);
 
 app.use((req: Request, res: Response) => {
   res.status(404).json({

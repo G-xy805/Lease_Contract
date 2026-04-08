@@ -470,12 +470,22 @@ Page({
     }
 
     // 手机号验证
+    const partyAPhone = String(formData.partyA_phone || '').trim()
+    if (partyAPhone && !/^1[3-9]\d{9}$/.test(partyAPhone)) {
+      errors.partyA_phone = '手机号格式错误'
+    }
+
     const partyBPhone = String(formData.partyB_phone || '').trim()
     if (partyBPhone && !/^1[3-9]\d{9}$/.test(partyBPhone)) {
       errors.partyB_phone = '手机号格式错误'
     }
 
     // 身份证验证
+    const partyAIdCard = String(formData.partyA_idcard || '').trim()
+    if (partyAIdCard && !/^\d{17}[\dXx]$/.test(partyAIdCard)) {
+      errors.partyA_idcard = '身份证号格式错误'
+    }
+
     const partyBIdCard = String(formData.partyB_idCard || '').trim()
     if (partyBIdCard && !/^\d{17}[\dXx]$/.test(partyBIdCard)) {
       errors.partyB_idCard = '身份证号格式错误'
@@ -488,6 +498,18 @@ Page({
       if (endDate < startDate) {
         errors.lease_end = '结束日期不得早于开始日期'
       }
+    }
+
+    // 租金必须为正数
+    const monthlyRent = parseFloat(formData.monthly_rent)
+    if (formData.monthly_rent && (isNaN(monthlyRent) || monthlyRent <= 0)) {
+      errors.monthly_rent = '租金必须为正数'
+    }
+
+    // 押金必须为正数
+    const deposit = parseFloat(formData.deposit)
+    if (formData.deposit && (isNaN(deposit) || deposit <= 0)) {
+      errors.deposit = '押金必须为正数'
     }
 
     this.setData({ errors: Object.keys(errors).length ? errors : {} })
@@ -827,11 +849,37 @@ Page({
   // ========== 提交 ==========
   onSubmit() {
     if (!this.validateForm()) {
-      wx.showToast({
-        title: '请完善必填信息',
-        icon: 'none',
-        duration: 2000
-      })
+      const { errors } = this.data
+      const errorFields = Object.keys(errors)
+      if (errorFields.length > 0) {
+        const firstError = errors[errorFields[0]]
+        const fieldNames = {
+          partyA_company: '甲方名称',
+          partyA_phone: '甲方手机号',
+          partyA_idcard: '甲方身份证号',
+          partyB_name: '乙方姓名',
+          partyB_phone: '乙方手机号',
+          partyB_idCard: '乙方身份证号',
+          house_address: '房屋地址',
+          lease_start: '租赁开始日期',
+          lease_end: '租赁结束日期',
+          lease_months: '租赁月数',
+          monthly_rent: '月租金',
+          deposit: '押金'
+        }
+        const fieldName = fieldNames[errorFields[0]] || errorFields[0]
+        wx.showToast({
+          title: `${fieldName}${firstError}`,
+          icon: 'none',
+          duration: 2000
+        })
+      } else {
+        wx.showToast({
+          title: '请完善必填信息',
+          icon: 'none',
+          duration: 2000
+        })
+      }
       return
     }
 

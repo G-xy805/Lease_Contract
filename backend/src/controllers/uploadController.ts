@@ -3,6 +3,15 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 
+const ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp'
+];
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
 // 扩展Request类型以包含上传文件
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
@@ -20,27 +29,21 @@ export const uploadImage = async (req: MulterRequest, res: Response, next: NextF
       return;
     }
 
-    // 验证文件类型
-    const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowedImageTypes.includes(req.file.mimetype)) {
-      // 删除已上传的文件
+    if (req.file.size > MAX_FILE_SIZE || !ALLOWED_MIME_TYPES.includes(req.file.mimetype)) {
       fs.unlinkSync(req.file.path);
       res.status(400).json({
         code: 400,
-        message: '不支持的图片格式，仅支持 JPG、PNG、GIF、WebP'
+        message: '不支持的文件类型或文件过大（最大5MB）'
       });
       return;
     }
 
-    // 生成新的文件名
     const fileExt = path.extname(req.file.originalname);
     const newFileName = `${uuidv4()}${fileExt}`;
     const newFilePath = path.join(path.dirname(req.file.path), newFileName);
 
-    // 重命名文件
     fs.renameSync(req.file.path, newFilePath);
 
-    // 返回结果
     res.json({
       code: 200,
       message: '图片上传成功',
@@ -67,15 +70,21 @@ export const uploadFile = async (req: MulterRequest, res: Response, next: NextFu
       return;
     }
 
-    // 生成新的文件名
+    if (req.file.size > MAX_FILE_SIZE) {
+      fs.unlinkSync(req.file.path);
+      res.status(400).json({
+        code: 400,
+        message: '不支持的文件类型或文件过大（最大5MB）'
+      });
+      return;
+    }
+
     const fileExt = path.extname(req.file.originalname);
     const newFileName = `${uuidv4()}${fileExt}`;
     const newFilePath = path.join(path.dirname(req.file.path), newFileName);
 
-    // 重命名文件
     fs.renameSync(req.file.path, newFilePath);
 
-    // 返回结果
     res.json({
       code: 200,
       message: '文件上传成功',

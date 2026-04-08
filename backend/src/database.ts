@@ -126,11 +126,15 @@ function migrateMissingColumns() {
 
     // 费用约定 - 使用 fee_items JSON 字段存储
     "ALTER TABLE contracts ADD COLUMN fee_items TEXT",
+    "ALTER TABLE contracts ADD COLUMN fee_tv BOOLEAN DEFAULT FALSE",
+    "ALTER TABLE contracts ADD COLUMN fee_network BOOLEAN DEFAULT FALSE",
 
     // 居间信息
     "ALTER TABLE contracts ADD COLUMN intermediary_name VARCHAR(100)",
     "ALTER TABLE contracts ADD COLUMN partyA_commission DECIMAL(10,2)",
+    "ALTER TABLE contracts ADD COLUMN partyA_commission_chinese VARCHAR(100)",
     "ALTER TABLE contracts ADD COLUMN partyB_commission DECIMAL(10,2)",
+    "ALTER TABLE contracts ADD COLUMN partyB_commission_chinese VARCHAR(100)",
 
     // 签署信息
     "ALTER TABLE contracts ADD COLUMN partyA_sign_status INTEGER DEFAULT 0",
@@ -164,6 +168,36 @@ function migrateMissingColumns() {
     sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_contracts_status ON contracts(status)');
     sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_contracts_lessor_user ON contracts(lessor_user_id)');
     sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_contracts_invite_code ON contracts(invite_code)');
+
+    // 创建 sign_invitations 表（如果不存在）
+    sqliteDb.exec(`
+      CREATE TABLE IF NOT EXISTS sign_invitations (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          contract_id INTEGER NOT NULL,
+          invitation_no VARCHAR(64) NOT NULL UNIQUE,
+          invite_type INTEGER NOT NULL,
+          invite_name VARCHAR(100) NOT NULL,
+          invite_phone VARCHAR(20) NOT NULL,
+          invite_email VARCHAR(100),
+          receiver_type INTEGER NOT NULL,
+          receiver_name VARCHAR(100) NOT NULL,
+          receiver_phone VARCHAR(20) NOT NULL,
+          receiver_email VARCHAR(100),
+          status INTEGER DEFAULT 1,
+          expires_at DATETIME NOT NULL,
+          accepted_at DATETIME,
+          refused_reason VARCHAR(255),
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (contract_id) REFERENCES contracts(id)
+      )
+    `);
+
+    // 创建 sign_invitations 表索引
+    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_sign_invitations_contract_id ON sign_invitations(contract_id)');
+    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_sign_invitations_invitation_no ON sign_invitations(invitation_no)');
+    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_sign_invitations_receiver_phone ON sign_invitations(receiver_phone)');
+    sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_sign_invitations_status ON sign_invitations(status)');
   } catch (e) {
     // 索引已存在
   }

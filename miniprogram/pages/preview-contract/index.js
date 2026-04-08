@@ -42,12 +42,21 @@ Page({
     // 优先从 URL 参数获取
     if (options.data) {
       try {
-        const contractData = JSON.parse(decodeURIComponent(options.data))
+        const decodedData = decodeURIComponent(options.data);
+        if (!decodedData || decodedData.length < 1) {
+          wx.showToast({ title: '无效的合同数据', icon: 'none' });
+          setTimeout(() => { wx.navigateBack() }, 1500);
+          return;
+        }
+        const contractData = JSON.parse(decodedData)
         console.log('预览合同数据:', contractData)
         this.processContractData(contractData)
         return
       } catch (err) {
         console.error('解析合同数据失败:', err)
+        wx.showToast({ title: '合同数据解析失败', icon: 'none' });
+        setTimeout(() => { wx.navigateBack() }, 1500);
+        return;
       }
     }
 

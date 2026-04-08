@@ -15,6 +15,7 @@ import {
   UserRow
 } from '../models/User';
 import { RowDataPacket } from 'mysql2';
+import { maskPhone, maskIdCard } from '../utils/sensitiveData';
 
 // 存储模拟验证码（本地开发用）
 const verificationCodes: Map<string, { code: string; expiresAt: Date }> = new Map();
@@ -61,8 +62,15 @@ const findOrCreateUser = async (data: IUserRegister): Promise<IUser> => {
   // 检查是否是第一个用户，第一个用户强制设为 ADMIN
   const userCount = await query<RowDataPacket[]>('SELECT COUNT(*) as count FROM users');
   const isFirstUser = userCount[0].count === 0;
-  // 只有第一个用户能成为 ADMIN，后续用户必须指定角色（通过管理界面分配）
-  const role = isFirstUser ? UserRole.ADMIN : UserRole.LESSEE;
+  // 如果前端传了角色且不是第一个用户，使用前端传入的角色；否则按规则分配
+  let role: UserRole;
+  if (isFirstUser) {
+    role = UserRole.ADMIN;
+  } else if (data.role) {
+    role = data.role;
+  } else {
+    role = UserRole.LESSEE;
+  }
 
   const result = await insert(
     `INSERT INTO users (openid, phone, name, real_name_status, role, created_at, updated_at)
@@ -124,7 +132,7 @@ export const wechatLogin = async (req: Request, res: Response): Promise<void> =>
       data: response
     });
   } catch (error) {
-    console.error('微信登录错误:', error);
+    console.error(`微信登录错误 (phone: ${maskPhone(req.body?.phone)}):`, error);
     res.status(500).json({
       code: 500,
       message: '服务器内部错误'
@@ -207,7 +215,7 @@ export const phoneLogin = async (req: Request, res: Response): Promise<void> => 
       data: response
     });
   } catch (error) {
-    console.error('手机号登录错误:', error);
+    console.error(`手机号登录错误 (phone: ${maskPhone(req.body?.phone)}):`, error);
     res.status(500).json({
       code: 500,
       message: '服务器内部错误'
@@ -250,7 +258,7 @@ export const sendCode = async (req: Request, res: Response): Promise<void> => {
 
     // 模拟发送短信（本地开发环境直接返回验证码）
     // 实际应调用短信网关发送验证码
-    console.log(`[模拟短信] 向 ${phone} 发送验证码: ${code}`);
+    console.log(`[模拟短信] 向 ${maskPhone(phone)} 发送验证码: ${code}`);
 
     const response: ISendCodeResponse = {
       success: true,
@@ -264,7 +272,7 @@ export const sendCode = async (req: Request, res: Response): Promise<void> => {
       data: response
     });
   } catch (error) {
-    console.error('发送验证码错误:', error);
+    console.error(`发送验证码错误 (phone: ${maskPhone(req.body?.phone)}):`, error);
     res.status(500).json({
       code: 500,
       message: '服务器内部错误'
@@ -433,20 +441,25 @@ export const realNameVerify = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    if (!name || !idcard) {
+    // 姓名校验
+    const trimmedName = name?.trim();
+    if (!trimmedName || trimmedName.length < 2 || trimmedName.length > 20) {
       res.status(400).json({
         code: 400,
-        message: '姓名和身份证号不能为空'
+        message: '姓名长度应在2-20个字符之间',
+        data: null
       });
       return;
     }
 
-    // 验证身份证号格式
-    const idcardRegex = /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/;
-    if (!idcardRegex.test(idcard)) {
+    // 身份证号校验
+    const trimmedIdcard = idcard?.trim();
+    const idcardPattern = /^\d{17}[\dXx]$/;
+    if (!trimmedIdcard || !idcardPattern.test(trimmedIdcard)) {
       res.status(400).json({
         code: 400,
-        message: '身份证号格式不正确'
+        message: '身份证号格式不正确',
+        data: null
       });
       return;
     }
@@ -461,6 +474,18 @@ export const realNameVerify = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
+    const user = users[0];
+
+    // 检查是否已经通过实名认证
+    if (user.real_name_status === RealNameStatus.VERIFIED) {
+      res.status(400).json({
+        code: 400,
+        message: '您已完成实名认证，无需重复认证',
+        data: null
+      });
+      return;
+    }
+
     // 模拟实名认证（实际应调用第三方实名认证接口）
     // 本地开发环境模拟验证过程
     const isVerified = process.env.NODE_ENV === 'development' ? true : false;
@@ -470,7 +495,7 @@ export const realNameVerify = async (req: AuthRequest, res: Response): Promise<v
       const now = new Date().toISOString();
       await execute(
         `UPDATE users SET name = ?, idcard = ?, real_name_status = ?, real_name_at = ?, updated_at = ? WHERE id = ?`,
-        [name, idcard, RealNameStatus.VERIFIED, now, now, userId]
+        [trimmedName, trimmedIdcard, RealNameStatus.VERIFIED, now, now, userId]
       );
 
       // 返回更新后的用户信息
@@ -491,7 +516,7 @@ export const realNameVerify = async (req: AuthRequest, res: Response): Promise<v
         created_at: user.created_at
       };
 
-      console.log(`[模拟实名认证] 用户 ${userId} 认证成功`);
+      console.log(`[模拟实名认证] 用户 ${userId} 认证成功 (idcard: ${maskIdCard(trimmedIdcard)})`);
 
       res.json({
         code: 200,
@@ -507,7 +532,7 @@ export const realNameVerify = async (req: AuthRequest, res: Response): Promise<v
         const now = new Date().toISOString();
         await execute(
           `UPDATE users SET name = ?, idcard = ?, real_name_status = ?, real_name_at = ?, updated_at = ? WHERE id = ?`,
-          [name, idcard, RealNameStatus.VERIFIED, now, now, userId]
+          [trimmedName, trimmedIdcard, RealNameStatus.VERIFIED, now, now, userId]
         );
 
         const updatedUsers = await query<UserRow[]>('SELECT * FROM users WHERE id = ?', [userId]);
@@ -528,7 +553,7 @@ export const realNameVerify = async (req: AuthRequest, res: Response): Promise<v
       } else {
         await execute(
           `UPDATE users SET name = ?, idcard = ?, real_name_status = ?, updated_at = ? WHERE id = ?`,
-          [name, idcard, RealNameStatus.FAILED, new Date().toISOString(), userId]
+          [trimmedName, trimmedIdcard, RealNameStatus.FAILED, new Date().toISOString(), userId]
         );
 
         res.status(400).json({

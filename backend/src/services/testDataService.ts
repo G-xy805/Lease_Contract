@@ -417,33 +417,44 @@ export const testDataService = {
   async insertTestContracts(contracts: TestContract[]): Promise<void> {
     for (const contract of contracts) {
       const now = new Date().toISOString();
+      const insertColumns = [
+        'id', 'contract_no', 'title', 'lessor_user_id', 'created_by',
+        'partyA_company', 'partyA_contact', 'partyA_phone', 'partyA_phone2', 'partyA_idcard', 'partyA_account',
+        'partyB_name', 'partyB_phone', 'partyB_idCard', 'partyB_contact',
+        'house_address', 'house_area', 'rent_purpose',
+        'lease_start', 'lease_end', 'lease_months', 'advance_notice_days',
+        'monthly_rent', 'year_rent', 'total_amount',
+        'payment_method', 'payment_cycle', 'payment_count',
+        'first_payment_amount', 'first_payment_date', 'second_payment_amount', 'second_payment_date', 'third_payment_amount',
+        'deposit', 'deposit_chinese',
+        'fee_items',
+        'partyA_commission', 'partyA_commission_chinese', 'partyB_commission', 'partyB_commission_chinese',
+        'electricity_meter', 'water_meter', 'gas_meter',
+        'remark', 'intermediary_name', 'inventory_items',
+        'status', 'created_at', 'updated_at',
+        'partyA_sign_status', 'partyB_sign_status', 'partyA_signed_at', 'partyB_signed_at', 'invite_code', 'reject_reason'
+      ];
+      const placeholders = insertColumns.map(() => '?').join(', ');
+      const values = [
+        contract.id, contract.contract_no, contract.title, contract.lessor_user_id, contract.created_by,
+        contract.partyA_company, null, contract.partyA_phone, null, contract.partyA_idcard, null,
+        contract.partyB_name, contract.partyB_phone, null, null,
+        contract.house_address, contract.house_area, contract.rent_purpose,
+        contract.lease_start, contract.lease_end, contract.lease_months, contract.advance_notice_days,
+        contract.monthly_rent, contract.year_rent, contract.total_amount,
+        contract.payment_method, contract.payment_cycle, contract.payment_count,
+        null, null, null, null, null,
+        contract.deposit, contract.deposit_chinese,
+        contract.fee_items,
+        null, null, null, null,
+        contract.electricity_meter, contract.water_meter, contract.gas_meter,
+        null, contract.intermediary_name || null, contract.inventory_items,
+        contract.status, now, now,
+        contract.partyA_sign_status, contract.partyB_sign_status, contract.partyA_signed_at, contract.partyB_signed_at, contract.invite_code, contract.reject_reason
+      ];
       await insert(
-        `INSERT INTO contracts (
-          id, contract_no, title, status, lessor_user_id, created_by,
-          partyA_company, partyA_phone, partyA_idcard,
-          partyB_name, partyB_phone,
-          house_address, house_area, rent_purpose,
-          lease_start, lease_end, lease_months, advance_notice_days,
-          monthly_rent, year_rent, payment_method, payment_cycle, payment_count,
-          deposit, deposit_chinese, total_amount,
-          partyA_sign_status, partyB_sign_status, partyA_signed_at, partyB_signed_at,
-          invite_code, reject_reason, intermediary_name, inventory_items, fee_items,
-          electricity_meter, water_meter, gas_meter,
-          created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          contract.id, contract.contract_no, contract.title, contract.status, contract.lessor_user_id, contract.created_by,
-          contract.partyA_company, contract.partyA_phone, contract.partyA_idcard,
-          contract.partyB_name, contract.partyB_phone,
-          contract.house_address, contract.house_area, contract.rent_purpose,
-          contract.lease_start, contract.lease_end, contract.lease_months, contract.advance_notice_days,
-          contract.monthly_rent, contract.year_rent, contract.payment_method, contract.payment_cycle, contract.payment_count,
-          contract.deposit, contract.deposit_chinese, contract.total_amount,
-          contract.partyA_sign_status, contract.partyB_sign_status, contract.partyA_signed_at, contract.partyB_signed_at,
-          contract.invite_code, contract.reject_reason, contract.intermediary_name || null, contract.inventory_items, contract.fee_items,
-          contract.electricity_meter, contract.water_meter, contract.gas_meter,
-          now, now
-        ]
+        `INSERT INTO contracts (${insertColumns.join(', ')}) VALUES (${placeholders})`,
+        values
       );
     }
   },

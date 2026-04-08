@@ -227,10 +227,17 @@ export const createSignature = async (req: AuthRequest, res: Response): Promise<
       }
     });
   } catch (error) {
-    console.error('创建签署记录错误:', error);
+    console.error('[签署模块] 创建签署记录错误:', error);
+    console.error('[签署模块] 错误详情:', {
+      message: error instanceof Error ? error.message : '未知错误',
+      stack: error instanceof Error ? error.stack : undefined,
+      userId: req.user?.userId,
+      contractId: req.body?.contract_id
+    });
     res.status(500).json({
       code: 500,
-      message: '服务器内部错误'
+      message: '创建签署记录失败，请稍后重试',
+      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : '未知错误' : undefined
     });
   }
 };
@@ -244,12 +251,15 @@ export const getSignaturesByContract = async (req: Request, res: Response): Prom
     const { contract_id } = req.params;
 
     if (!contract_id) {
+      console.warn('[签署模块] 缺少合同ID参数');
       res.status(400).json({
         code: 400,
         message: '合同ID不能为空'
       });
       return;
     }
+
+    console.log(`[签署模块] 正在查询合同 ${contract_id} 的签署记录`);
 
     // 查询合同是否存在
     const contracts = await query<any[]>(
@@ -258,6 +268,7 @@ export const getSignaturesByContract = async (req: Request, res: Response): Prom
     );
 
     if (contracts.length === 0) {
+      console.warn(`[签署模块] 合同不存在，ID: ${contract_id}`);
       res.status(404).json({
         code: 404,
         message: '合同不存在'
@@ -267,11 +278,13 @@ export const getSignaturesByContract = async (req: Request, res: Response): Prom
 
     // 查询签署记录
     const signatures = await query<any[]>(
-      `SELECT * FROM signatures 
+      `SELECT * FROM signatures
        WHERE contract_id = ?
        ORDER BY signed_at ASC`,
       [contract_id]
     );
+
+    console.log(`[签署模块] 找到 ${signatures.length} 条签署记录，合同ID: ${contract_id}`);
 
     // 转换签署记录格式
     const list: ISignatureResponse[] = signatures.map(sig => ({
@@ -299,10 +312,16 @@ export const getSignaturesByContract = async (req: Request, res: Response): Prom
       data: response
     });
   } catch (error) {
-    console.error('获取签署记录错误:', error);
+    console.error('[签署模块] 获取签署记录错误:', error);
+    console.error('[签署模块] 错误详情:', {
+      message: error instanceof Error ? error.message : '未知错误',
+      stack: error instanceof Error ? error.stack : undefined,
+      contractId: req.params.contract_id
+    });
     res.status(500).json({
       code: 500,
-      message: '服务器内部错误'
+      message: '获取签署记录失败，请稍后重试',
+      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : '未知错误' : undefined
     });
   }
 };
@@ -316,6 +335,7 @@ export const getSignatureById = async (req: Request, res: Response): Promise<voi
     const { id } = req.params;
 
     if (!id) {
+      console.warn('[签署模块] 缺少签署记录ID参数');
       res.status(400).json({
         code: 400,
         message: '签署记录ID不能为空'
@@ -323,13 +343,16 @@ export const getSignatureById = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    console.log(`[签署模块] 正在查询签署记录ID: ${id}`);
+
     const signatures = await query<any[]>(
-      `SELECT * FROM signatures 
+      `SELECT * FROM signatures
        WHERE id = ?`,
       [id]
     );
 
     if (signatures.length === 0) {
+      console.warn(`[签署模块] 签署记录不存在，ID: ${id}`);
       res.status(404).json({
         code: 404,
         message: '签署记录不存在'
@@ -338,7 +361,7 @@ export const getSignatureById = async (req: Request, res: Response): Promise<voi
     }
 
     const signature = signatures[0];
-    
+
     // 构建响应数据
     const response = {
       id: signature.id,
@@ -349,16 +372,24 @@ export const getSignatureById = async (req: Request, res: Response): Promise<voi
       signed_at: signature.signed_at
     };
 
+    console.log(`[签署模块] 成功获取签署记录ID: ${id}`);
+
     res.json({
       code: 200,
       message: '获取成功',
       data: response
     });
   } catch (error) {
-    console.error('获取签署记录详情错误:', error);
+    console.error('[签署模块] 获取签署记录详情错误:', error);
+    console.error('[签署模块] 错误详情:', {
+      message: error instanceof Error ? error.message : '未知错误',
+      stack: error instanceof Error ? error.stack : undefined,
+      signatureId: req.params.id
+    });
     res.status(500).json({
       code: 500,
-      message: '服务器内部错误'
+      message: '获取签署记录详情失败，请稍后重试',
+      error: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : '未知错误' : undefined
     });
   }
 };

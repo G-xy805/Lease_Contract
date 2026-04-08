@@ -47,6 +47,7 @@ Page({
 
   // 签名上下文
   signContext: null,
+  canvasNode: null,
 
   onLoad(options) {
     // 获取传入的合同ID
@@ -78,8 +79,21 @@ Page({
   },
 
   onReady() {
-    // 创建签名上下文
-    this.signContext = wx.createCanvasContext('signCanvas')
+    const query = wx.createSelectorQuery().in(this)
+    query.select('#signCanvas')
+      .fields({ node: true, size: true })
+      .exec((res) => {
+        if (res[0]) {
+          this.canvasNode = res[0].node
+          this.signContext = this.canvasNode.getContext('2d')
+
+          const dpr = wx.getSystemInfoSync().pixelRatio
+          this.canvasNode.width = res[0].width * dpr
+          this.canvasNode.height = res[0].height * dpr
+
+          this.signContext.scale(dpr, dpr)
+        }
+      })
   },
 
   // 加载合同详情
@@ -174,7 +188,7 @@ Page({
 
   // 触摸开始
   handleTouchStart(e) {
-    if (!this.signContext) return
+    if (!this.signContext || !this.canvasNode) return
 
     this.isDrawing = true
     const touch = e.touches[0]
@@ -185,20 +199,19 @@ Page({
 
     this.points = [point]
 
-    // 设置画笔样式
-    this.signContext.setStrokeStyle(this.data.currentColor)
-    this.signContext.setLineWidth(parseInt(this.data.currentThickness))
-    this.signContext.setLineCap('round')
-    this.signContext.setLineJoin('round')
+    this.signContext.strokeStyle = this.data.currentColor
+    this.signContext.lineWidth = parseInt(this.data.currentThickness)
+    this.signContext.lineCap = 'round'
+    this.signContext.lineJoin = 'round'
 
+    this.signContext.beginPath()
     this.signContext.moveTo(point.x, point.y)
     this.signContext.stroke()
-    this.signContext.draw(true)
   },
 
   // 触摸移动
   handleTouchMove(e) {
-    if (!this.isDrawing || !this.signContext) return
+    if (!this.isDrawing || !this.signContext || !this.canvasNode) return
 
     const touch = e.touches[0]
     const point = {
@@ -210,7 +223,6 @@ Page({
 
     this.signContext.lineTo(point.x, point.y)
     this.signContext.stroke()
-    this.signContext.draw(true)
   },
 
   // 触摸结束
@@ -218,7 +230,6 @@ Page({
     if (!this.isDrawing) return
 
     this.isDrawing = false
-    this.signContext.draw(true)
 
     // 标记已有签名
     if (this.points && this.points.length > 0) {
@@ -237,10 +248,10 @@ Page({
 
   // 清除签名
   clearSign() {
-    if (!this.signContext) return
+    if (!this.signContext || !this.canvasNode) return
 
-    this.signContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight)
-    this.signContext.draw()
+    const dpr = wx.getSystemInfoSync().pixelRatio
+    this.signContext.clearRect(0, 0, this.canvasNode.width / dpr, this.canvasNode.height / dpr)
 
     this.setData({
       hasSigned: false
@@ -255,10 +266,14 @@ Page({
   // 获取签名图片
   getSignatureImage() {
     return new Promise((resolve, reject) => {
+      if (!this.canvasNode) {
+        reject(new Error('Canvas未初始化'))
+        return
+      }
+
       wx.canvasToTempFilePath({
-        canvasId: 'signCanvas',
+        canvas: this.canvasNode,
         success: (res) => {
-          // 读取图片并转为base64
           wx.getFileSystemManager().readFile({
             filePath: res.tempFilePath,
             encoding: 'base64',
