@@ -1,8 +1,10 @@
 <view class="signature-pad">
+  <!-- Canvas 画布 -->
   <canvas
-    class="signature-canvas"
-    canvas-id="{{canvasId}}"
-    style="width: {{width}}; height: {{height}}px;"
+    id="signatureCanvas"
+    type="2d"
+    class="signature-pad__canvas"
+    style="width: {{width}}rpx; height: {{height}}rpx;"
     bindtouchstart="onTouchStart"
     bindtouchmove="onTouchMove"
     bindtouchend="onTouchEnd"

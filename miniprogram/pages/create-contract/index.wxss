@@ -250,7 +250,8 @@
 .info-tip,
 .fee-tip,
 .auto-tip,
-.calc-tip {
+.calc-tip,
+.form-hint {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -260,6 +261,12 @@
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-md);
   margin-top: var(--spacing-md);
+}
+
+.form-hint {
+  color: var(--primary-color);
+  background: var(--primary-color-light);
+  font-weight: 500;
 }
 
 .tip-icon {

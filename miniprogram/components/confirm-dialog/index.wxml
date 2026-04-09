@@ -1,0 +1,32 @@
+<view class="confirm-dialog" wx:if="{{show}}">
+  <!-- 遮罩层 -->
+  <view class="confirm-dialog__mask" wx:if="{{visible}}" bindtap="onMaskTap"></view>
+
+  <!-- 对话框主体 -->
+  <view class="confirm-dialog__container {{visible ? 'confirm-dialog__container--show' : ''}}" catchtap="stopPropagation">
+    <!-- 标题 -->
+    <view class="confirm-dialog__header" wx:if="{{title}}">
+      <text class="confirm-dialog__title">{{title}}</text>
+    </view>
+
+    <!-- 内容 -->
+    <view class="confirm-dialog__body">
+      <text class="confirm-dialog__content">{{content}}</text>
+    </view>
+
+    <!-- 按钮区域 -->
+    <view class="confirm-dialog__footer">
+      <view class="confirm-dialog__btn confirm-dialog__btn--cancel" bindtap="onCancelTap">
+        <text class="confirm-dialog__btn-text">{{cancelText}}</text>
+      </view>
+      <view class="confirm-dialog__divider"></view>
+      <view
+        class="confirm-dialog__btn confirm-dialog__btn--confirm"
+        style="color: {{confirmColor}};"
+        bindtap="onConfirmTap"
+      >
+        <text class="confirm-dialog__btn-text confirm-dialog__btn-text--bold">{{confirmText}}</text>
+      </view>
+    </view>
+  </view>
+</view>

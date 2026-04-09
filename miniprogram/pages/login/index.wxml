@@ -1,4 +1,4 @@
-<!-- pages/login/index.wxml -->
+<!-- pages/login/index.wxml - 登录页（v2重构版） -->
 <view class="container">
   <!-- 品牌区域 -->
   <view class="brand-section">
@@ -9,66 +9,66 @@
     <text class="brand-slogan">房屋租赁合同签署平台</text>
   </view>
 
-  <!-- 登录表单 -->
+  <!-- 登录表单 - 使用 form-section 组件 -->
   <view class="login-form">
     <view class="form-card">
       <view class="form-title">欢迎登录</view>
       <view class="form-subtitle">请输入您的手机号码登录</view>
 
-      <!-- 手机号 -->
-      <view class="form-item">
-        <view class="form-label">
-          <van-icon name="phone-o" class="label-icon" />
-          <text>手机号码</text>
-        </view>
+      <!-- 手机号输入 -->
+      <form-section title="手机号码" icon="phone-o" required>
         <van-field
-          value="{{phone}}"
-          placeholder="请输入手机号"
+          value="{{ phone }}"
+          placeholder="请输入11位手机号"
           type="number"
           maxlength="11"
           bind:change="onPhoneChange"
           clearable
-          border="{{false}}"
+          border="{{ false }}"
           custom-class="custom-input"
-          class="input-field"
         />
-      </view>
+      </form-section>
 
-      <!-- 验证码 -->
-      <view class="form-item">
-        <view class="form-label">
-          <van-icon name="shield-o" class="label-icon" />
-          <text>验证码</text>
-        </view>
+      <!-- 验证码输入 -->
+      <form-section title="验证码" icon="shield-o" required>
         <view class="code-input-wrapper">
           <van-field
-            value="{{code}}"
-            placeholder="请输入验证码"
+            value="{{ code }}"
+            placeholder="请输入6位验证码"
             type="number"
             maxlength="6"
             bind:change="onCodeChange"
-            border="{{false}}"
-            custom-class="custom-input"
-            class="code-input-field"
+            border="{{ false }}"
+            custom-class="custom-input code-input-field"
           />
           <van-button
             size="small"
             type="primary"
             round
             bind:click="onSendCode"
-            disabled="{{countdown > 0}}"
-            class="code-btn {{countdown > 0 ? 'code-btn-disabled' : ''}}"
+            disabled="{{ countdown > 0 || sendingCode }}"
+            loading="{{ sendingCode }}"
+            class="code-btn {{ countdown > 0 ? 'code-btn-disabled' : '' }}"
           >
-            {{countdown > 0 ? countdown + 's' : '获取验证码'}}
+            {{ countdown > 0 ? countdown + 's后重发' : '获取验证码' }}
           </van-button>
         </view>
-      </view>
+      </form-section>
 
-      <!-- 协议 -->
+      <!-- 协议勾选 -->
       <view class="agreement-row">
-        <van-checkbox value="{{agreed}}" bind:change="onAgreementChange" shape="round" icon-size="36rpx" class="agreement-checkbox">
+        <van-checkbox
+          value="{{ agreed }}"
+          bind:change="onAgreementChange"
+          shape="round"
+          icon-size="36rpx"
+          class="agreement-checkbox"
+        >
           <view class="agreement-text">
-            我已阅读并同意<text class="link" catchtap="showAgreement">《用户服务协议》</text>和<text class="link" catchtap="showPrivacy">《隐私政策》</text>
+            我已阅读并同意
+            <text class="link" catchtap="showAgreement">《用户服务协议》</text>
+            和
+            <text class="link" catchtap="showPrivacy">《隐私政策》</text>
           </view>
         </van-checkbox>
       </view>
@@ -80,26 +80,43 @@
         round
         block
         bind:click="handleLogin"
-        loading="{{loading}}"
-        disabled="{{!canLogin}}"
+        loading="{{ loading }}"
+        disabled="{{ !canLogin }}"
         class="login-btn"
       >
-        <text class="btn-text">{{loading ? '登录中...' : '登录'}}</text>
+        {{ loading ? '登录中...' : '登 录' }}
       </van-button>
+
+      <!-- 微信一键登录（可选） -->
+      <view class="wechat-login-wrapper">
+        <view class="divider-line">
+          <view class="line"></view>
+          <text class="divider-text">其他登录方式</text>
+          <view class="line"></view>
+        </view>
+        <van-button
+          type="default"
+          size="large"
+          round
+          block
+          plain
+          bind:click="onWechatLogin"
+          class="wechat-login-btn"
+        >
+          <van-icon name="wechat" class="wechat-icon" />
+          微信一键登录
+        </van-button>
+      </view>
     </view>
   </view>
 
   <!-- 底部信息 -->
   <view class="footer-section">
-    <view class="footer-divider">
-      <view class="divider-line"></view>
-      <text class="divider-text">登录即表示您同意</text>
-      <view class="divider-line"></view>
-    </view>
     <view class="footer-links">
       <text class="link" catchtap="showAgreement">服务条款</text>
       <text class="dot">·</text>
       <text class="link" catchtap="showPrivacy">隐私政策</text>
     </view>
+    <text class="copyright">© 2024 契约之约 版权所有</text>
   </view>
 </view>

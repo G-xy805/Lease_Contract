@@ -93,8 +93,8 @@ class HtmlPdfService {
   private templatePath: string;
 
   constructor() {
-    this.outputDir = path.join(process.cwd(), 'uploads', 'pdfs');
-    this.templatePath = path.join(process.cwd(), '..', 'lease_contract_template.html');
+    this.outputDir = path.resolve(__dirname, '..', '..', 'uploads', 'pdfs');
+    this.templatePath = path.resolve(__dirname, '..', '..', '..', 'lease_contract_template.html');
     this.ensureDirectoryExists();
   }
 

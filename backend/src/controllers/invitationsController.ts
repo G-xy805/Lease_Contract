@@ -13,7 +13,7 @@ import {
   IContractInfoResponse,
   INotificationResponse,
   InvitationStatus,
-  SignerType
+  InviteeRole
 } from '../models/SignInvitation';
 import { ContractRow } from '../models/Contract';
 
@@ -40,17 +40,17 @@ const toInvitationResponse = (invitation: ISignInvitation & { contract_title?: s
     id: invitation.id,
     contract_id: invitation.contract_id,
     invitation_no: invitation.invitation_no,
-    invite_type: invitation.invite_type,
-    invite_name: invitation.invite_name,
-    invite_phone: invitation.invite_phone,
-    invite_email: invitation.invite_email,
-    receiver_type: invitation.receiver_type,
-    receiver_name: invitation.receiver_name,
-    receiver_phone: invitation.receiver_phone,
-    receiver_email: invitation.receiver_email,
+    invite_code: invitation.invite_code,
+    inviter_id: invitation.inviter_id,
+    invitee_name: invitation.invitee_name,
+    invitee_phone: invitation.invitee_phone,
+    invitee_role: invitation.invitee_role,
     status: invitation.status,
     expires_at: invitation.expires_at,
     accepted_at: invitation.accepted_at,
+    refused_reason: invitation.refused_reason,
+    view_count: invitation.view_count,
+    last_viewed_at: invitation.last_viewed_at,
     created_at: invitation.created_at,
     contract_title: invitation.contract_title,
     house_address: invitation.house_address
@@ -64,22 +64,17 @@ const toInvitationResponse = (invitation: ISignInvitation & { contract_title?: s
  */
 export const createInvitation = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const userId = req.user?.userId;
     const {
       contract_id,
-      invite_type,
-      invite_name,
-      invite_phone,
-      invite_email,
-      receiver_type,
-      receiver_name,
-      receiver_phone,
-      receiver_email,
+      invitee_name,
+      invitee_phone,
+      invitee_role,
       expires_in_hours = 72
     } = req.body as ICreateInvitation;
 
     // 参数验证
-    if (!contract_id || !invite_type || !invite_name || !invite_phone ||
-        !receiver_type || !receiver_name || !receiver_phone) {
+    if (!contract_id || !invitee_name || !invitee_phone || !invitee_role) {
       res.status(400).json({
         code: 400,
         message: '缺少必填参数'
@@ -114,8 +109,8 @@ export const createInvitation = async (req: AuthRequest, res: Response): Promise
     // 检查是否已存在有效的签署邀请
     const existingInvitations = await query<SignInvitationRow[]>(
       `SELECT * FROM sign_invitations
-       WHERE contract_id = ? AND receiver_type = ? AND status IN (?, ?)`,
-      [contract_id, receiver_type, InvitationStatus.PENDING, InvitationStatus.ACCEPTED]
+       WHERE contract_id = ? AND invitee_role = ? AND status IN (?, ?)`,
+      [contract_id, invitee_role, InvitationStatus.PENDING, InvitationStatus.ACCEPTED]
     );
 
     if (existingInvitations.length > 0) {
@@ -135,22 +130,20 @@ export const createInvitation = async (req: AuthRequest, res: Response): Promise
     // 创建签署邀请记录
     const result = await insert(
       `INSERT INTO sign_invitations
-       (contract_id, invitation_no, invite_type, invite_name, invite_phone, invite_email,
-        receiver_type, receiver_name, receiver_phone, receiver_email, status, expires_at, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (contract_id, invitation_no, invite_code, inviter_id, invitee_name, invitee_phone,
+        invitee_role, status, expires_at, view_count, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         contract_id,
         invitation_no,
-        invite_type,
-        invite_name,
-        invite_phone,
-        invite_email || null,
-        receiver_type,
-        receiver_name,
-        receiver_phone,
-        receiver_email || null,
+        invite_code,
+        userId,
+        invitee_name,
+        invitee_phone,
+        invitee_role,
         InvitationStatus.PENDING,
         expires_at,
+        0,
         now,
         now
       ]
@@ -167,10 +160,7 @@ export const createInvitation = async (req: AuthRequest, res: Response): Promise
     res.status(201).json({
       code: 201,
       message: '签署邀请创建成功',
-      data: {
-        ...toInvitationResponse(invitation),
-        invite_code: invite_code  // 前端使用邀请码访问
-      }
+      data: toInvitationResponse(invitation)
     });
   } catch (error) {
     console.error('创建签署邀请错误:', error);
@@ -219,7 +209,7 @@ export const getReceivedInvitations = async (req: AuthRequest, res: Response): P
       `SELECT si.*, c.title as contract_title, c.house_address
        FROM sign_invitations si
        LEFT JOIN contracts c ON si.contract_id = c.id
-       WHERE si.receiver_phone = ?
+       WHERE si.invitee_phone = ?
        ORDER BY si.created_at DESC`,
       [userPhone]
     );
@@ -264,25 +254,11 @@ export const getContractByInviteCode = async (req: Request, res: Response): Prom
       return;
     }
 
-    // 通过邀请编号查询邀请记录（支持两种方式：invitation_no 或 contracts.invite_code）
+    // 通过邀请码或邀请编号查询邀请记录
     let invitations = await query<SignInvitationRow[]>(
-      'SELECT * FROM sign_invitations WHERE invitation_no = ?',
-      [code]
+      'SELECT * FROM sign_invitations WHERE invite_code = ? OR invitation_no = ?',
+      [code, code]
     );
-
-    // 如果没找到，尝试通过 contracts.invite_code 查找
-    if (invitations.length === 0) {
-      const contracts = await query<ContractRow[]>(
-        'SELECT * FROM contracts WHERE invite_code = ?',
-        [code]
-      );
-      if (contracts.length > 0) {
-        invitations = await query<SignInvitationRow[]>(
-          'SELECT * FROM sign_invitations WHERE contract_id = ? ORDER BY created_at DESC LIMIT 1',
-          [contracts[0].id]
-        );
-      }
-    }
 
     if (invitations.length === 0) {
       res.status(404).json({
@@ -313,7 +289,7 @@ export const getContractByInviteCode = async (req: Request, res: Response): Prom
     if (invitation.status !== InvitationStatus.PENDING && invitation.status !== InvitationStatus.ACCEPTED) {
       const statusMessages: Record<number, string> = {
         [InvitationStatus.ACCEPTED]: '签署邀请已被接受',
-        [InvitationStatus.REJECTED]: '签署邀请已被拒绝',
+        [InvitationStatus.REFUSED]: '签署邀请已被拒绝',
         [InvitationStatus.EXPIRED]: '签署邀请已过期'
       };
 
@@ -323,6 +299,12 @@ export const getContractByInviteCode = async (req: Request, res: Response): Prom
       });
       return;
     }
+
+    // 更新查看次数和最后查看时间
+    await execute(
+      'UPDATE sign_invitations SET view_count = view_count + 1, last_viewed_at = ?, updated_at = ? WHERE id = ?',
+      [new Date().toISOString(), new Date().toISOString(), invitation.id]
+    );
 
     // 查询合同详情
     const contracts = await query<RowDataPacket[]>(
@@ -380,40 +362,26 @@ export const getContractByInviteCode = async (req: Request, res: Response): Prom
 /**
  * POST /api/invitations/:code/accept
  * 接受签署邀请（乙方）
- * 验证接收方身份后接受邀请
+ * 通过邀请码验证身份后接受邀请
  */
 export const acceptInvitation = async (req: Request, res: Response): Promise<void> => {
   try {
     const { code } = req.params;
-    const { receiver_phone } = req.body as IAcceptInvitation;
+    const { invite_code } = req.body as IAcceptInvitation;
 
-    if (!code || !receiver_phone) {
+    if (!code || !invite_code) {
       res.status(400).json({
         code: 400,
-        message: '邀请码和接收方手机号不能为空'
+        message: '邀请码不能为空'
       });
       return;
     }
 
-    // 查询邀请记录（支持两种方式：invitation_no 或 contracts.invite_code）
+    // 查询邀请记录（通过邀请码或邀请编号）
     let invitations = await query<SignInvitationRow[]>(
-      'SELECT * FROM sign_invitations WHERE invitation_no = ?',
-      [code]
+      'SELECT * FROM sign_invitations WHERE invite_code = ? OR invitation_no = ?',
+      [code, code]
     );
-
-    // 如果没找到，尝试通过 contracts.invite_code 查找
-    if (invitations.length === 0) {
-      const contracts = await query<ContractRow[]>(
-        'SELECT * FROM contracts WHERE invite_code = ?',
-        [code]
-      );
-      if (contracts.length > 0) {
-        invitations = await query<SignInvitationRow[]>(
-          'SELECT * FROM sign_invitations WHERE contract_id = ? ORDER BY created_at DESC LIMIT 1',
-          [contracts[0].id]
-        );
-      }
-    }
 
     if (invitations.length === 0) {
       res.status(404).json({
@@ -425,11 +393,11 @@ export const acceptInvitation = async (req: Request, res: Response): Promise<voi
 
     const invitation = invitations[0];
 
-    // 验证接收方手机号
-    if (invitation.receiver_phone !== receiver_phone) {
+    // 验证邀请码匹配
+    if (invitation.invite_code !== invite_code && invitation.invitation_no !== code) {
       res.status(403).json({
         code: 403,
-        message: '您不是此签署邀请的接收方'
+        message: '邀请码不匹配'
       });
       return;
     }
@@ -490,35 +458,21 @@ export const acceptInvitation = async (req: Request, res: Response): Promise<voi
 export const rejectInvitation = async (req: Request, res: Response): Promise<void> => {
   try {
     const { code } = req.params;
-    const { receiver_phone, reason } = req.body as IRejectInvitation;
+    const { invite_code, reason } = req.body as IRejectInvitation;
 
-    if (!code || !receiver_phone) {
+    if (!code || !invite_code) {
       res.status(400).json({
         code: 400,
-        message: '邀请码和接收方手机号不能为空'
+        message: '邀请码不能为空'
       });
       return;
     }
 
-    // 查询邀请记录（支持两种方式：invitation_no 或 contracts.invite_code）
+    // 查询邀请记录（通过邀请码或邀请编号）
     let invitations = await query<SignInvitationRow[]>(
-      'SELECT * FROM sign_invitations WHERE invitation_no = ?',
-      [code]
+      'SELECT * FROM sign_invitations WHERE invite_code = ? OR invitation_no = ?',
+      [code, code]
     );
-
-    // 如果没找到，尝试通过 contracts.invite_code 查找
-    if (invitations.length === 0) {
-      const contracts = await query<ContractRow[]>(
-        'SELECT * FROM contracts WHERE invite_code = ?',
-        [code]
-      );
-      if (contracts.length > 0) {
-        invitations = await query<SignInvitationRow[]>(
-          'SELECT * FROM sign_invitations WHERE contract_id = ? ORDER BY created_at DESC LIMIT 1',
-          [contracts[0].id]
-        );
-      }
-    }
 
     if (invitations.length === 0) {
       res.status(404).json({
@@ -530,11 +484,11 @@ export const rejectInvitation = async (req: Request, res: Response): Promise<voi
 
     const invitation = invitations[0];
 
-    // 验证接收方手机号
-    if (invitation.receiver_phone !== receiver_phone) {
+    // 验证邀请码匹配
+    if (invitation.invite_code !== invite_code && invitation.invitation_no !== code) {
       res.status(403).json({
         code: 403,
-        message: '您不是此签署邀请的接收方'
+        message: '邀请码不匹配'
       });
       return;
     }
@@ -552,7 +506,7 @@ export const rejectInvitation = async (req: Request, res: Response): Promise<voi
     const now = new Date().toISOString();
     await execute(
       'UPDATE sign_invitations SET status = ?, refused_reason = ?, updated_at = ? WHERE id = ?',
-      [InvitationStatus.REJECTED, reason || null, now, invitation.id]
+      [InvitationStatus.REFUSED, reason || null, now, invitation.id]
     );
 
     res.json({
@@ -560,7 +514,7 @@ export const rejectInvitation = async (req: Request, res: Response): Promise<voi
       message: '签署邀请已拒绝',
       data: {
         invitation_no: invitation.invitation_no,
-        status: InvitationStatus.REJECTED,
+        status: InvitationStatus.REFUSED,
         refused_reason: reason
       }
     });
@@ -580,12 +534,12 @@ export const rejectInvitation = async (req: Request, res: Response): Promise<voi
  */
 export const sendSignInviteNotification = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { invitation_no, receiver_phone, receiver_name, contract_title, invite_code } = req.body;
+    const { invitation_no, invitee_phone, invitee_name, contract_title, invite_code } = req.body;
 
-    if (!invitation_no || !receiver_phone) {
+    if (!invitation_no || !invitee_phone) {
       res.status(400).json({
         code: 400,
-        message: '邀请编号和接收方手机号不能为空'
+        message: '邀请编号和被邀请人手机号不能为空'
       });
       return;
     }
@@ -593,13 +547,13 @@ export const sendSignInviteNotification = async (req: Request, res: Response): P
     // 模拟发送通知（实际应调用短信、邮件等通知服务）
     // 这里模拟发送短信通知
     const inviteLink = `https://example.com/sign?code=${invite_code || invitation_no}`;
-    const message = `【租赁合同】尊敬的${receiver_name || '用户'}，您收到一份来自身份宝的合同签署邀请："${contract_title || '租赁合同'}"。请在有效期内点击链接签署：${inviteLink}`;
+    const message = `【租赁合同】尊敬的${invitee_name || '用户'}，您收到一份来自身份宝的合同签署邀请："${contract_title || '租赁合同'}"。请在有效期内点击链接签署：${inviteLink}`;
 
     // 模拟发送延迟
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // 记录发送日志
-    console.log(`[模拟短信通知] 向 ${receiver_phone} 发送签署邀请通知:`);
+    console.log(`[模拟短信通知] 向 ${invitee_phone} 发送签署邀请通知:`);
     console.log(`  邀请编号: ${invitation_no}`);
     console.log(`  签署链接: ${inviteLink}`);
     console.log(`  短信内容: ${message}`);
@@ -608,7 +562,7 @@ export const sendSignInviteNotification = async (req: Request, res: Response): P
       success: true,
       message: '通知发送成功',
       notification_type: 'sign_invite',
-      recipient: receiver_phone,
+      recipient: invitee_phone,
       sent_at: new Date()
     };
 
@@ -633,24 +587,24 @@ export const sendSignInviteNotification = async (req: Request, res: Response): P
  */
 export const sendSignCompleteNotification = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { contract_id, invite_phone, invite_name, contract_title, contract_no } = req.body;
+    const { contract_id, invitee_phone, invitee_name, contract_title, contract_no } = req.body;
 
-    if (!contract_id || !invite_phone) {
+    if (!contract_id || !invitee_phone) {
       res.status(400).json({
         code: 400,
-        message: '合同ID和邀请方手机号不能为空'
+        message: '合同ID和被邀请人手机号不能为空'
       });
       return;
     }
 
     // 模拟发送通知
-    const message = `【租赁合同】尊敬的${invite_name || '用户'}，您发出的合同"${contract_title || '租赁合同'}"（编号：${contract_no || ''}）已签署完成，双方确认后合同正式生效。`;
+    const message = `【租赁合同】尊敬的${invitee_name || '用户'}，您发出的合同"${contract_title || '租赁合同'}"（编号：${contract_no || ''}）已签署完成，双方确认后合同正式生效。`;
 
     // 模拟发送延迟
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // 记录发送日志
-    console.log(`[模拟短信通知] 向 ${invite_phone} 发送签署完成通知:`);
+    console.log(`[模拟短信通知] 向 ${invitee_phone} 发送签署完成通知:`);
     console.log(`  合同ID: ${contract_id}`);
     console.log(`  合同编号: ${contract_no}`);
     console.log(`  短信内容: ${message}`);
@@ -659,7 +613,7 @@ export const sendSignCompleteNotification = async (req: Request, res: Response):
       success: true,
       message: '通知发送成功',
       notification_type: 'sign_complete',
-      recipient: invite_phone,
+      recipient: invitee_phone,
       sent_at: new Date()
     };
 

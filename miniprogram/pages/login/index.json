@@ -1,4 +1,1 @@
-{
-  "usingComponents": {},
-  "navigationBarTitleText": "登录"
-}
+{"usingComponents": {"van-button": "@vant/weapp/button/index", "van-field": "@vant/weapp/field/index", "van-checkbox": "@vant/weapp/checkbox/index", "van-icon": "@vant/weapp/icon/index", "form-section": "../../components/form-section/index"}, "navigationBarTitleText": "登录"}

@@ -1,37 +1,42 @@
+/* status-tag 状态标签组件样式 */
+
 :host {
   display: inline-block;
 }
 
-/* 使用CSS变量统一状态标签样式 */
+/* 基础样式 */
 .status-tag {
   display: inline-flex;
   align-items: center;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: none;
+  justify-content: center;
 }
 
-/* 不同状态的颜色方案 */
-.status-pending { 
-  color: var(--warning-color-dark); 
-  background-color: var(--warning-color-light); 
+.status-tag__text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: opacity var(--transition-fast) var(--ease-out);
 }
-.status-signed { 
-  color: var(--success-color-dark); 
-  background-color: var(--success-color-light); 
+
+/* 尺寸变体 - 小 */
+.status-tag--sm .status-tag__text {
+  font-size: var(--font-size-xs);
+  padding: 4rpx 12rpx;
 }
-.status-rejected { 
-  color: var(--danger-color-dark); 
-  background-color: var(--danger-color-light); 
+
+/* 尺寸变体 - 中（默认） */
+.status-tag--md .status-tag__text {
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
 }
-.status-cancelled { 
-  color: var(--text-color-tertiary); 
-  background-color: var(--background-color-light); 
-}
-.status-draft { 
-  color: var(--text-color-secondary); 
-  background-color: var(--background-color-light); 
+
+/* 尺寸变体 - 大 */
+.status-tag--lg .status-tag__text {
+  font-size: var(--font-size-md);
+  padding: var(--spacing-sm) var(--spacing-md);
 }

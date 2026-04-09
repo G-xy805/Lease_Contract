@@ -1,33 +1,35 @@
-// pages/contracts/index.js
+// pages/contracts/index.js - 合同列表页（v2重构版）
 const app = getApp()
 const api = require('../../services/api')
-const { CONTRACT_STATUS, CONTRACT_STATUS_TEXT, CONTRACT_STATUS_COLOR } = require('../../utils/constants')
+const { CONTRACT_STATUS, CONTRACT_STATUS_TEXT } = require('../../utils/constants')
 const navigation = require('../../utils/navigation')
+
+// 筛选Tab配置
+const FILTER_TABS = [
+  { title: '全部', status: null },
+  { title: '待签署', status: '1,2' },
+  { title: '已签署', status: '3' },
+  { title: '已拒绝', status: '4' },
+  { title: '已取消', status: '5' }
+]
 
 Page({
   data: {
-    // 统计数据
-    stats: {
-      total: 0,
-      pending: 0,
-      signed: 0
-    },
-    // 合同列表
+    // 搜索关键词
+    keyword: '',
+    // 筛选状态
+    activeTab: 0,
+    tabs: FILTER_TABS,
+    // 合同列表数据
     contracts: [],
+    // 加载状态
     loading: false,
     refreshing: false,
     loadingMore: false,
+    // 分页参数
     page: 1,
     pageSize: 10,
-    hasMore: true,
-    // Tab状态
-    activeTab: 0,
-    tabs: [
-      { title: '全部', status: null },
-      { title: '待签署', status: '1,2' },
-      { title: '已签署', status: '3' },
-      { title: '已拒绝/已取消', status: '4,5' }
-    ]
+    hasMore: true
   },
 
   onLoad(options) {
@@ -40,7 +42,7 @@ Page({
   },
 
   onShow() {
-    // 检查是否有合同被签署/更新
+    // 检查是否有合同被签署/更新（从其他页面返回时）
     const updatedContract = wx.getStorageSync('contract_updated')
     if (updatedContract && this.data.contracts.length > 0) {
       wx.removeStorageSync('contract_updated')
@@ -49,7 +51,6 @@ Page({
         const contracts = [...this.data.contracts]
         contracts[index] = { ...contracts[index], ...updatedContract }
         this.setData({ contracts })
-        this.updateStats()
       }
     }
   },
@@ -64,9 +65,15 @@ Page({
     }
   },
 
-  loadContracts(isRefresh = false, isLoadMore = false) {
-    const { page, pageSize, activeTab, tabs } = this.data
+  /**
+   * 加载合同列表
+   * @param {boolean} isRefresh - 是否刷新（清除已有数据）
+   * @param {boolean} isLoadMore - 是否加载更多（追加数据）
+   */
+  async loadContracts(isRefresh = false, isLoadMore = false) {
+    const { page, pageSize, activeTab, tabs, keyword } = this.data
 
+    // 设置加载状态
     if (isRefresh) {
       this.setData({ refreshing: true, page: 1, hasMore: true })
     } else if (isLoadMore) {
@@ -75,26 +82,35 @@ Page({
       this.setData({ loading: true })
     }
 
-    const currentTab = tabs[activeTab]
-    const params = {
-      page: isRefresh ? 1 : page,
-      page_size: pageSize
-    }
+    try {
+      const currentTab = tabs[activeTab]
+      const params = {
+        page: isRefresh ? 1 : page,
+        page_size: pageSize
+      }
 
-    if (currentTab.status !== null) {
-      params.status = currentTab.status
-    }
+      // 添加筛选条件
+      if (currentTab.status !== null) {
+        params.status = currentTab.status
+      }
 
-    api.getLandlordContracts(params).then(res => {
+      // 添加搜索关键词
+      if (keyword.trim()) {
+        params.keyword = keyword.trim()
+      }
+
+      // 根据用户角色调用不同API
+      const res = await api.getLandlordContracts(params)
+
       if (res.code === 200) {
         const list = res.data?.list || []
-        const total = res.data?.total || 0
 
-        const transformContract = (item) => ({
+        // 转换合同数据格式
+        const transformedList = list.map(item => ({
           id: item.id,
           title: item.title || '房屋租赁合同',
           status: item.status,
-          statusText: this.getStatusText(item.status),
+          statusText: CONTRACT_STATUS_TEXT[item.status] || '未知状态',
           contract_no: item.contract_no,
           houseAddress: item.house_address || '',
           house_address: item.house_address || '',
@@ -118,21 +134,17 @@ Page({
           lessor_sign_status: item.lessor_sign_status || 0,
           lessee_sign_status: item.lessee_sign_status || 0,
           partyA_sign_status: item.partyA_sign_status || 0,
-          partyB_sign_status: item.partyB_sign_status || 0,
-        })
+          partyB_sign_status: item.partyB_sign_status || 0
+        }))
 
+        // 更新列表数据
         let newContracts
         if (isRefresh) {
-          newContracts = list.map(transformContract)
+          newContracts = transformedList
         } else if (isLoadMore) {
-          newContracts = [...this.data.contracts, ...list.map(transformContract)]
+          newContracts = [...this.data.contracts, ...transformedList]
         } else {
-          newContracts = [...this.data.contracts, ...list.map(transformContract)]
-        }
-
-        // 计算统计数据
-        if (isRefresh) {
-          this.calculateStats(list, total)
+          newContracts = [...this.data.contracts, ...transformedList]
         }
 
         this.setData({
@@ -146,12 +158,14 @@ Page({
           icon: 'none'
         })
       }
-    }).catch(err => {
+    } catch (err) {
       console.error('获取合同列表失败', err)
       wx.showToast({
         title: '网络错误，请稍后重试',
         icon: 'none'
       })
+
+      // 错误时恢复分页状态
       if (isRefresh) {
         this.setData({ hasMore: false })
       } else if (isLoadMore) {
@@ -162,56 +176,19 @@ Page({
           hasMore: false
         })
       }
-    }).finally(() => {
+    } finally {
       this.setData({
         loading: false,
         refreshing: false,
         loadingMore: false
       })
       wx.stopPullDownRefresh()
-    })
-  },
-
-  // 计算统计数据
-  calculateStats(list, total) {
-    const stats = {
-      total: total || list.length,
-      pending: 0,
-      signed: 0
     }
-
-    list.forEach(item => {
-      const status = item.status
-      if (status === 1 || status === 2) {
-        stats.pending++
-      } else if (status === 3) {
-        stats.signed++
-      }
-    })
-
-    this.setData({ stats })
   },
 
-  // 更新统计数据
-  updateStats() {
-    const stats = {
-      total: this.data.contracts.length,
-      pending: 0,
-      signed: 0
-    }
-
-    this.data.contracts.forEach(item => {
-      const status = item.status
-      if (status === 1 || status === 2) {
-        stats.pending++
-      } else if (status === 3) {
-        stats.signed++
-      }
-    })
-
-    this.setData({ stats })
-  },
-
+  /**
+   * 切换筛选Tab
+   */
   onTabChange(e) {
     const index = e.detail.index !== undefined ? e.detail.index : e.currentTarget.dataset.index
 
@@ -225,6 +202,48 @@ Page({
     this.loadContracts(true)
   },
 
+  /**
+   * 搜索输入事件
+   */
+  onSearchInput(e) {
+    this.setData({ keyword: e.detail })
+  },
+
+  /**
+   * 执行搜索（防抖处理）
+   */
+  onSearch() {
+    // 防抖：清除之前的定时器
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer)
+    }
+
+    this.searchTimer = setTimeout(() => {
+      this.setData({
+        contracts: [],
+        page: 1,
+        hasMore: true
+      })
+      this.loadContracts(true)
+    }, 300)
+  },
+
+  /**
+   * 清除搜索
+   */
+  onClearSearch() {
+    this.setData({
+      keyword: '',
+      contracts: [],
+      page: 1,
+      hasMore: true
+    })
+    this.loadContracts(true)
+  },
+
+  /**
+   * 跳转到合同详情页
+   */
   goToContractDetail(e) {
     const { id } = e.currentTarget.dataset
     wx.navigateTo({
@@ -232,25 +251,12 @@ Page({
     })
   },
 
-  getStatusTagType(status) {
-    return CONTRACT_STATUS_COLOR[status] || 'default'
-  },
-
-  getStatusText(status) {
-    return CONTRACT_STATUS_TEXT[status] || '未知状态'
-  },
-
-  // 获取签署状态文字
-  getSignStatusText(item) {
-    const partyA = item.lessor_sign_status === 1 || item.partyA_sign_status === 1
-    const partyB = item.lessee_sign_status === 1 || item.partyB_sign_status === 1
-
-    if (partyA && partyB) {
-      return '双方已签署'
-    } else if (partyA) {
-      return '待乙方签署'
-    } else {
-      return '待甲方签署'
-    }
+  /**
+   * 跳转到创建合同页
+   */
+  goToCreateContract() {
+    wx.navigateTo({
+      url: '/pages/create-contract/index'
+    })
   }
 })

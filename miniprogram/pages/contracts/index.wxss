@@ -1,4 +1,4 @@
-/* pages/contracts/index.wxss - Optimized */
+/* pages/contracts/index.wxss - 合同列表页（v2重构版） */
 
 .container {
   min-height: 100vh;
@@ -27,11 +27,45 @@
   color: var(--text-color-tertiary);
 }
 
+/* ========== Search Section ========== */
+.search-section {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--card-background);
+  border-bottom: 1rpx solid var(--border-color-light);
+}
+
+.search-input {
+  background: var(--background-color-light) !important;
+  border-radius: var(--radius-xl) !important;
+  padding: var(--spacing-xs) !important;
+}
+
 /* ========== Filter Section ========== */
 .filter-section {
   background: var(--card-background);
-  padding-bottom: var(--spacing-xs);
-  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+  box-shadow: var(--shadow-xs);
+}
+
+.filter-scroll {
+  white-space: nowrap;
+}
+
+.filter-tabs {
+  display: inline-flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) 0;
+}
+
+.filter-tab {
+  display: inline-flex;
+  transition: all var(--transition-fast) var(--ease-out);
+  opacity: 0.7;
+}
+
+.filter-tab.active {
+  opacity: 1;
+  transform: scale(1.05);
 }
 
 /* ========== Contract List ========== */
@@ -39,165 +73,16 @@
   padding: var(--spacing-md);
 }
 
-.contract-item {
-  display: flex;
-  align-items: stretch;
-  background: var(--card-background);
-  border-radius: var(--radius-xl);
+.contract-item-wrapper {
   margin-bottom: var(--spacing-md);
-  box-shadow: var(--shadow-sm);
-  border: 1rpx solid var(--border-color);
-  overflow: hidden;
-  transition: all var(--transition-fast) var(--ease-out);
-  cursor: pointer;
-}
-
-.contract-item:active {
-  transform: scale(0.99);
-  box-shadow: var(--shadow-xs);
-  border-color: var(--border-color-dark);
-}
-
-/* 状态指示条 */
-.status-indicator {
-  width: 10rpx;
-  flex-shrink: 0;
-}
-
-.status-0, .status-1 {
-  background: var(--text-color-secondary);
-}
-
-.status-2 {
-  background: var(--warning-color);
-}
-
-.status-3 {
-  background: var(--success-color);
-}
-
-.status-4 {
-  background: var(--danger-color);
-}
-
-.status-5, .status-6 {
-  background: var(--text-color-tertiary);
-}
-
-/* 中间内容 */
-.contract-main {
-  flex: 1;
-  padding: var(--spacing-md);
-  min-width: 0;
-}
-
-.contract-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-sm);
-  gap: var(--spacing-sm);
-}
-
-.contract-title {
-  font-size: var(--font-size-md);
-  font-weight: 600;
-  color: var(--text-color-primary);
-  flex: 1;
-  margin-right: var(--spacing-sm);
-  letter-spacing: -0.01em;
-}
-
-/* 信息区域 */
-.contract-info {
-  margin-bottom: var(--spacing-sm);
-}
-
-.info-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: var(--spacing-xs);
-}
-
-.info-row:last-child {
-  margin-bottom: 0;
-}
-
-.info-icon {
-  color: var(--text-color-tertiary);
-  margin-right: var(--spacing-sm);
-  flex-shrink: 0;
-}
-
-.info-text {
-  font-size: var(--font-size-sm);
-  color: var(--text-color-secondary);
-  flex: 1;
-}
-
-/* 底部区域 */
-.contract-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: var(--spacing-sm);
-  border-top: 1rpx solid var(--border-color);
-}
-
-.contract-amount {
-  display: flex;
-  align-items: baseline;
-  gap: var(--spacing-xs);
-}
-
-.amount-label {
-  font-size: var(--font-size-xs);
-  color: var(--text-color-tertiary);
-}
-
-.amount-value {
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  color: var(--danger-color);
-  letter-spacing: -0.01em;
-}
-
-.contract-date {
-  display: flex;
-  align-items: center;
-}
-
-.date-text {
-  font-size: var(--font-size-xs);
-  color: var(--text-color-tertiary);
-}
-
-/* 箭头 */
-.contract-arrow {
-  display: flex;
-  align-items: center;
-  padding: 0 var(--spacing-md);
-  flex-shrink: 0;
   transition: transform var(--transition-fast) var(--ease-out);
 }
 
-.contract-item:active .contract-arrow {
-  transform: translateX(4rpx);
+.contract-item-wrapper:active {
+  transform: scale(0.98);
 }
 
 /* ========== Empty State ========== */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-xxl) var(--spacing-xl);
-}
-
-.empty-illustration {
-  margin-bottom: var(--spacing-md);
-}
-
 .empty-action-btn {
   margin-top: var(--spacing-lg);
   width: 360rpx;
@@ -207,25 +92,43 @@
   box-shadow: var(--shadow-md);
 }
 
-.empty-action-btn .btn-icon {
-  margin-right: var(--spacing-xs);
-  font-size: 36rpx;
+/* ========== Load More ========== */
+.load-more-wrapper {
+  padding: var(--spacing-lg) 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* ========== Loading ========== */
-.loading-wrapper {
+.load-more-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
+  margin-left: var(--spacing-xs);
+}
+
+.no-more {
+  width: 100%;
+  text-align: center;
+}
+
+.no-more-text {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-placeholder);
+  letter-spacing: 0.05em;
+}
+
+/* ========== Loading Overlay ========== */
+.loading-overlay {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.95);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-xl);
-  box-shadow: var(--shadow-lg);
+  z-index: 999;
 }
 
 /* ========== Bottom Placeholder ========== */

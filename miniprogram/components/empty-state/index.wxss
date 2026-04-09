@@ -1,16 +1,78 @@
+/* empty-state 空状态组件样式 */
+
+:host {
+  display: block;
+}
+
+/* 容器 */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 100rpx 60rpx;
+  padding: var(--spacing-xxl) var(--spacing-xl);
   min-height: 400rpx;
 }
 
-.empty-action {
-  margin-top: 24rpx;
+/* 图标区域 */
+.empty-state__icon {
+  margin-bottom: var(--spacing-lg);
 }
 
-.empty-action .van-button {
-  min-width: 200rpx;
+.empty-state__icon-wrapper {
+  width: 160rpx;
+  height: 160rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background-color-light);
+  border-radius: var(--radius-full);
+}
+
+.empty-state__icon-text {
+  font-size: 72rpx;
+  line-height: 1;
+}
+
+/* 标题 */
+.empty-state__title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-color-primary);
+  margin-bottom: var(--spacing-sm);
+  text-align: center;
+}
+
+/* 描述文字 */
+.empty-state__description {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
+  line-height: var(--line-height-relaxed);
+  text-align: center;
+  max-width: 480rpx;
+  margin-bottom: var(--spacing-md);
+}
+
+/* 操作按钮 */
+.empty-state__action {
+  margin-top: var(--spacing-sm);
+}
+
+.empty-state__action-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm) var(--spacing-xl);
+  background-color: var(--primary-color);
+  color: #ffffff;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  border-radius: var(--radius-full);
+  transition: opacity var(--transition-fast) var(--ease-out),
+              transform var(--transition-fast) var(--ease-out);
+}
+
+.empty-state__action:active .empty-state__action-text {
+  opacity: 0.9;
+  transform: scale(0.98);
 }

@@ -1,13 +1,1 @@
-{
-  "usingComponents": {
-    "van-tabs": "@vant/weapp/tabs/index",
-    "van-tab": "@vant/weapp/tab/index",
-    "van-tag": "@vant/weapp/tag/index",
-    "van-empty": "@vant/weapp/empty/index",
-    "van-loading": "@vant/weapp/loading/index",
-    "van-icon": "@vant/weapp/icon/index"
-  },
-  "navigationBarTitleText": "我的合同",
-  "enablePullDownRefresh": true,
-  "onReachBottomDistance": 50
-}
+{"usingComponents": {"van-search": "@vant/weapp/search/index", "van-tabs": "@vant/weapp/tabs/index", "van-tab": "@vant/weapp/tab/index", "van-button": "@vant/weapp/button/index", "van-loading": "@vant/weapp/loading/index", "contract-card": "../../components/contract-card/index", "status-tag": "../../components/status-tag/index", "empty-state": "../../components/empty-state/index"}, "navigationBarTitleText": "我的合同", "enablePullDownRefresh": true, "onReachBottomDistance": 50}

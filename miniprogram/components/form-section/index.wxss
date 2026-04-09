@@ -1,0 +1,98 @@
+/* form-section 表单分组容器组件样式 */
+
+:host {
+  display: block;
+}
+
+/* 容器 */
+.form-section {
+  background-color: var(--card-background);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  border: 1rpx solid var(--border-color);
+}
+
+/* 头部区域 */
+.form-section__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+/* 可折叠头部样式 */
+.form-section__header--collapsible {
+  cursor: pointer;
+  transition: opacity var(--transition-fast) var(--ease-out);
+}
+
+.form-section__header--collapsible:active {
+  opacity: 0.7;
+}
+
+/* 标题包裹 */
+.form-section__title-wrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+/* 标题文字 */
+.form-section__title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-color-primary);
+  letter-spacing: -0.01em;
+}
+
+/* 必填标记 */
+.form-section__required {
+  color: var(--danger-color);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin-left: 4rpx;
+}
+
+/* 箭头图标 */
+.form-section__arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40rpx;
+  height: 40rpx;
+  color: var(--text-color-tertiary);
+  transition: transform var(--transition-normal) var(--ease-out);
+}
+
+/* 箭头图标文字 */
+.form-section__arrow-icon {
+  font-size: var(--font-size-xs);
+  line-height: 1;
+}
+
+/* 描述文字 */
+.form-section__desc {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--spacing-md);
+  padding-left: var(--spacing-sm);
+}
+
+/* 内容区域 */
+.form-section__body {
+  animation: slideDown var(--transition-normal) var(--ease-out);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

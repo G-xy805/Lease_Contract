@@ -1,0 +1,135 @@
+/* confirm-dialog 确认对话框组件样式 */
+
+:host {
+  display: block;
+}
+
+/* 对话框容器 */
+.confirm-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 遮罩层 */
+.confirm-dialog__mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  animation: fadeIn var(--transition-normal) var(--ease-out);
+}
+
+/* 对话框主体容器 */
+.confirm-dialog__container {
+  position: relative;
+  width: 560rpx;
+  background-color: #ffffff;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transform: scale(0.9);
+  opacity: 0;
+  transition: transform var(--transition-normal) var(--ease-out),
+              opacity var(--transition-normal) var(--ease-out);
+}
+
+/* 显示状态 */
+.confirm-dialog__container--show {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* 头部区域 */
+.confirm-dialog__header {
+  padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-sm);
+  text-align: center;
+}
+
+/* 标题文字 */
+.confirm-dialog__title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-color-primary);
+  line-height: var(--line-height-tight);
+}
+
+/* 内容区域 */
+.confirm-dialog__body {
+  padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-lg);
+  text-align: center;
+}
+
+/* 内容文字 */
+.confirm-dialog__content {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+/* 按钮区域 */
+.confirm-dialog__footer {
+  display: flex;
+  align-items: center;
+  border-top: 1rpx solid var(--border-color);
+}
+
+/* 按钮样式 */
+.confirm-dialog__btn {
+  flex: 1;
+  padding: var(--spacing-md) 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color var(--transition-fast) var(--ease-out);
+}
+
+.confirm-dialog__btn:active {
+  background-color: var(--background-color-dark);
+}
+
+/* 取消按钮 */
+.confirm-dialog__btn--cancel {
+  color: var(--text-color-secondary);
+}
+
+/* 确认按钮 */
+.confirm-dialog__btn--confirm {
+  color: var(--danger-color);
+}
+
+/* 分割线 */
+.confirm-dialog__divider {
+  width: 1rpx;
+  height: var(--spacing-xl);
+  background-color: var(--border-color);
+}
+
+/* 按钮文字 */
+.confirm-dialog__btn-text {
+  font-size: var(--font-size-md);
+  font-weight: 400;
+}
+
+/* 确认按钮文字加粗 */
+.confirm-dialog__btn-text--bold {
+  font-weight: 600;
+}
+
+/* 动画定义 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

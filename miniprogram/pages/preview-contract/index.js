@@ -1,12 +1,13 @@
-// pages/preview-contract/index.js
+// pages/preview-contract/index.js - 预览合同页（v2重构版）
 const app = getApp()
-const { formatDate, digitToChinese } = require('../../utils/helpers')
+const { formatDate, digitToChinese, formatNumber } = require('../../utils/helpers')
 const { CONTRACT_STATUS_TEXT, CONTRACT_STATUS_COLOR, APP_CONFIG } = require('../../utils/constants')
 
 Page({
   data: {
     loading: true,
     contractData: null,
+    // 合同基本信息
     contractNo: '',
     contractStatus: '',
     statusText: '',
@@ -39,48 +40,54 @@ Page({
   },
 
   onLoad(options) {
-    // 优先从 URL 参数获取
-    if (options.data) {
-      try {
-        const decodedData = decodeURIComponent(options.data);
-        if (!decodedData || decodedData.length < 1) {
-          wx.showToast({ title: '无效的合同数据', icon: 'none' });
-          setTimeout(() => { wx.navigateBack() }, 1500);
-          return;
-        }
-        const contractData = JSON.parse(decodedData)
-        console.log('预览合同数据:', contractData)
-        this.processContractData(contractData)
-        return
-      } catch (err) {
-        console.error('解析合同数据失败:', err)
-        wx.showToast({ title: '合同数据解析失败', icon: 'none' });
-        setTimeout(() => { wx.navigateBack() }, 1500);
-        return;
+    this.loadPreviewData()
+  },
+
+  /**
+   * 加载预览合同数据（优先从Storage读取）
+   */
+  loadPreviewData() {
+    let contractData = null
+
+    // 方式1：从 Storage 读取（推荐方式）
+    try {
+      const storageData = wx.getStorageSync('preview_contract_data')
+      if (storageData) {
+        contractData = storageData
+        console.log('从Storage加载预览数据:', contractData)
       }
+    } catch (err) {
+      console.warn('从Storage读取预览数据失败:', err)
     }
 
-    // 从 globalData 获取
-    const globalContractData = app.globalData?.previewContractData
-    if (globalContractData) {
-      this.processContractData(globalContractData)
+    // 方式2：从 globalData 获取（兼容旧逻辑）
+    if (!contractData && app.globalData?.previewContractData) {
+      contractData = app.globalData.previewContractData
+      console.log('从globalData加载预览数据:', contractData)
+    }
+
+    if (!contractData) {
+      wx.showToast({ title: '缺少合同数据', icon: 'none' })
+      setTimeout(() => wx.navigateBack(), 1500)
       return
     }
 
-    wx.showToast({ title: '缺少合同数据', icon: 'none' })
-    setTimeout(() => wx.navigateBack(), 1500)
+    this.processContractData(contractData)
   },
 
+  /**
+   * 处理并格式化合同数据
+   */
   processContractData(data) {
     // 生成合同编号
-    const contractNo = data.contract_no || data.title?.split(' - ')[1] || this.generateContractNo()
+    const contractNo = data.contract_no || this.generateContractNo()
 
     // 合同状态
     const status = data.status || 1
     const statusText = CONTRACT_STATUS_TEXT[status] || '待签署'
     const statusColor = CONTRACT_STATUS_COLOR[status] || '#FF976A'
 
-    // 甲方信息（兼容旧字段名）
+    // 甲方信息（兼容新旧字段名）
     const lessorInfo = {
       name: data.partyA_contact || data.lessor_contact || '',
       company: data.partyA_company || data.lessor_name || APP_CONFIG.DEFAULT_COMPANY_NAME,
@@ -91,7 +98,7 @@ Page({
       account: data.partyA_account || ''
     }
 
-    // 乙方信息（兼容旧字段名）
+    // 乙方信息（兼容新旧字段名）
     const lesseeInfo = {
       name: data.partyB_name || data.lessee_name || '',
       phone: data.partyB_phone || data.lessee_phone || '',
@@ -106,13 +113,12 @@ Page({
       purpose: data.rent_purpose || ''
     }
 
-    // 租赁期限信息（年月日拆分显示）
+    // 租赁期限信息
     const leaseInfo = {
       leaseStart: this.formatDateForDisplay(data.lease_start),
       leaseEnd: this.formatDateForDisplay(data.lease_end),
       months: data.lease_months || 0,
       advanceNoticeDays: data.advance_notice_days || 30,
-      // 年月日拆分
       startYear: data.lease_start_year || '',
       startMonth: data.lease_start_month || '',
       startDay: data.lease_start_day || '',
@@ -121,31 +127,39 @@ Page({
       endDay: data.lease_end_day || ''
     }
 
-    // 租金信息
+    // 租金信息（带千分位格式化）
+    const monthlyRent = data.monthly_rent || 0
     const rentInfo = {
-      monthlyRent: data.monthly_rent || 0,
-      yearRent: data.year_rent || (data.monthly_rent && data.lease_months ? data.monthly_rent * data.lease_months : 0),
+      monthlyRent: monthlyRent,
+      monthlyRentFormatted: formatNumber(monthlyRent),
+      yearRent: data.year_rent || (monthlyRent && data.lease_months ? monthlyRent * data.lease_months : 0),
+      yearRentFormatted: formatNumber(data.year_rent || (monthlyRent * data.lease_months)),
       paymentMethod: data.payment_method || 1,
       paymentCycleText: this.getPaymentMethodText(data.payment_method),
       paymentCycle: data.payment_cycle || 1,
       paymentCount: data.payment_count || 1
     }
 
-    // 押金信息
+    // 押金信息（带大写金额）
+    const deposit = data.deposit || 0
     const depositInfo = {
-      amount: data.deposit || 0,
-      chinese: data.deposit_chinese || digitToChinese(data.deposit) || ''
+      amount: deposit,
+      formatted: formatNumber(deposit),
+      chinese: data.deposit_chinese || digitToChinese(deposit) || ''
     }
 
     // 支付计划信息
     const paymentInfo = {
       count: data.payment_count || 1,
       cycle: data.payment_cycle || 1,
-      firstAmount: data.first_payment_amount || data.monthly_rent || 0,
+      firstAmount: data.first_payment_amount || monthlyRent,
+      firstAmountFormatted: formatNumber(data.first_payment_amount || monthlyRent),
       firstDate: this.formatDateForDisplay(data.lease_start),
       secondAmount: data.second_payment_amount || 0,
+      secondAmountFormatted: formatNumber(data.second_payment_amount || 0),
       secondDate: this.formatDateForDisplay(data.second_payment_date),
-      thirdAmount: data.third_payment_amount || 0
+      thirdAmount: data.third_payment_amount || 0,
+      thirdAmountFormatted: formatNumber(data.third_payment_amount || 0)
     }
 
     // 处理物品清单
@@ -160,6 +174,7 @@ Page({
     // 处理居间服务费
     const commissions = this.processCommissions(data)
 
+    // 更新页面数据
     this.setData({
       loading: false,
       contractData: data,
@@ -182,13 +197,17 @@ Page({
     })
   },
 
-  // 获取支付方式文本
+  /**
+   * 获取支付方式文本
+   */
   getPaymentMethodText(method) {
     const methodMap = { 1: '月付', 3: '季付', 6: '半年付', 12: '年付' }
     return methodMap[method] || '月付'
   },
 
-  // 生成合同编号
+  /**
+   * 生成合同编号
+   */
   generateContractNo() {
     const now = new Date()
     const year = now.getFullYear()
@@ -198,23 +217,33 @@ Page({
     return `HT${year}${month}${day}${random}`
   },
 
-  // 格式化日期显示
+  /**
+   * 格式化日期显示为中文格式
+   */
   formatDateForDisplay(dateStr) {
     if (!dateStr) return ''
-    if (typeof dateStr === 'string' && dateStr.includes('T')) {
-      const d = new Date(dateStr)
-      return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
-    }
-    if (typeof dateStr === 'string' && dateStr.includes('-')) {
-      const parts = dateStr.split('-')
-      if (parts.length === 3) {
-        return `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`
+
+    if (typeof dateStr === 'string') {
+      // ISO格式日期
+      if (dateStr.includes('T')) {
+        const d = new Date(dateStr)
+        return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
+      }
+      // 标准格式 YYYY-MM-DD
+      if (dateStr.includes('-')) {
+        const parts = dateStr.split('-')
+        if (parts.length === 3) {
+          return `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`
+        }
       }
     }
+
     return dateStr
   },
 
-  // 处理物品清单
+  /**
+   * 处理物品清单数据（支持数组格式和分散字段格式）
+   */
   processInventoryItems(data) {
     const items = []
 
@@ -236,28 +265,12 @@ Page({
     const inventoryFields = [
       { key: 'item_tv_qty', label: '电视', unit: '台' },
       { key: 'item_wardrobe_qty', label: '衣柜', unit: '个' },
-      { key: 'item_tv_remote_qty', label: '电视遥控器', unit: '个' },
-      { key: 'item_tv_table_qty', label: '电视柜', unit: '个' },
-      { key: 'item_box_qty', label: '机顶盒', unit: '个' },
       { key: 'item_sofa_qty', label: '沙发', unit: '个' },
-      { key: 'item_coffee_table_qty', label: '茶几', unit: '个' },
-      { key: 'item_dining_table_qty', label: '餐桌', unit: '张' },
-      { key: 'item_chair_qty', label: '餐桌椅', unit: '把' },
       { key: 'item_bed_qty', label: '床', unit: '张' },
-      { key: 'item_nightstand_qty', label: '床头柜', unit: '个' },
-      { key: 'item_curtain_qty', label: '窗帘', unit: '个' },
       { key: 'item_ac_qty', label: '空调', unit: '台' },
-      { key: 'item_ac_remote_qty', label: '空调遥控器', unit: '个' },
       { key: 'item_fridge_qty', label: '冰箱', unit: '台' },
-      { key: 'item_mattress_qty', label: '床垫子', unit: '个' },
       { key: 'item_washer_qty', label: '洗衣机', unit: '台' },
-      { key: 'item_water_heater_qty', label: '热水器', unit: '台' },
-      { key: 'item_gas_stove_qty', label: '煤气灶', unit: '台' },
-      { key: 'item_hood_qty', label: '油烟机', unit: '台' },
-      { key: 'item_induction_qty', label: '电磁灶', unit: '台' },
-      { key: 'item_door_card_qty', label: '门禁卡', unit: '个' },
-      { key: 'item_water_card_qty', label: '水卡', unit: '个' },
-      { key: 'item_power_card_qty', label: '电卡', unit: '个' }
+      { key: 'item_water_heater_qty', label: '热水器', unit: '台' }
     ]
 
     inventoryFields.forEach(item => {
@@ -274,7 +287,9 @@ Page({
     return items
   },
 
-  // 处理费用约定
+  /**
+   * 处理费用约定数据
+   */
   processFees(data) {
     const feeLabels = {
       fee_water: '水费',
@@ -294,7 +309,9 @@ Page({
       }))
   },
 
-  // 处理水电表
+  /**
+   * 处理水电表读数
+   */
   processMeters(data) {
     const meters = []
     if (data.electricity_meter) {
@@ -309,13 +326,16 @@ Page({
     return meters
   },
 
-  // 处理居间服务费
+  /**
+   * 处理居间服务费
+   */
   processCommissions(data) {
     const commissions = []
     if (data.partyA_commission) {
       commissions.push({
         party: '甲方',
         amount: data.partyA_commission,
+        formatted: formatNumber(data.partyA_commission),
         chinese: data.partyA_commission_chinese || digitToChinese(data.partyA_commission) || ''
       })
     }
@@ -323,214 +343,69 @@ Page({
       commissions.push({
         party: '乙方',
         amount: data.partyB_commission,
+        formatted: formatNumber(data.partyB_commission),
         chinese: data.partyB_commission_chinese || digitToChinese(data.partyB_commission) || ''
       })
     }
     return commissions
   },
 
-  // 返回修改
+  /**
+   * 返回编辑页面
+   */
   goBackToEdit() {
     const { contractData } = this.data
     if (contractData) {
+      // 将数据保存回 globalData 以便编辑页面恢复
       app.globalData.previewContractData = contractData
     }
     wx.navigateBack()
   },
 
-  // 将合同数据转换为HTML模板格式
-  contractToTemplateData(data) {
-    // 日期拆分
-    const startParts = this.splitDate(data.lease_start)
-    const endParts = this.splitDate(data.lease_end)
-
-    // 处理物品清单 -> 模板字段
-    const inventoryTemplateData = this.inventoryItemsToTemplateFields(data.inventory_items)
-
-    // 构建完整的模板数据
-    return {
-      // 甲方信息
-      partyA_company: data.partyA_company || '',
-      partyA_phone: data.partyA_phone || '',
-      partyA_phone2: data.partyA_phone2 || '',
-      partyA_contact: data.partyA_contact || '',
-      partyA_idcard: data.partyA_idcard || '',
-      partyA_account: data.partyA_account || '',
-
-      // 乙方信息
-      partyB_name: data.partyB_name || '',
-      partyB_idCard: data.partyB_idCard || '',
-      partyB_phone: data.partyB_phone || '',
-      partyB_contact: data.partyB_contact || '',
-
-      // 房屋信息
-      house_address: data.house_address || '',
-      house_area: data.house_area || '',
-
-      // 租赁期限（拆分）
-      lease_start_year: startParts.year,
-      lease_start_month: startParts.month,
-      lease_start_day: startParts.day,
-      lease_end_year: endParts.year,
-      lease_end_month: endParts.month,
-      lease_end_day: endParts.day,
-      lease_months: data.lease_months || '',
-
-      // 租金信息
-      monthly_rent: data.monthly_rent || '',
-      year_rent: data.year_rent || '',
-      advance_notice_days: data.advance_notice_days || '',
-      payment_count: data.payment_count || '',
-      payment_cycle: data.payment_cycle || '',
-      first_payment_amount: data.first_payment_amount || '',
-      second_payment_amount: data.second_payment_amount || '',
-      second_payment_date: data.second_payment_date || '',
-      third_payment_amount: data.third_payment_amount || '',
-
-      // 押金
-      deposit: data.deposit || '',
-      deposit_chinese: data.deposit_chinese || '',
-
-      // 居间服务费
-      partyA_commission: data.partyA_commission || '',
-      partyA_commission_chinese: data.partyA_commission_chinese || '',
-      partyB_commission: data.partyB_commission || '',
-      partyB_commission_chinese: data.partyB_commission_chinese || '',
-
-      // 水电表
-      electricity_meter: data.electricity_meter || '',
-      water_meter: data.water_meter || '',
-      gas_meter: data.gas_meter || '',
-
-      // 物品清单
-      ...inventoryTemplateData,
-
-      // 其他
-      remark: data.remark || '',
-      sign_date: data.sign_date || ''
-    }
-  },
-
-  // 拆分日期为年月日
-  splitDate(dateStr) {
-    if (!dateStr) return { year: '', month: '', day: '' }
-    if (typeof dateStr === 'string' && dateStr.includes('T')) {
-      const d = new Date(dateStr)
-      return {
-        year: String(d.getFullYear()),
-        month: String(d.getMonth() + 1).padStart(2, '0'),
-        day: String(d.getDate()).padStart(2, '0')
-      }
-    }
-    const parts = dateStr.split('-')
-    if (parts.length === 3) {
-      return {
-        year: parts[0],
-        month: parts[1],
-        day: parts[2]
-      }
-    }
-    return { year: '', month: '', day: '' }
-  },
-
-  // 物品清单数组转换为模板字段
-  inventoryItemsToTemplateFields(inventoryItems) {
-    // 初始化所有模板字段为0
-    const templateFields = {
-      item_tv_qty: '0',
-      item_wardrobe_qty: '0',
-      item_tv_remote_qty: '0',
-      item_tv_table_qty: '0',
-      item_box_qty: '0',
-      item_sofa_qty: '0',
-      item_coffee_table_qty: '0',
-      item_dining_table_qty: '0',
-      item_chair_qty: '0',
-      item_bed_qty: '0',
-      item_nightstand_qty: '0',
-      item_curtain_qty: '0',
-      item_ac_qty: '0',
-      item_ac_remote_qty: '0',
-      item_fridge_qty: '0',
-      item_mattress_qty: '0',
-      item_washer_qty: '0',
-      item_water_heater_qty: '0',
-      item_gas_stove_qty: '0',
-      item_hood_qty: '0',
-      item_induction_qty: '0',
-      item_door_card_qty: '0',
-      item_water_card_qty: '0',
-      item_power_card_qty: '0'
-    }
-
-    // 名称到模板字段的映射
-    const nameToField = {
-      '电视': 'item_tv_qty',
-      '衣柜': 'item_wardrobe_qty',
-      '电视遥控器': 'item_tv_remote_qty',
-      '电视柜': 'item_tv_table_qty',
-      '机顶盒': 'item_box_qty',
-      '沙发': 'item_sofa_qty',
-      '茶几': 'item_coffee_table_qty',
-      '餐桌': 'item_dining_table_qty',
-      '餐桌椅': 'item_chair_qty',
-      '床': 'item_bed_qty',
-      '床头柜': 'item_nightstand_qty',
-      '窗帘': 'item_curtain_qty',
-      '空调': 'item_ac_qty',
-      '空调遥控器': 'item_ac_remote_qty',
-      '冰箱': 'item_fridge_qty',
-      '床垫子': 'item_mattress_qty',
-      '洗衣机': 'item_washer_qty',
-      '热水器': 'item_water_heater_qty',
-      '煤气灶': 'item_gas_stove_qty',
-      '油烟机': 'item_hood_qty',
-      '电磁灶': 'item_induction_qty',
-      '门禁卡': 'item_door_card_qty',
-      '水卡': 'item_water_card_qty',
-      '电卡': 'item_power_card_qty'
-    }
-
-    if (!inventoryItems || !Array.isArray(inventoryItems)) {
-      return templateFields
-    }
-
-    inventoryItems.forEach(item => {
-      const field = nameToField[item.name]
-      if (field && item.quantity) {
-        templateFields[field] = String(item.quantity)
-      }
-    })
-
-    return templateFields
-  },
-
-  // 确认签署
-  goToSign() {
+  /**
+   * 确认提交合同
+   */
+  async onSubmit() {
     const { contractData, contractNo } = this.data
+
     if (!contractData) {
       wx.showToast({ title: '缺少合同数据', icon: 'none' })
       return
     }
 
-    // 准备签署页面需要的参数
-    const signParams = {
-      contractId: contractData.id || '',
-      contractNo: contractNo,
-      title: contractData.title || '房屋租赁合同',
-      partyA: contractData.partyA_company || contractData.lessor_name || '',
-      partyB: contractData.partyB_name || contractData.lessee_name || '',
-      isPartyA: app.isLessor() ? 'true' : 'false'
+    wx.showLoading({ title: '正在提交...', mask: true })
+
+    try {
+      // 调用创建合同API
+      const res = await api.createContract(contractData)
+
+      wx.hideLoading()
+
+      if (res.code === 200) {
+        wx.showToast({
+          title: '合同创建成功',
+          icon: 'success'
+        })
+
+        // 延迟跳转到合同列表
+        setTimeout(() => {
+          wx.navigateBack()
+          // 可选：标记需要刷新列表
+          wx.setStorageSync('need_refresh_contracts', true)
+        }, 1500)
+      } else {
+        wx.showToast({
+          title: res.message || '创建失败',
+          icon: 'none'
+        })
+      }
+    } catch (err) {
+      wx.hideLoading()
+      console.error('提交合同失败', err)
+      wx.showToast({
+        title: '提交失败，请重试',
+        icon: 'none'
+      })
     }
-
-    // 构建 URL 参数
-    const queryString = Object.entries(signParams)
-      .filter(([_, v]) => v)
-      .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-      .join('&')
-
-    wx.navigateTo({
-      url: `/pages/sign-contract/index?${queryString}`
-    })
   }
 })

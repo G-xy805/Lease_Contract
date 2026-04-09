@@ -1,11 +1,22 @@
-.signature-pad {
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  overflow: hidden;
+/* signature-pad 手写签名板组件样式 */
+
+:host {
+  display: block;
 }
 
-.signature-canvas {
+/* 签名板容器 */
+.signature-pad {
+  background-color: var(--card-background);
+  border: 2rpx solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+}
+
+/* Canvas 画布 */
+.signature-pad__canvas {
   display: block;
+  width: 100%;
   background-color: #ffffff;
+  touch-action: none;
 }

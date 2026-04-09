@@ -1,0 +1,56 @@
+<view class="share-panel" wx:if="{{show}}">
+  <!-- 遮罩层 -->
+  <view class="share-panel__mask" wx:if="{{visible}}" bindtap="onMaskTap"></view>
+
+  <!-- 面板主体 -->
+  <view class="share-panel__container {{visible ? 'share-panel__container--show' : ''}}" catchtap="stopPropagation">
+    <!-- 标题栏 -->
+    <view class="share-panel__header">
+      <text class="share-panel__title">分享给好友</text>
+      <view class="share-panel__close" bindtap="closePanel">
+        <text class="share-panel__close-icon">✕</text>
+      </view>
+    </view>
+
+    <!-- 邀请码区域 -->
+    <view class="share-panel__invite" wx:if="{{inviteCode}}">
+      <text class="share-panel__invite-label">邀请码</text>
+      <view class="share-panel__invite-code-wrap">
+        <text class="share-panel__invite-code">{{inviteCode}}</text>
+        <view class="share-panel__copy-btn {{copied ? 'share-panel__copy-btn--copied' : ''}}" bindtap="onCopyCode">
+          <text class="share-panel__copy-text">{{copied ? '已复制' : '复制'}}</text>
+        </view>
+      </view>
+      <text class="share-panel__expires" wx:if="{{expiresAt}}">有效期至：{{expiresAt}}</text>
+    </view>
+
+    <!-- 二维码区域 -->
+    <view class="share-panel__qr" wx:if="{{qrCodeUrl}}">
+      <image
+        class="share-panel__qr-image"
+        src="{{qrCodeUrl}}"
+        mode="aspectFit"
+      ></image>
+      <view class="share-panel__save-btn" bindtap="onSaveQr">
+        <text class="share-panel__save-text">保存二维码</text>
+      </view>
+    </view>
+
+    <!-- 分享按钮行 -->
+    <view class="share-panel__actions">
+      <view class="share-panel__action-item" bindtap="onShareWechat">
+        <view class="share-panel__action-icon share-panel__action-icon--wechat">
+          <text class="share-panel__action-icon-text">💬</text>
+        </view>
+        <text class="share-panel__action-label">微信好友</text>
+      </view>
+
+      <view class="share-panel__action-item" bindtap="onCopyCode" wx:if="{{shareUrl}}">
+        <view class="share-panel__action-icon share-panel__action-icon--link">
+          <text class="share-panel__action-icon-text">🔗</text>
+        </view>
+        <text class="share-panel__action-label">复制链接</text>
+      </view>
+    </view>
+  </view>
+</view>

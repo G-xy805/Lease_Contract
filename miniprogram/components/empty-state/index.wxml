@@ -1,18 +1,19 @@
 <view class="empty-state">
-  <van-empty
-    description="{{displayText}}"
-    image="{{type}}"
-    icon="{{iconMap[type]}}"
-  >
-    <view wx:if="{{showButton}}" slot="action" class="empty-action">
-      <van-button
-        type="primary"
-        size="small"
-        round
-        bind:click="onButtonClick"
-      >
-        {{buttonText}}
-      </van-button>
+  <!-- 图标区域 -->
+  <view class="empty-state__icon">
+    <view class="empty-state__icon-wrapper">
+      <text class="empty-state__icon-text">{{currentIcon === 'note' ? '📝' : currentIcon === 'warn' ? '⚠️' : currentIcon === 'info' ? 'ℹ️' : '🔒'}}</text>
     </view>
-  </van-empty>
+  </view>
+
+  <!-- 标题 -->
+  <text class="empty-state__title">{{currentTitle}}</text>
+
+  <!-- 描述文字 -->
+  <text class="empty-state__description" wx:if="{{currentDescription}}">{{currentDescription}}</text>
+
+  <!-- 操作按钮 -->
+  <view class="empty-state__action" wx:if="{{showAction && currentActionText}}" bindtap="onActionTap">
+    <text class="empty-state__action-text">{{currentActionText}}</text>
+  </view>
 </view>

@@ -1,4 +1,4 @@
-/* pages/contract-detail/index.wxss - Optimized */
+/* pages/contract-detail/index.wxss - Optimized v2 */
 
 .container {
   min-height: 100vh;
@@ -113,6 +113,191 @@
   color: var(--text-color-primary);
 }
 
+/* ========== Section Card (可折叠分组) ========== */
+.section-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-lg);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.section-header:active {
+  background-color: var(--background-color-light);
+}
+
+.section-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.section-title {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--text-color-primary);
+}
+
+.section-arrow {
+  color: var(--text-color-tertiary);
+  transition: transform var(--transition-fast);
+}
+
+.section-content {
+  transition: all var(--transition-normal) ease-in-out;
+}
+
+.section-content.expanded {
+  padding: 0 var(--spacing-lg) var(--spacing-lg);
+}
+
+.section-content.collapsed {
+  display: none;
+}
+
+.section-divider {
+  height: 1rpx;
+  background: var(--border-color);
+  margin: var(--spacing-md) 0;
+}
+
+.subsection-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  margin-bottom: var(--spacing-sm);
+  padding-left: var(--spacing-xs);
+}
+
+/* ========== Party Section (甲乙双方子分组) ========== */
+.party-section {
+  margin-bottom: var(--spacing-sm);
+}
+
+.party-section:last-child {
+  margin-bottom: 0;
+}
+
+.party-section .party-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.party-section .party-badge-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.party-section .party-badge {
+  padding: 6rpx 20rpx;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.party-section .party-a {
+  background: var(--primary-color-light);
+  color: var(--primary-color);
+}
+
+.party-section .party-b {
+  background: var(--success-color-light);
+  color: var(--success-color);
+}
+
+.party-section .party-company {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-color-primary);
+}
+
+.party-section .party-header-icon {
+  color: var(--text-color-tertiary);
+}
+
+/* ========== Info Grid (甲乙双方信息网格) ========== */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.info-item-full {
+  grid-column: span 2;
+}
+
+.info-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: var(--font-size-md);
+  color: var(--text-color-primary);
+  font-weight: 500;
+}
+
+.info-value.phone-value {
+  color: var(--primary-color);
+}
+
+.info-value.idcard-value {
+  font-family: monospace;
+  font-size: var(--font-size-sm);
+}
+
+.info-value.address-value {
+  font-size: var(--font-size-sm);
+  text-align: right;
+  flex: 1;
+  margin-left: var(--spacing-md);
+}
+
+.info-label-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.row-icon {
+  color: var(--text-color-tertiary);
+}
+
+/* ========== Info List ========== */
+.info-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
 /* ========== Contract Info Card ========== */
 .contract-info-card {
   text-align: center;
@@ -148,118 +333,6 @@
   font-size: var(--font-size-xs);
   color: var(--text-color-tertiary);
   font-family: monospace;
-}
-
-/* ========== Party Card ========== */
-.party-card {
-  padding: var(--spacing-md);
-}
-
-.party-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-}
-
-.party-badge-wrapper {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.party-badge {
-  padding: 6rpx 20rpx;
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-}
-
-.party-a {
-  background: var(--primary-color-light);
-  color: var(--primary-color);
-}
-
-.party-b {
-  background: var(--success-color-light);
-  color: var(--success-color);
-}
-
-.party-company {
-  font-size: var(--font-size-md);
-  font-weight: 600;
-  color: var(--text-color-primary);
-}
-
-.party-header-icon {
-  color: var(--text-color-tertiary);
-}
-
-/* ========== Info Grid ========== */
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-md);
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4rpx;
-}
-
-.info-label {
-  font-size: var(--font-size-xs);
-  color: var(--text-color-tertiary);
-  font-weight: 500;
-}
-
-.info-value {
-  font-size: var(--font-size-md);
-  color: var(--text-color-primary);
-  font-weight: 500;
-}
-
-.info-value.phone-value {
-  color: var(--primary-color);
-}
-
-.info-value.idcard-value {
-  font-family: monospace;
-  font-size: var(--font-size-sm);
-}
-
-.info-value.address-value {
-  font-size: var(--font-size-sm);
-  text-align: right;
-}
-
-.info-label-wrapper {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-
-.row-icon {
-  color: var(--text-color-tertiary);
-}
-
-/* ========== Info List ========== */
-.info-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-sm) 0;
-  border-bottom: 1rpx solid var(--border-color);
-}
-
-.info-row:last-child {
-  border-bottom: none;
 }
 
 /* ========== Rent Card ========== */
@@ -334,66 +407,112 @@
   color: var(--text-color-secondary);
 }
 
-/* ========== Signature Card ========== */
-.signature-card {
+/* ========== Signature Section (⭐ 新版 - 从signatures数组渲染) ========== */
+.signature-section {
   background: var(--card-background);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid var(--border-color);
 }
 
-.signature-area {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-lg);
+.section-title-bar {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--text-color-primary);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2rpx solid var(--border-color);
 }
 
 .signature-item {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.signature-header {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--spacing-sm);
 }
 
-.signature-badge-wrapper {
-  display: flex;
-  justify-content: center;
+.signature-role {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-color-primary);
 }
 
-.signature-badge {
+.signature-status-tag {
   padding: 4rpx 16rpx;
-  background: var(--success-color);
-  color: var(--card-background);
   border-radius: var(--radius-full);
   font-size: var(--font-size-xs);
   font-weight: 600;
 }
 
-.signature-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-color-secondary);
-  font-weight: 500;
+.signature-status-tag.signed {
+  background: var(--success-color-light);
+  color: var(--success-color);
 }
 
-.signature-img {
-  width: 200rpx;
-  height: 100rpx;
+.signature-status-tag.pending {
+  background: var(--warning-color-light);
+  color: var(--warning-color);
+}
+
+.signature-status-tag.waiting {
   background: var(--background-color-light);
+  color: var(--text-color-tertiary);
+}
+
+.signature-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--background-color-light);
+  border-radius: var(--radius-lg);
+}
+
+.signature-image {
+  width: 240rpx;
+  height: 120rpx;
+  background: var(--card-background);
   border-radius: var(--radius-md);
   border: 1rpx solid var(--border-color);
 }
 
-.signature-time {
+.signature-meta {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 4rpx;
   font-size: var(--font-size-xs);
   color: var(--text-color-tertiary);
 }
 
+.signature-pending {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  background: var(--background-color-light);
+  border-radius: var(--radius-lg);
+  border: 2rpx dashed var(--border-color);
+}
+
+.text-secondary {
+  color: var(--text-color-tertiary);
+  font-size: var(--font-size-sm);
+}
+
 .signature-divider {
-  width: 2rpx;
-  height: 120rpx;
+  height: 2rpx;
   background: var(--border-color);
+  margin: var(--spacing-md) 0;
 }
 
 /* ========== Bottom Placeholder ========== */
@@ -401,7 +520,7 @@
   height: 200rpx;
 }
 
-/* ========== Action Bar ========== */
+/* ========== Action Bar (⭐ 新版 - 动态按钮数组) ========== */
 .action-bar {
   position: fixed;
   bottom: 0;
@@ -416,50 +535,37 @@
   gap: var(--spacing-sm);
 }
 
-.action-row {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
 .action-btn {
   height: 96rpx;
   font-size: var(--font-size-md);
   font-weight: 600;
-}
-
-.action-btn-half {
-  flex: 1;
-  height: 96rpx;
-  font-size: var(--font-size-md);
-  font-weight: 600;
-}
-
-.primary-action,
-.secondary-action {
+  border-radius: var(--radius-xl);
+  border: none;
   display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.primary-action .action-btn {
+.btn-primary {
+  background: var(--primary-color);
+  color: #fff;
   box-shadow: var(--shadow-md);
 }
 
-.primary-btn .btn-icon,
-.reject-btn .btn-icon {
-  margin-right: var(--spacing-sm);
-  font-size: 36rpx;
+.btn-warning {
+  background: var(--warning-color);
+  color: #fff;
 }
 
-.edit-btn .btn-icon,
-.delete-btn .btn-icon,
-.share-btn .btn-icon,
-.cancel-btn .btn-icon,
-.download-btn .btn-icon {
-  margin-right: var(--spacing-xs);
-  font-size: 32rpx;
+.btn-danger {
+  background: var(--danger-color);
+  color: #fff;
 }
 
-.btn-icon {
-  flex-shrink: 0;
+.btn-default {
+  background: var(--background-color-light);
+  color: var(--text-color-primary);
+  border: 1rpx solid var(--border-color);
 }
 
 /* ========== Items Grid ========== */
@@ -581,13 +687,6 @@
   line-height: 1.6;
 }
 
-/* ========== Card Content ========== */
-.card-content {
-  font-size: var(--font-size-sm);
-  color: var(--text-color-secondary);
-  line-height: 1.8;
-}
-
 /* ========== Contract Full Content ========== */
 .contract-full-content {
   background: var(--card-background);
@@ -705,20 +804,64 @@
   padding-bottom: 280rpx;
 }
 
-/* ========== Full Contract Container (完整合同内容容器) ========== */
-.full-contract-container {
+/* ========== Contract Rich Text (完整合同富文本) ========== */
+.contract-rich-wrapper {
   background: var(--card-background);
   border-radius: var(--radius-xl);
-  padding: var(--spacing-xl);
+  padding: var(--spacing-lg);
   box-shadow: var(--shadow-sm);
   border: 1rpx solid var(--border-color);
-  min-height: 400rpx;
 }
 
-.full-contract-container rich-text {
-  font-size: 26rpx;
+/* ========== Contract Lines Content (结构化合同显示) ========== */
+.contract-lines-wrapper {
+  padding: var(--spacing-lg);
+  background: var(--card-background);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid var(--border-color);
+}
+
+.contract-line {
+  margin-bottom: 16rpx;
+}
+
+.contract-line-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  text-align: center;
+  color: #1a1a1a;
+  padding: 24rpx 0;
+  border-bottom: 4rpx solid var(--primary-color);
+  margin-bottom: 24rpx;
+  text-decoration: underline;
+}
+
+.contract-line-section {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  background: linear-gradient(135deg, var(--primary-color-light) 0%, transparent 100%);
+  padding: 16rpx 20rpx;
+  border-left: 6rpx solid var(--primary-color);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  margin: 24rpx 0 16rpx 0;
+}
+
+.contract-line-paragraph {
+  font-size: 28rpx;
+  color: #444;
   line-height: 2;
-  color: var(--text-color-primary);
+  text-indent: 2em;
+  text-align: justify;
+  padding: 8rpx 0;
+}
+
+.contract-line-text {
+  font-size: 28rpx;
+  color: #444;
+  line-height: 1.8;
+  padding: 6rpx 0;
 }
 
 /* ========== Empty Full Content (空状态提示) ========== */

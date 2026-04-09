@@ -1,0 +1,32 @@
+<view class="form-section">
+  <!-- 可折叠的头部 -->
+  <view
+    class="form-section__header form-section__header--collapsible"
+    wx:if="{{collapsible}}"
+    bindtap="toggleCollapse"
+  >
+    <view class="form-section__title-wrap">
+      <text class="form-section__title">{{title}}</text>
+      <text class="form-section__required" wx:if="{{required}}">*</text>
+    </view>
+    <view class="form-section__arrow {{expanded ? 'form-section__arrow--up' : 'form-section__arrow--down'}}">
+      <text class="form-section__arrow-icon">{{expanded ? '▲' : '▼'}}</text>
+    </view>
+  </view>
+
+  <!-- 不可折叠的头部 -->
+  <view class="form-section__header" wx:else>
+    <view class="form-section__title-wrap">
+      <text class="form-section__title">{{title}}</text>
+      <text class="form-section__required" wx:if="{{required}}">*</text>
+    </view>
+  </view>
+
+  <!-- 描述文字 -->
+  <text class="form-section__desc" wx:if="{{description}}">{{description}}</text>
+
+  <!-- 内容区域（支持插槽） -->
+  <view class="form-section__body" wx:if="{{!collapsible || expanded}}">
+    <slot></slot>
+  </view>
+</view>

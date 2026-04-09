@@ -1,12 +1,14 @@
-// pages/login/index.js
+// pages/login/index.js - 登录页（v2重构版）
 const app = getApp()
 const api = require('../../services/api')
 const { USER_ROLE } = require('../../utils/constants')
 
 Page({
   data: {
+    // 表单数据
     phone: '',
     code: '',
+    // 状态控制
     loading: false,
     sendingCode: false,
     codeSent: false,
@@ -18,6 +20,7 @@ Page({
   },
 
   onLoad(options) {
+    // 检查是否已登录，如果已登录则直接跳转
     const token = wx.getStorageSync('token')
     const userInfo = wx.getStorageSync('userInfo')
     if (token && userInfo) {
@@ -26,51 +29,76 @@ Page({
   },
 
   onUnload() {
+    // 清除定时器
     if (this.data.timer) {
       clearInterval(this.data.timer)
     }
   },
 
+  /**
+   * 手机号输入事件
+   */
   onPhoneChange(e) {
     this.setData({ phone: e.detail })
     this.updateCanLogin()
   },
 
+  /**
+   * 验证码输入事件
+   */
   onCodeChange(e) {
     this.setData({ code: e.detail })
     this.updateCanLogin()
   },
 
+  /**
+   * 协议勾选状态变更
+   */
   onAgreementChange(e) {
     this.setData({ agreed: e.detail })
     this.updateCanLogin()
   },
 
+  /**
+   * 更新登录按钮可用状态
+   */
   updateCanLogin() {
     const { phone, code, agreed } = this.data
     const canLogin = phone.length === 11 && code.length === 6 && agreed
     this.setData({ canLogin })
   },
 
+  /**
+   * 显示用户服务协议
+   */
   showAgreement() {
     wx.showModal({
       title: '用户服务协议',
-      content: '这里是用户服务协议的内容...',
-      showCancel: false
+      content: '欢迎使用契约之约租赁合同平台。本平台为用户提供电子合同签署服务，请仔细阅读以下条款...',
+      showCancel: false,
+      confirmText: '我知道了'
     })
   },
 
+  /**
+   * 显示隐私政策
+   */
   showPrivacy() {
     wx.showModal({
       title: '隐私政策',
-      content: '这里是隐私政策的内容...',
-      showCancel: false
+      content: '我们重视您的隐私保护。我们将按照本隐私政策收集、使用和保护您的个人信息...',
+      showCancel: false,
+      confirmText: '我知道了'
     })
   },
 
+  /**
+   * 发送验证码（带60秒倒计时）
+   */
   async onSendCode() {
     const { phone } = this.data
 
+    // 验证手机号格式
     if (!phone || phone.length !== 11) {
       wx.showToast({ title: '请输入正确的手机号', icon: 'none' })
       return
@@ -83,14 +111,16 @@ Page({
 
       if (res.code === 200) {
         wx.showToast({ title: '验证码已发送', icon: 'success' })
+
+        // 开始60秒倒计时
         this.setData({
           codeSent: true,
           countdown: 60
         })
 
         const timer = setInterval(() => {
-          const countdown = this.data.countdown - 1
-          if (countdown <= 0) {
+          const newCountdown = this.data.countdown - 1
+          if (newCountdown <= 0) {
             clearInterval(timer)
             this.setData({
               codeSent: false,
@@ -98,7 +128,7 @@ Page({
               timer: null
             })
           } else {
-            this.setData({ countdown })
+            this.setData({ countdown: newCountdown })
           }
         }, 1000)
 
@@ -107,15 +137,20 @@ Page({
         wx.showToast({ title: res.message || '发送失败', icon: 'none' })
       }
     } catch (error) {
-      wx.showToast({ title: '发送失败', icon: 'none' })
+      console.error('发送验证码失败', error)
+      wx.showToast({ title: '网络错误，请重试', icon: 'none' })
     } finally {
       this.setData({ sendingCode: false })
     }
   },
 
+  /**
+   * 执行手机号+验证码登录
+   */
   async handleLogin() {
     const { phone, code } = this.data
 
+    // 表单验证
     if (!phone || phone.length !== 11) {
       wx.showToast({ title: '请输入正确的手机号', icon: 'none' })
       return
@@ -137,8 +172,13 @@ Page({
 
       if (res.code === 200) {
         const user = res.data.user
+
+        // 更新全局状态
         app.login(user, res.data.token)
+
         wx.showToast({ title: '登录成功', icon: 'success' })
+
+        // 延迟跳转，让用户看到成功提示
         setTimeout(() => {
           this.redirectBasedOnRole(user.role)
         }, 1500)
@@ -146,12 +186,16 @@ Page({
         wx.showToast({ title: res.message || '登录失败', icon: 'none' })
       }
     } catch (error) {
-      wx.showToast({ title: '登录失败', icon: 'none' })
+      console.error('登录失败', error)
+      wx.showToast({ title: '登录失败，请重试', icon: 'none' })
     } finally {
       this.setData({ loading: false })
     }
   },
 
+  /**
+   * 微信一键登录
+   */
   onWechatLogin() {
     wx.showLoading({ title: '正在获取...', mask: true })
 
@@ -173,8 +217,12 @@ Page({
 
           if (res.code === 200) {
             const user = res.data.user
+
+            // 更新全局状态
             app.login(user, res.data.token)
+
             wx.showToast({ title: '登录成功', icon: 'success' })
+
             setTimeout(() => {
               this.redirectBasedOnRole(user.role)
             }, 1500)
@@ -183,6 +231,7 @@ Page({
           }
         } catch (error) {
           wx.hideLoading()
+          console.error('微信登录失败', error)
           wx.showToast({ title: '微信登录失败', icon: 'none' })
         }
       },
@@ -193,14 +242,13 @@ Page({
     })
   },
 
+  /**
+   * 根据用户角色跳转到对应页面
+   */
   redirectBasedOnRole(role) {
     let url = '/pages/my-contracts/index'
 
-    if (role === USER_ROLE.LESSOR) {
-      url = '/pages/index/index'
-    }
-
-    if (role === USER_ROLE.ADMIN) {
+    if (role === USER_ROLE.LESSOR || role === USER_ROLE.ADMIN) {
       url = '/pages/index/index'
     }
 

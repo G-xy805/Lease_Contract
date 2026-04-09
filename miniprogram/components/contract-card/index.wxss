@@ -1,124 +1,107 @@
+/* contract-card 合同卡片组件样式 */
+
+:host {
+  display: block;
+}
+
+/* 卡片容器 */
 .contract-card {
-  background-color: #ffffff;
-  border-radius: 16rpx;
-  padding: 32rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
-  position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background-color: var(--card-background);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-card);
+  border: 1rpx solid var(--border-color);
+  transition: transform var(--transition-normal) var(--ease-out),
+              box-shadow var(--transition-normal) var(--ease-out),
+              border-color var(--transition-normal) var(--ease-out);
 }
 
-.contract-card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 16rpx;
-  border: 2rpx solid transparent;
-  transition: border-color 0.2s ease;
-}
-
+/* 点击态效果 */
 .contract-card:active {
   transform: scale(0.98);
-  box-shadow: 0 1rpx 6rpx rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--primary-color);
 }
 
-.contract-card:active::after {
-  border-color: #1989fa;
-}
-
-.card-header {
+/* 头部区域 */
+.contract-card__header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20rpx;
+  margin-bottom: var(--spacing-md);
 }
 
-.card-title-wrap {
+/* 标题文字 */
+.contract-card__title {
   flex: 1;
-  margin-right: 16rpx;
-  overflow: hidden;
-}
-
-.card-title {
-  font-size: 32rpx;
+  font-size: var(--font-size-lg);
   font-weight: 600;
-  color: #323233;
+  color: var(--text-color-primary);
+  margin-right: var(--spacing-sm);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.card-body {
-  color: #646566;
+/* 主体内容区域 */
+.contract-card__body {
+  color: var(--text-color-secondary);
 }
 
-.card-info-row {
+/* 信息行 */
+.contract-card__row {
   display: flex;
   align-items: center;
-  font-size: 28rpx;
-  line-height: 1.6;
-  margin-bottom: 12rpx;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--spacing-xs);
 }
 
-.card-info-row:last-child {
+.contract-card__row:last-child {
   margin-bottom: 0;
 }
 
-.info-label {
-  color: #969799;
+/* 标签文字 */
+.contract-card__label {
+  color: var(--text-color-tertiary);
   flex-shrink: 0;
+  margin-right: var(--spacing-sm);
+  min-width: 80rpx;
 }
 
-.info-value {
-  color: #323233;
-  margin-left: 12rpx;
+/* 值文字 */
+.contract-card__value {
   flex: 1;
+  color: var(--text-color-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.info-money {
-  color: #ee0a24;
-  font-weight: 500;
+/* 文本省略 */
+.contract-card__value.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.info-money .text-xs {
-  color: #969799;
-  font-weight: normal;
+/* 价格样式 - 使用主题色加粗 */
+.contract-card__value.price {
+  color: var(--danger-color);
+  font-weight: 600;
+  font-size: var(--font-size-md);
 }
 
-.card-divider {
-  height: 1rpx;
-  background-color: #ebedf0;
-  margin: 20rpx 0;
+/* 底部区域 */
+.contract-card__footer {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  border-top: 1rpx solid var(--border-color);
 }
 
-.card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.sign-status {
-  display: flex;
-  gap: 32rpx;
-}
-
-.sign-item {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-}
-
-.sign-item.signed .sign-text {
-  color: #07c160;
-}
-
-.sign-text {
-  font-size: 24rpx;
-  color: #999999;
+/* 时间文字 */
+.contract-card__time {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
 }

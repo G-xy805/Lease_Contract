@@ -9,7 +9,7 @@ import {
   ICreateSignature,
   SignatureRow,
   SignRole,
-  SignType,
+  SignStatus,
   ContractStatus,
   IContract
 } from '../models/Signature';
@@ -47,13 +47,14 @@ const formatSignatureResponse = (signature: ISignature): ISignatureResponse => {
     id: signature.id,
     contract_id: signature.contract_id,
     user_id: signature.user_id,
-    sign_type: signature.sign_type,
     sign_role: signature.sign_role,
-    sign_image: signature.sign_image,
-    sign_data: signature.sign_data || null,
-    sign_ip: signature.sign_ip,
-    sign_device: signature.sign_device,
-    sign_location: signature.sign_location || null,
+    sign_name: signature.sign_name,
+    sign_phone: signature.sign_phone,
+    signature_data: signature.signature_data,
+    sign_status: signature.sign_status,
+    ip_address: signature.ip_address,
+    device_info: signature.device_info,
+    sign_location: signature.sign_location,
     signed_at: signature.signed_at
   };
 };
@@ -67,18 +68,18 @@ export const createSignature = async (req: AuthRequest, res: Response): Promise<
     const userId = req.user?.userId;
     const {
       contract_id,
-      sign_type,
       sign_role,
-      sign_image,
-      sign_data,
+      sign_name,
+      sign_phone,
+      signature_data,
       sign_location
     } = req.body as ICreateSignature;
 
     // 参数验证
-    if (!contract_id || !sign_type || !sign_role || !sign_image) {
+    if (!contract_id || !sign_role || !signature_data) {
       res.status(400).json({
         code: 400,
-        message: '缺少必要参数：contract_id、sign_type、sign_role、sign_image'
+        message: '缺少必要参数：contract_id、sign_role、signature_data'
       });
       return;
     }
@@ -92,17 +93,8 @@ export const createSignature = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    // 验证签署类型
-    if (!Object.values(SignType).includes(sign_type)) {
-      res.status(400).json({
-        code: 400,
-        message: '无效的签署类型'
-      });
-      return;
-    }
-
     // 验证签名图片Base64格式
-    if (!sign_image.startsWith('data:image/')) {
+    if (!signature_data.startsWith('data:image/')) {
       res.status(400).json({
         code: 400,
         message: '签名图片格式无效，应为Base64格式'
@@ -144,7 +136,7 @@ export const createSignature = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    if (sign_role === SignRole.TENANT && contract.status !== ContractStatus.PENDING_TENANT_SIGN) {
+    if (sign_role === SignRole.LESSEE && contract.status !== ContractStatus.PENDING_TENANT_SIGN) {
       res.status(400).json({
         code: 400,
         message: '合同状态不是待乙方签署状态'
@@ -154,8 +146,8 @@ export const createSignature = async (req: AuthRequest, res: Response): Promise<
 
     // 检查是否已签署
     const existingSignatures = await query<any[]>(
-      'SELECT * FROM signatures WHERE contract_id = ? AND sign_name = ?',
-      [contract_id, sign_role === SignRole.LESSOR ? contract.lessor_name : contract.lessee_name]
+      'SELECT * FROM signatures WHERE contract_id = ? AND sign_role = ?',
+      [contract_id, sign_role]
     );
 
     if (existingSignatures.length > 0) {
@@ -168,26 +160,30 @@ export const createSignature = async (req: AuthRequest, res: Response): Promise<
 
     // 获取签署留痕信息
     const signed_at = new Date().toISOString();
-    const sign_ip = getClientIp(req);
-    const sign_device = getClientDevice(req);
+    const ip_address = getClientIp(req);
+    const device_info = getClientDevice(req);
 
-    // 确定签署人姓名和电话
-    const signName = sign_role === SignRole.LESSOR ? contract.lessor_name : contract.lessee_name;
-    const signPhone = sign_role === SignRole.LESSOR ? contract.lessor_phone : contract.lessee_phone;
+    // 确定签署人姓名和电话（优先使用传入值，否则从合同获取）
+    const finalSignName = sign_name || (sign_role === SignRole.LESSOR ? contract.lessor_name : contract.lessee_name);
+    const finalSignPhone = sign_phone || (sign_role === SignRole.LESSOR ? contract.lessor_phone : contract.lessee_phone);
 
     // 创建签署记录
     const result = await insert(
       `INSERT INTO signatures
-       (contract_id, sign_type, sign_name, sign_phone, signature_data, ip_address, device_info, signed_at, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (contract_id, user_id, sign_role, sign_name, sign_phone, signature_data,
+        sign_status, ip_address, device_info, sign_location, signed_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         contract_id,
-        sign_type,
-        signName,
-        signPhone,
-        sign_image,
-        sign_ip,
-        sign_device,
+        userId || null,
+        sign_role,
+        finalSignName,
+        finalSignPhone,
+        signature_data,
+        SignStatus.CONFIRMED,
+        ip_address,
+        device_info,
+        sign_location || null,
         signed_at,
         signed_at
       ]
@@ -210,9 +206,7 @@ export const createSignature = async (req: AuthRequest, res: Response): Promise<
     const response = {
       id: result.insertId,
       contract_id,
-      sign_type,
       sign_role,
-      sign_image,
       signed_at
     };
 
@@ -277,7 +271,7 @@ export const getSignaturesByContract = async (req: Request, res: Response): Prom
     }
 
     // 查询签署记录
-    const signatures = await query<any[]>(
+    const signatures = await query<SignatureRow[]>(
       `SELECT * FROM signatures
        WHERE contract_id = ?
        ORDER BY signed_at ASC`,
@@ -287,19 +281,7 @@ export const getSignaturesByContract = async (req: Request, res: Response): Prom
     console.log(`[签署模块] 找到 ${signatures.length} 条签署记录，合同ID: ${contract_id}`);
 
     // 转换签署记录格式
-    const list: ISignatureResponse[] = signatures.map(sig => ({
-      id: sig.id,
-      contract_id: sig.contract_id,
-      user_id: sig.user_id || 0,
-      sign_type: sig.sign_type,
-      sign_role: sig.sign_name === contracts[0].lessor_name ? SignRole.LESSOR : SignRole.TENANT,
-      sign_image: sig.signature_data,
-      sign_data: sig.signature_data || null,
-      sign_ip: sig.ip_address || '',
-      sign_device: sig.device_info || '',
-      sign_location: sig.sign_location || null,
-      signed_at: sig.signed_at
-    }));
+    const list: ISignatureResponse[] = signatures.map(formatSignatureResponse);
 
     const response: ISignatureListResponse = {
       total: list.length,
@@ -345,7 +327,7 @@ export const getSignatureById = async (req: Request, res: Response): Promise<voi
 
     console.log(`[签署模块] 正在查询签署记录ID: ${id}`);
 
-    const signatures = await query<any[]>(
+    const signatures = await query<SignatureRow[]>(
       `SELECT * FROM signatures
        WHERE id = ?`,
       [id]
@@ -363,14 +345,7 @@ export const getSignatureById = async (req: Request, res: Response): Promise<voi
     const signature = signatures[0];
 
     // 构建响应数据
-    const response = {
-      id: signature.id,
-      contract_id: signature.contract_id,
-      sign_type: signature.sign_type,
-      sign_role: signature.sign_name === '甲方' ? SignRole.LESSOR : SignRole.TENANT,
-      sign_image: signature.signature_data,
-      signed_at: signature.signed_at
-    };
+    const response = formatSignatureResponse(signature);
 
     console.log(`[签署模块] 成功获取签署记录ID: ${id}`);
 

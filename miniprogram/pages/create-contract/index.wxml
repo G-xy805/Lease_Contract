@@ -253,7 +253,7 @@ module.exports = {
       </view>
     </view>
 
-    <!-- ========== Step 4: 租赁期限 ========== -->
+    <!-- ========== Step 4: 租赁期限 ⭐⭐⭐ 使用原生picker替代van-datetime-picker ========== -->
     <view class="section {{currentStep === 3 ? 'active' : ''}}" wx:if="{{currentStep === 3}}">
       <view class="section-header">
         <view class="section-icon">
@@ -263,36 +263,35 @@ module.exports = {
         <view class="section-subtitle">合同时间范围</view>
       </view>
 
-      <view class="picker-cell {{errors.lease_start ? 'error' : ''}}" bindtap="showStartDatePickerModal">
+      <!-- 租赁开始日期 - 原生picker -->
+      <view class="picker-cell {{errors.lease_start_year ? 'error' : ''}}">
         <text class="picker-label required">租赁开始日期</text>
-        <view class="picker-value-wrapper">
-          <text class="{{formData.lease_start ? 'picker-value' : 'picker-placeholder'}}">{{formData.lease_start || '请选择'}}</text>
-          <van-icon name="arrow" class="picker-arrow" />
-        </view>
+        <picker mode="date" value="{{startDateDisplay}}" start="2024-01-01" end="2035-12-31"
+                bindchange="onStartDateChange">
+          <view class="picker-value-wrapper">
+            <text class="{{startDateDisplay ? 'picker-value' : 'picker-placeholder'}}">{{startDateDisplay || '请选择开始日期'}}</text>
+            <van-icon name="arrow" class="picker-arrow" />
+          </view>
+        </picker>
       </view>
 
-      <view class="picker-cell {{errors.lease_end ? 'error' : ''}}" bindtap="showEndDatePickerModal">
+      <!-- 租赁结束日期 - 原生picker -->
+      <view class="picker-cell {{errors.lease_end_year ? 'error' : ''}}">
         <text class="picker-label required">租赁结束日期</text>
-        <view class="picker-value-wrapper">
-          <text class="{{formData.lease_end ? 'picker-value' : 'picker-placeholder'}}">{{formData.lease_end || '请选择'}}</text>
-          <van-icon name="arrow" class="picker-arrow" />
-        </view>
+        <picker mode="date" value="{{endDateDisplay}}" start="{{minEndDate}}" end="2035-12-31"
+                bindchange="onEndDateChange">
+          <view class="picker-value-wrapper">
+            <text class="{{endDateDisplay ? 'picker-value' : 'picker-placeholder'}}">{{endDateDisplay || '请选择结束日期'}}</text>
+            <van-icon name="arrow" class="picker-arrow" />
+          </view>
+        </picker>
       </view>
 
-      <van-field
-        label="租赁月数"
-        placeholder="请输入租赁月数"
-        value="{{formData.lease_months}}"
-        data-field="lease_months"
-        bind:change="onFieldChange"
-        bind:blur="onFieldBlur"
-        required
-        size="large"
-        type="number"
-        error="{{errors.lease_months ? true : false}}"
-        error-message="{{errors.lease_months}}"
-        class="form-field"
-      />
+      <!-- 显示租赁月数（自动计算）-->
+      <view class="form-hint" wx:if="{{leaseMonths > 0}}">
+        <van-icon name="info-o" size="24rpx" color="var(--primary-color)" />
+        <text>租赁期限: 共 {{leaseMonths}} 个月</text>
+      </view>
 
       <van-field
         label="提前通知天数"
@@ -786,30 +785,7 @@ module.exports = {
     </view>
   </van-popup>
 
-  <!-- 日期选择弹窗 -->
-  <van-popup show="{{showStartDatePicker}}" position="bottom" bind:close="closeStartDatePicker">
-    <van-datetime-picker
-      type="date"
-      value="{{startDate}}"
-      min-date="{{minDate}}"
-      bind:confirm="onStartDateConfirm"
-      bind:cancel="closeStartDatePicker"
-      title="选择开始日期"
-    />
-  </van-popup>
-
-  <van-popup show="{{showEndDatePicker}}" position="bottom" bind:close="closeEndDatePicker">
-    <van-datetime-picker
-      type="date"
-      value="{{endDate}}"
-      min-date="{{minDate}}"
-      bind:confirm="onEndDateConfirm"
-      bind:cancel="closeEndDatePicker"
-      title="选择结束日期"
-    />
-  </van-popup>
-
-  <!-- 第二次付款日期选择 -->
+  <!-- 第二次付款日期选择（保留原datetime-picker） -->
   <van-popup show="{{showSecondPaymentDatePicker}}" position="bottom" bind:close="closeSecondPaymentDatePicker">
     <van-datetime-picker
       type="date"

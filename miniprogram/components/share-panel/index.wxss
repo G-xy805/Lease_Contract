@@ -1,0 +1,254 @@
+/* share-panel 分享面板组件样式 */
+
+:host {
+  display: block;
+}
+
+/* 面板容器 */
+.share-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* 遮罩层 */
+.share-panel__mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  animation: fadeIn var(--transition-normal) var(--ease-out);
+}
+
+/* 面板主体容器 */
+.share-panel__container {
+  position: relative;
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: var(--spacing-lg) var(--spacing-lg) env(safe-area-inset-bottom);
+  transform: translateY(100%);
+  transition: transform var(--transition-slow) var(--ease-out);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* 显示状态 */
+.share-panel__container--show {
+  transform: translateY(0);
+}
+
+/* 头部区域 */
+.share-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+/* 标题文字 */
+.share-panel__title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-color-primary);
+}
+
+/* 关闭按钮 */
+.share-panel__close {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color-tertiary);
+  cursor: pointer;
+}
+
+.share-panel__close:active {
+  opacity: 0.6;
+}
+
+.share-panel__close-icon {
+  font-size: var(--font-size-md);
+  line-height: 1;
+}
+
+/* 邀请码区域 */
+.share-panel__invite {
+  background-color: var(--background-color-light);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+/* 邀请码标签 */
+.share-panel__invite-label {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--text-color-tertiary);
+  margin-bottom: var(--spacing-sm);
+}
+
+/* 邀请码包裹 */
+.share-panel__invite-code-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+/* 邀请码文字 */
+.share-panel__invite-code {
+  flex: 1;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--primary-color);
+  letter-spacing: 4rpx;
+  font-family: 'Courier New', monospace;
+}
+
+/* 复制按钮 */
+.share-panel__copy-btn {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--primary-color);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: opacity var(--transition-fast) var(--ease-out),
+              transform var(--transition-fast) var(--ease-out);
+}
+
+.share-panel__copy-btn:active {
+  opacity: 0.9;
+  transform: scale(0.96);
+}
+
+/* 已复制状态 */
+.share-panel__copy-btn--copied {
+  background-color: var(--success-color);
+}
+
+/* 复制按钮文字 */
+.share-panel__copy-text {
+  color: #ffffff;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+/* 过期时间 */
+.share-panel__expires {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--text-color-placeholder);
+  margin-top: var(--spacing-sm);
+}
+
+/* 二维码区域 */
+.share-panel__qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  background-color: var(--background-color-light);
+  border-radius: var(--radius-md);
+}
+
+/* 二维码图片 */
+.share-panel__qr-image {
+  width: 360rpx;
+  height: 360rpx;
+  margin-bottom: var(--spacing-md);
+}
+
+/* 保存按钮 */
+.share-panel__save-btn {
+  padding: var(--spacing-sm) var(--spacing-xl);
+  background-color: var(--primary-color-light);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: opacity var(--transition-fast) var(--ease-out);
+}
+
+.share-panel__save-btn:active {
+  opacity: 0.8;
+}
+
+/* 保存按钮文字 */
+.share-panel__save-text {
+  color: var(--primary-color);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+/* 分享按钮行 */
+.share-panel__actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-xl);
+  padding-top: var(--spacing-md);
+  border-top: 1rpx solid var(--border-color);
+}
+
+/* 分享项 */
+.share-panel__action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform var(--transition-fast) var(--ease-out);
+}
+
+.share-panel__action-item:active {
+  transform: scale(0.95);
+}
+
+/* 分享图标 */
+.share-panel__action-icon {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+/* 微信图标背景色 */
+.share-panel__action-icon--wechat {
+  background-color: #07c160;
+}
+
+/* 链接图标背景色 */
+.share-panel__action-icon--link {
+  background-color: var(--primary-color);
+}
+
+/* 图标文字 */
+.share-panel__action-icon-text {
+  font-size: 44rpx;
+  line-height: 1;
+}
+
+/* 分享标签 */
+.share-panel__action-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-secondary);
+}
+
+/* 动画定义 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

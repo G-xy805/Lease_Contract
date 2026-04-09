@@ -1,40 +1,35 @@
-<view class="contract-card" bindtap="onClick">
-  <view class="card-header">
-    <view class="card-title-wrap">
-      <view class="card-title text-lg text-bold">{{contract.title}}</view>
-      <view class="text-xs text-gray">编号：{{contract.contract_no || contract.id}}</view>
-    </view>
-    <van-tag color="{{getStatusColor(contract.status)}}" plain>{{getStatusText(contract.status)}}</van-tag>
+<view class="contract-card" bindtap="onTap">
+  <!-- 头部：标题和状态标签 -->
+  <view class="contract-card__header">
+    <text class="contract-card__title">{{title}}</text>
+    <status-tag status="{{status}}" size="sm" />
   </view>
 
-  <view class="card-body">
-    <view class="card-info-row">
-      <text class="info-label">{{role === USER_ROLE.LESSOR ? '乙方' : '甲方'}}：</text>
-      <text class="info-value">{{getCounterpartyName()}}</text>
+  <!-- 主体内容 -->
+  <view class="contract-card__body">
+    <view class="contract-card__row">
+      <text class="contract-card__label">地址</text>
+      <text class="contract-card__value ellipsis">{{address}}</text>
     </view>
-    <view class="card-info-row" wx:if="{{contract.house_address}}">
-      <text class="info-label">房屋：</text>
-      <text class="info-value">{{contract.house_address}}</text>
+
+    <view class="contract-card__row">
+      <text class="contract-card__label">月租金</text>
+      <text class="contract-card__value price">¥{{monthlyRent}}</text>
     </view>
-    <view class="card-info-row" wx:if="{{contract.monthly_rent}}">
-      <text class="info-label">金额：</text>
-      <text class="info-value info-money">¥{{contract.monthly_rent}}<text class="text-xs">/月</text></text>
+
+    <view class="contract-card__row">
+      <text class="contract-card__label">甲方</text>
+      <text class="contract-card__value">{{partyA}}</text>
+    </view>
+
+    <view class="contract-card__row" wx:if="{{partyB}}">
+      <text class="contract-card__label">乙方</text>
+      <text class="contract-card__value">{{partyB}}</text>
     </view>
   </view>
 
-  <view class="card-divider"></view>
-
-  <view class="card-footer">
-    <view class="sign-status">
-      <view class="sign-item {{getLessorSigned() ? 'signed' : ''}}">
-        <van-icon name="{{getLessorSigned() ? 'passed' : 'circle'}}" size="32rpx" color="{{getLessorSigned() ? '#07c160' : '#999'}}" />
-        <text class="sign-text">甲方{{getLessorSigned() ? '已签' : '未签'}}</text>
-      </view>
-      <view class="sign-item {{getLesseeSigned() ? 'signed' : ''}}">
-        <van-icon name="{{getLesseeSigned() ? 'passed' : 'circle'}}" size="32rpx" color="{{getLesseeSigned() ? '#07c160' : '#999'}}" />
-        <text class="sign-text">乙方{{getLesseeSigned() ? '已签' : '未签'}}</text>
-      </view>
-    </view>
-    <view class="text-xs text-gray">{{contract.updated_at || contract.created_at}}</view>
+  <!-- 底部：创建时间 -->
+  <view class="contract-card__footer" wx:if="{{createdAt}}">
+    <text class="contract-card__time">{{createdAt}}</text>
   </view>
 </view>

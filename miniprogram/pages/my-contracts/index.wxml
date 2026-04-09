@@ -1,24 +1,23 @@
+<!-- pages/my-contracts/index.wxml - 我的合同页（v2重构版 - TabBar页面） -->
 <view class="container">
   <!-- 顶部欢迎语 -->
   <view class="header-wrapper">
     <view class="header-content">
-      <view class="welcome-text">欢迎查看合同</view>
-      <view class="sub-welcome-text">您的电子合同列表</view>
+      <text class="welcome-text">欢迎查看合同</text>
+      <text class="sub-welcome-text">您的电子合同列表</text>
     </view>
   </view>
 
+  <!-- 筛选Tab -->
   <van-tabs
     active="{{ activeTab }}"
     bind:change="onTabChange"
-    color="#1989fa"
-    line-width="20"
+    color="var(--primary-color)"
+    line-width="40rpx"
     sticky
     scroll-top="0"
   >
-    <van-tab title="全部" name="all"></van-tab>
-    <van-tab title="待签署" name="pending"></van-tab>
-    <van-tab title="已签署" name="signed"></van-tab>
-    <van-tab title="已拒绝/取消" name="rejected"></van-tab>
+    <van-tab wx:for="{{tabs}}" wx:key="name" title="{{item.title}}" name="{{item.name}}"></van-tab>
   </van-tabs>
 
   <!-- 骨架屏 - 首次加载 -->
@@ -43,64 +42,30 @@
       <text class="refresh-text">刷新中...</text>
     </view>
 
-    <!-- 合同列表 -->
+    <!-- 合同列表 - 使用 contract-card 组件 -->
     <view class="contract-list" wx:if="{{contracts.length > 0}}">
       <view
         wx:for="{{contracts}}"
         wx:key="id"
-        class="contract-item"
+        class="contract-item-wrapper"
         bindtap="goToContractDetail"
         data-id="{{item.id}}"
       >
-        <view class="contract-header">
-          <view class="contract-title text-bold text-lg">{{item.title}}</view>
-          <van-tag type="{{getStatusTagType(item.status)}}" size="medium">
-            {{getStatusText(item.status)}}
-          </van-tag>
-        </view>
-
-        <view class="contract-body">
-          <view class="contract-info">
-            <van-icon name="location-o" size="32rpx" class="info-icon" />
-            <text class="text-sm text-gray">{{item.house_address || '未填写地址'}}</text>
-          </view>
-          <view class="contract-info">
-            <van-icon name="user-o" size="32rpx" class="info-icon" />
-            <text class="text-sm text-gray">甲方：{{item.partyA_name || item.lessor_name || '未知'}}</text>
-          </view>
-          <view class="contract-info">
-            <van-icon name="paid" size="32rpx" class="info-icon" />
-            <text class="text-sm text-gray">金额：¥{{item.monthly_rent || 0}}/月</text>
-          </view>
-          <view class="contract-info">
-            <van-icon name="clock-o" size="32rpx" class="info-icon" />
-            <text class="text-sm text-gray">创建时间：{{item.created_at}}</text>
-          </view>
-        </view>
-
-        <!-- 待签署状态显示提示 -->
-        <view class="contract-footer" wx:if="{{item.status === 2}}">
-          <view class="sign-hint">
-            <van-icon name="info-o" size="28rpx" />
-            <text>点击查看合同详情并签署</text>
-          </view>
-        </view>
+        <contract-card contract="{{item}}" />
       </view>
     </view>
 
-    <!-- 空状态 -->
-    <view class="empty-wrapper" wx:if="{{!contracts.length && !loading && !refreshing}}">
-      <van-empty
-        image="https://img.yzcdn.cn/vant/custom-empty-image.png"
-        description="{{getEmptyConfig().text}}"
-      >
-        <view class="empty-sub-text">{{getEmptyConfig().subText}}</view>
-      </van-empty>
-    </view>
+    <!-- 空状态 - 使用 empty-state 组件 -->
+    <empty-state
+      wx:if="{{!contracts.length && !loading && !refreshing}}"
+      image="search"
+      title="{{getEmptyConfig().text}}"
+      description="{{getEmptyConfig().subText}}"
+    />
 
     <!-- 加载更多 -->
     <view class="load-more" wx:if="{{contracts.length > 0}}">
-      <van-loading size="24rpx" wx:if="{{loadingMore}}">
+      <van-loading size="24rpx" wx:if="{{loadingMore}}" color="var(--primary-color)">
         <text class="loading-text">加载中...</text>
       </van-loading>
       <view class="no-more-wrapper" wx:if="{{!loadingMore && !hasMore}}">
@@ -113,11 +78,7 @@
 
   <!-- 全局加载状态 -->
   <view class="global-loading-mask" wx:if="{{loading && !refreshing && !skeletonLoading && !contracts.length}}">
-    <van-loading
-      type="spinner"
-      size="50rpx"
-      color="#1989fa"
-    />
+    <van-loading type="spinner" size="50rpx" color="var(--primary-color)" />
     <text class="loading-text">加载中...</text>
   </view>
 </view>

@@ -25,7 +25,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(corsMiddleware);
 
 // 静态文件服务 - 托管 uploads 目录
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+app.use('/uploads', express.static(uploadsDir));
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();

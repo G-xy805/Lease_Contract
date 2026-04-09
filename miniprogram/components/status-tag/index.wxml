@@ -1,8 +1,5 @@
-<van-tag
-  color="{{tagColor}}"
-  size="{{size}}"
-  plain="{{false}}"
-  round="{{true}}"
->
-  {{tagText}}
-</van-tag>
+<view class="status-tag status-tag--{{size}}">
+  <text class="status-tag__text" style="color: {{currentColor}}; background-color: {{currentBg}};">
+    {{currentText}}
+  </text>
+</view>

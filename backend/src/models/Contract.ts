@@ -37,110 +37,102 @@ export interface IFeeItem {
 // 费用约定JSON格式
 export type FeeItems = IFeeItem[];
 
-// 合同数据接口
+// 合同数据接口（按照 SQLite 表结构的 13 个分组顺序）
 export interface IContract {
+  // ==================== 1. 基础标识 ====================
   id: number;
   contract_no: string;
   title: string;
   status: ContractStatus;
-  created_by: number;
+
+  // ==================== 2. 用户关联 ====================
   lessor_user_id: number;
+  lessee_user_id: number | null;    // 乙方用户ID（可为NULL，乙方注册后补充）
+  created_by: number;
 
-  // 甲方信息
+  // ==================== 3. 甲乙双方信息 ====================
   partyA_company: string | null;    // 甲方公司/姓名
-  partyA_phone: string | null;      // 甲方电话
-  partyA_contact: string | null;    // 甲方代理人
-  partyA_phone2: string | null;     // 甲方备用电话
-  partyA_account: string | null;    // 甲方收款账户
-  partyA_idcard: string | null;     // 甲方身份证
+  partyA_phone: string | null;      // 甲方联系电话
+  partyA_contact: string | null;    // 甲方委托代理人
+  partyA_phone2: string | null;     // 甲方代理人联系电话
+  partyA_account: string | null;    // 甲方账户信息
+  partyA_idcard: string | null;     // 甲方身份证号
 
-  // 乙方信息
   partyB_name: string | null;       // 乙方姓名
-  partyB_phone: string | null;      // 乙方电话
-  partyB_idCard: string | null;     // 乙方身份证
-  partyB_contact: string | null;    // 乙方代理人
+  partyB_idCard: string | null;     // 乙方身份证号
+  partyB_phone: string | null;      // 乙方联系电话
+  partyB_contact: string | null;    // 乙方委托代理人
 
-  // 房屋信息
-  house_address: string;
-  house_area: number | null;
-  rent_purpose: string | null;
+  // ==================== 4. 房屋基本情况 ====================
+  house_address: string;            // 房屋地址
+  house_area: number | null;        // 建筑面积（平方米）
 
-  // 租赁期限
-  lease_start: Date | null;
-  lease_end: Date | null;
-  lease_months: number | null;
-  advance_notice_days: number | null;
+  // ==================== 5. 租赁期限及用途 - 日期拆分为组件！====================
+  lease_start_year: number | null;   // 租赁开始年份
+  lease_start_month: number | null;  // 租赁开始月份
+  lease_start_day: number | null;    // 租赁开始日期
+  lease_end_year: number | null;     // 租赁结束年份
+  lease_end_month: number | null;    // 租赁结束月份
+  lease_end_day: number | null;      // 租赁结束日期
+  lease_months: number | null;       // 租赁总月数
+  rent_purpose: string | null;       // 租赁用途
+  advance_notice_days: number | null; // 提前通知天数
 
-  // 租金和支付
-  monthly_rent: number;
-  year_rent: number | null;
-  payment_method: PaymentMethod;
-  payment_cycle: number | null;      // 支付周期（月数）
+  // ==================== 6. 租金和支付方式 ====================
+  monthly_rent: number;              // 月租金
+  year_rent: number | null;          // 年租金/总租金
+  payment_method: PaymentMethod;     // 支付方式
+  payment_cycle: number | null;      // 支付周期（月数）- INTEGER 类型
   payment_count: number | null;      // 支付次数
-  first_payment_amount: number | null;
-  second_payment_amount: number | null;
-  second_payment_date: Date | null;
-  third_payment_amount: number | null;
-  fourth_payment_amount: number | null;
-  total_amount: number;
+  first_payment_amount: number | null;   // 第一次支付金额
+  second_payment_amount: number | null;  // 第二次支付金额
+  third_payment_amount: number | null;   // 第三次支付金额
+  fourth_payment_amount: number | null;  // 第四次支付金额
+  partyA_account_for_rent: string | null; // 第三条第3款收款账户
 
-  // 押金
-  deposit: number;
-  deposit_chinese: string | null;
+  // ==================== 7. 押金信息 ====================
+  deposit: number;                  // 押金金额
+  deposit_chinese: string | null;   // 押金大写
 
-  // 费用约定（JSON格式）
-  fee_items: FeeItems;
+  // ==================== 8. 费用约定（JSON格式）====================
+  fee_items: FeeItems | null;       // 费用项目JSON（替代原来的7个BOOLEAN字段）
 
-  // 居间服务
-  intermediary_name: string | null;
-  partyA_commission: number | null;
-  partyA_commission_chinese: string | null;
-  partyB_commission: number | null;
-  partyB_commission_chinese: string | null;
+  // ==================== 9. 居间服务 ====================
+  intermediary_name: string | null;  // 中介方名称
+  partyA_commission: number | null;  // 甲方佣金
+  partyA_commission_chinese: string | null; // 甲方佣金大写
+  partyB_commission: number | null;  // 乙方佣金
+  partyB_commission_chinese: string | null; // 乙方佣金大写
 
-  // 水电表读数
-  electricity_meter: string | null;
-  water_meter: string | null;
-  gas_meter: string | null;
+  // ==================== 10. 物品清单及水电表 ====================
+  inventory_items: InventoryItems | null; // 物品清单JSON
+  electricity_meter: string | null;  // 电表读数
+  water_meter: string | null;       // 水表读数
+  gas_meter: string | null;         // 燃气表读数
 
-  // 备注
-  remark: string | null;
+  // ==================== 11. 备注及其他约定 ====================
+  remark: string | null;            // 备注及其他约定
 
-  // 签署状态
-  partyA_sign_status: number;
-  partyB_sign_status: number;
-  partyA_signed_at: Date | null;
-  partyB_signed_at: Date | null;
-  partyA_signature: string | null;
-  partyB_signature: string | null;
-  sign_date: Date | null;
+  // ==================== 12. 合同文档 ====================
+  contract_pdf_path: string | null;  // 合同PDF路径
 
-  // 签署邀请
-  invite_code: string | null;
-  invite_expires_at: Date | null;
-
-  // 合同文档
-  contract_pdf_path: string | null;
-
-  // 物品清单（JSON格式）
-  inventory_items: InventoryItems;
-
-  // 状态时间
-  effective_at: Date | null;
-  expires_at: Date | null;
-  reject_reason: string | null;
-
-  created_at: Date;
-  updated_at: Date;
+  // ==================== 13. 状态和时间戳 ====================
+  effective_at: Date | null;        // 生效时间
+  expires_at: Date | null;          // 过期时间
+  reject_reason: string | null;     // 拒绝原因
+  sign_date: Date | null;           // 签约日期
+  created_at: Date;                 // 创建时间
+  updated_at: Date;                 // 更新时间
 }
 
 // 合同行数据
 export interface ContractRow extends RowDataPacket, IContract {}
 
-// 创建合同数据
+// 创建合同数据（使用日期组件 year/month/day）
 export interface IContractCreate {
   title: string;
   lessor_user_id: number;
+  lessee_user_id?: number | null;  // 乙方用户ID（可选）
 
   // 甲方信息
   partyA_company?: string;
@@ -152,36 +144,40 @@ export interface IContractCreate {
 
   // 乙方信息
   partyB_name: string;
-  partyB_phone: string;
   partyB_idCard?: string;
+  partyB_phone?: string;
   partyB_contact?: string;
 
   // 房屋信息
   house_address: string;
   house_area?: number;
-  rent_purpose?: string;
 
-  // 租赁期限
-  lease_start: string;
-  lease_end: string;
+  // 租赁期限及用途（日期拆分为组件！）
+  lease_start_year?: number;
+  lease_start_month?: number;
+  lease_start_day?: number;
+  lease_end_year?: number;
+  lease_end_month?: number;
+  lease_end_day?: number;
   lease_months?: number;
+  rent_purpose?: string;
   advance_notice_days?: number;
 
-  // 租金和支付
+  // 租金和支付方式
   monthly_rent: number;
   year_rent?: number;
   payment_method: PaymentMethod;
-  payment_cycle?: number;
-  payment_count?: number;
+  payment_cycle?: number;           // 支付周期（月数）
+  payment_count?: number;           // 支付次数
   first_payment_amount?: number;
-  first_payment_date?: string;
   second_payment_amount?: number;
-  second_payment_date?: string;
   third_payment_amount?: number;
   fourth_payment_amount?: number;
+  partyA_account_for_rent?: string; // 第三条第3款收款账户
+
+  // 押金信息
   deposit?: number;
   deposit_chinese?: string;
-  total_amount?: number;
 
   // 费用约定（JSON格式）
   fee_items?: FeeItems;
@@ -193,22 +189,21 @@ export interface IContractCreate {
   partyB_commission?: number;
   partyB_commission_chinese?: string;
 
-  // 水电表读数
+  // 物品清单及水电表
+  inventory_items?: InventoryItems;
   electricity_meter?: string;
   water_meter?: string;
   gas_meter?: string;
 
   // 备注
   remark?: string;
-
-  // 物品清单（JSON格式）
-  inventory_items?: InventoryItems;
 }
 
-// 更新合同数据
+// 更新合同数据（使用日期组件 year/month/day）
 export interface IContractUpdate {
   title?: string;
   lessor_user_id?: number;
+  lessee_user_id?: number | null;   // 乙方用户ID
 
   // 甲方信息
   partyA_company?: string;
@@ -220,36 +215,40 @@ export interface IContractUpdate {
 
   // 乙方信息
   partyB_name?: string;
-  partyB_phone?: string;
   partyB_idCard?: string;
+  partyB_phone?: string;
   partyB_contact?: string;
 
   // 房屋信息
   house_address?: string;
   house_area?: number;
-  rent_purpose?: string;
 
-  // 租赁期限
-  lease_start?: string;
-  lease_end?: string;
+  // 租赁期限及用途（日期拆分为组件！）
+  lease_start_year?: number;
+  lease_start_month?: number;
+  lease_start_day?: number;
+  lease_end_year?: number;
+  lease_end_month?: number;
+  lease_end_day?: number;
   lease_months?: number;
+  rent_purpose?: string;
   advance_notice_days?: number;
 
-  // 租金和支付
+  // 租金和支付方式
   monthly_rent?: number;
   year_rent?: number;
   payment_method?: PaymentMethod;
-  payment_cycle?: number;
-  payment_count?: number;
+  payment_cycle?: number;            // 支付周期（月数）
+  payment_count?: number;            // 支付次数
   first_payment_amount?: number;
-  first_payment_date?: string;
   second_payment_amount?: number;
-  second_payment_date?: string;
   third_payment_amount?: number;
   fourth_payment_amount?: number;
+  partyA_account_for_rent?: string;  // 第三条第3款收款账户
+
+  // 押金信息
   deposit?: number;
   deposit_chinese?: string;
-  total_amount?: number;
 
   // 费用约定（JSON格式）
   fee_items?: FeeItems;
@@ -261,7 +260,8 @@ export interface IContractUpdate {
   partyB_commission?: number;
   partyB_commission_chinese?: string;
 
-  // 水电表读数
+  // 物品清单及水电表
+  inventory_items?: InventoryItems;
   electricity_meter?: string;
   water_meter?: string;
   gas_meter?: string;
@@ -269,8 +269,14 @@ export interface IContractUpdate {
   // 备注
   remark?: string;
 
-  // 物品清单（JSON格式）
-  inventory_items?: InventoryItems;
+  // 合同文档
+  contract_pdf_path?: string;
+
+  // 状态和时间戳（通常由系统自动设置，但允许管理员手动调整）
+  effective_at?: Date | null;
+  expires_at?: Date | null;
+  reject_reason?: string | null;
+  sign_date?: Date | null;
 }
 
 // 合同查询参数
@@ -344,4 +350,30 @@ export const getPaymentMethodText = (method: PaymentMethod): string => {
     [PaymentMethod.PAY_YEARLY]: '年付'
   };
   return methodMap[method] || '未知方式';
+}
+
+// ==================== 日期组件工具函数 ====================
+
+/**
+ * 将日期组件（year/month/day）组合为 Date 对象
+ * @param year 年份（如 2026）
+ * @param month 月份（1-12）
+ * @param day 日期（1-31）
+ * @returns Date 对象
+ */
+export function composeDateComponents(year: number, month: number, day: number): Date {
+  return new Date(year, month - 1, day);
+}
+
+/**
+ * 将 Date 对象分解为日期组件（year/month/day）
+ * @param date Date 对象
+ * @returns 包含 year、month、day 的对象
+ */
+export function decomposeDate(date: Date): { year: number; month: number; day: number } {
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: date.getDate()
+  };
 }

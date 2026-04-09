@@ -7,10 +7,20 @@ const { APP_CONFIG } = require('./utils/constants')
 
 App({
   globalData: {
+    // === 现有字段保持不变 ===
     userInfo: null,
     token: null,
     baseUrl: 'http://localhost:3000',
-    loginExpiresAt: null
+    loginExpiresAt: null,
+
+    // === 新增缓存系统 ===
+    contractListCache: {},
+    templateCache: [],
+    dictionaryCache: {},
+
+    // === 新增UI状态 ===
+    networkStatus: 'online',
+    lastSyncTime: null
   },
 
   _tokenTimer: null,
@@ -92,22 +102,45 @@ App({
   },
 
   login(userInfo, token, expiresIn = 7 * 24 * 60 * 60 * 1000) {
-    const loginExpiresAt = Date.now() + expiresIn
-    this.globalData.userInfo = userInfo
-    this.globalData.token = token
-    this.globalData.loginExpiresAt = loginExpiresAt
-    wx.setStorageSync('userInfo', userInfo)
-    wx.setStorageSync('token', token)
-    wx.setStorageSync('loginExpiresAt', loginExpiresAt)
+    const loginExpiresAt = Date.now() + expiresIn;
+    this.globalData.userInfo = userInfo;
+    this.globalData.token = token;
+    this.globalData.loginExpiresAt = loginExpiresAt;
+
+    // 同步写入本地存储
+    wx.setStorageSync('userInfo', userInfo);
+    wx.setStorageSync('token', token);
+    wx.setStorageSync('loginExpiresAt', loginExpiresAt);
+
+    // 初始化缓存结构
+    this.globalData.contractListCache = {};
+    this.globalData.templateCache = [];
+    this.globalData.dictionaryCache = {};
+
+    console.log('用户登录成功:', userInfo?.username || userInfo?.phone || '未知用户');
   },
 
   logout() {
-    this.globalData.userInfo = null
-    this.globalData.token = null
-    this.globalData.loginExpiresAt = null
-    wx.removeStorageSync('userInfo')
-    wx.removeStorageSync('token')
-    wx.removeStorageSync('loginExpiresAt')
+    // 清除所有缓存数据
+    this.clearCache();
+
+    // 清除用户状态
+    this.globalData.userInfo = null;
+    this.globalData.token = null;
+    this.globalData.loginExpiresAt = null;
+    this.globalData.lastSyncTime = null;
+
+    // 清除本地存储
+    wx.removeStorageSync('userInfo');
+    wx.removeStorageSync('token');
+    wx.removeStorageSync('loginExpiresAt');
+
+    // 跳转到登录页
+    wx.reLaunch({
+      url: '/pages/login/index'
+    });
+
+    console.log('用户已登出');
   },
 
   isLoggedIn() {
@@ -139,5 +172,65 @@ App({
 
   isLessee() {
     return this.getUserRole() === 'lessee'
+  },
+
+  // ===== 缓存管理方法 =====
+
+  /**
+   * 清除所有缓存
+   */
+  clearCache() {
+    this.globalData.contractListCache = {};
+    this.globalData.templateCache = [];
+    this.globalData.dictionaryCache = {};
+    try {
+      wx.removeStorageSync('contractListCache');
+      wx.removeStorageSync('templateCache');
+    } catch (e) {
+      console.error('清除缓存失败:', e);
+    }
+  },
+
+  /**
+   * 获取合同列表缓存
+   * @param {string} type - 缓存类型（landlord/tenant）
+   * @returns {Array|null} 缓存的数据或null
+   */
+  getContractListCache(type) {
+    const cached = this.globalData.contractListCache[type];
+    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+      return cached.data;
+    }
+    return null;
+  },
+
+  /**
+   * 设置合同列表缓存
+   * @param {string} type - 缓存类型（landlord/tenant）
+   * @param {Array} data - 合同列表数据
+   */
+  setContractListCache(type, data) {
+    this.globalData.contractListCache[type] = {
+      data: data,
+      timestamp: Date.now()
+    };
+  },
+
+  /**
+   * 强制刷新用户数据
+   * 从服务器重新获取用户信息并更新本地存储
+   */
+  async refreshUserData() {
+    if (!this.globalData.token) return;
+    try {
+      const api = require('./services/api').default;
+      const res = await api.getProfile();
+      if (res.code === 200) {
+        this.globalData.userInfo = res.data;
+        wx.setStorageSync('userInfo', res.data);
+      }
+    } catch (e) {
+      console.error('刷新用户数据失败:', e);
+    }
   }
 })

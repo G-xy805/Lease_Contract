@@ -1,190 +1,99 @@
 <!-- pages/index/index.wxml -->
-<view class="container">
-  <!-- 欢迎区域 -->
-  <view class="welcome-section">
-    <view class="welcome-left">
-      <view class="avatar-wrapper">
-        <image class="avatar" src="{{userInfo.avatar || '/assets/images/default-avatar.png'}}" mode="aspectFill" />
-        <view class="avatar-ring"></view>
-      </view>
-      <view class="welcome-info">
-        <text class="welcome-name">{{userInfo.name || '用户'}}</text>
-        <view class="role-badge role-{{userInfo.role === 'LESSOR' ? 'lessor' : userInfo.role === 'ADMIN' ? 'admin' : 'tenant'}}">
-          <van-icon name="{{userInfo.role === 'LESSOR' ? 'home-o' : userInfo.role === 'ADMIN' ? 'setting-o' : 'user-o'}}" class="role-icon" />
-          {{userInfo.role === 'LESSOR' ? '出租方' : userInfo.role === 'ADMIN' ? '管理员' : '承租方'}}
+<view class="page-container">
+  <!-- 顶部用户信息栏 -->
+  <view class="header">
+    <view class="user-info">
+      <image
+        class="avatar"
+        src="{{userInfo.avatar || '/assets/images/default-avatar.png'}}"
+        mode="aspectFill"
+      />
+      <view class="user-detail">
+        <text class="user-name">{{userInfo.name || userInfo.phone || '用户'}}</text>
+        <view class="user-tags">
+          <text class="tag tag-role">
+            {{userRole === 'LESSOR' ? '房东' : userRole === 'LESSEE' ? '租客' : userRole === 'ADMIN' ? '管理员' : '未知'}}
+          </text>
+          <text class="tag {{isRealNameVerified ? 'tag-success' : 'tag-warning'}}">
+            {{isRealNameVerified ? '已实名' : '未实名'}}
+          </text>
         </view>
       </view>
-    </view>
-    <view class="notification-btn touch-target" bindtap="goToNotifications">
-      <van-icon name="bell" size="44rpx" color="var(--text-color-secondary)" />
-      <view class="notification-dot" wx:if="{{unreadCount > 0}}"></view>
     </view>
   </view>
 
-  <!-- 甲方视图 -->
-  <block wx:if="{{userInfo && (userInfo.role === 'LESSOR' || userInfo.role === 'ADMIN')}}">
-    <!-- 统计卡片区域 -->
-    <view class="stats-section">
-      <view class="stats-header">
-        <text class="stats-title">合同概览</text>
-      </view>
-      <view class="stats-grid">
-        <view class="stat-card stat-card-primary interactive" bindtap="goToContracts" data-filter="all">
-          <view class="stat-icon-bg">
-            <van-icon name="orders-o" class="stat-icon" />
-          </view>
-          <view class="stat-content">
-            <text class="stat-num">{{stats.totalCount}}</text>
-            <text class="stat-label">合同总数</text>
-          </view>
-          <view class="stat-decoration"></view>
-        </view>
-
-        <view class="stat-card stat-card-warning interactive" bindtap="goToContracts" data-filter="pending">
-          <view class="stat-icon-bg">
-            <van-icon name="clock-o" class="stat-icon" />
-          </view>
-          <view class="stat-content">
-            <text class="stat-num">{{stats.pendingSignCount}}</text>
-            <text class="stat-label">待签署</text>
-          </view>
-          <view class="stat-decoration"></view>
-        </view>
-
-        <view class="stat-card stat-card-success interactive" bindtap="goToContracts" data-filter="signed">
-          <view class="stat-icon-bg">
-            <van-icon name="passed" class="stat-icon" />
-          </view>
-          <view class="stat-content">
-            <text class="stat-num">{{stats.signedCount}}</text>
-            <text class="stat-label">已签署</text>
-          </view>
-          <view class="stat-decoration"></view>
-        </view>
-      </view>
+  <!-- 统计面板 -->
+  <view class="stats-panel card" wx:if="{{userInfo}}">
+    <view class="stats-item" bindtap="onViewAll">
+      <text class="stats-number text-primary">{{stats.totalContracts}}</text>
+      <text class="stats-label">全部合同</text>
     </view>
-
-    <!-- 快捷操作 -->
-    <view class="action-section">
-      <view class="section-header">
-        <text class="section-title">快捷操作</text>
-      </view>
-      <view class="action-buttons">
-        <van-button type="primary" size="large" round block bind:click="goToCreateContract" class="action-btn-primary">
-          <van-icon name="plus" class="btn-icon" />
-          <text class="btn-text">创建合同</text>
-        </van-button>
-        <van-button type="default" size="large" round block bind:click="goToContracts" class="action-btn-secondary">
-          <van-icon name="list" class="btn-icon" />
-          <text class="btn-text-secondary">查看合同列表</text>
-        </van-button>
-      </view>
+    <view class="stats-divider"></view>
+    <view class="stats-item">
+      <text class="stats-number text-warning">{{stats.pendingSignCount}}</text>
+      <text class="stats-label">待签署</text>
     </view>
-
-    <!-- 最近合同 -->
-    <view class="section">
-      <view class="section-header">
-        <text class="section-title">最近操作</text>
-        <view class="section-more interactive" bindtap="goToContracts">
-          <text>查看更多</text>
-          <van-icon name="arrow-right" size="24rpx" />
-        </view>
-      </view>
-
-      <view wx:if="{{recentContracts.length > 0}}" class="contract-list">
-        <view
-          wx:for="{{recentContracts}}"
-          wx:key="id"
-          class="contract-card interactive"
-          bindtap="goToContractDetail"
-          data-id="{{item.id}}"
-        >
-          <view class="contract-status-bar status-color-{{item.status}}"></view>
-          <view class="contract-content">
-            <view class="contract-header">
-              <text class="contract-title text-ellipsis">{{item.title}}</text>
-              <van-tag type="{{item.status === 3 ? 'success' : item.status === 2 ? 'warning' : item.status === 4 ? 'danger' : 'default'}}" size="small">
-                {{item.statusText}}
-              </van-tag>
-            </view>
-            <view class="contract-meta">
-              <van-icon name="clock-o" size="24rpx" class="meta-icon" />
-              <text class="contract-date">{{item.updateTime}}</text>
-            </view>
-          </view>
-          <van-icon name="arrow" class="contract-arrow" size="32rpx" color="var(--text-color-tertiary)" />
-        </view>
-      </view>
-
-      <view wx:else class="empty-state">
-        <view class="empty-illustration">
-          <van-empty description="暂无合同" image="default" />
-        </view>
-        <van-button type="primary" round size="small" bind:click="goToCreateContract" class="create-btn">
-          <van-icon name="plus" class="btn-icon" />
-          立即创建
-        </van-button>
-      </view>
+    <view class="stats-divider"></view>
+    <view class="stats-item">
+      <text class="stats-number text-success">{{stats.completedCount}}</text>
+      <text class="stats-label">已完成</text>
     </view>
-  </block>
+  </view>
 
-  <!-- 乙方视图 -->
-  <block wx:if="{{userInfo && userInfo.role === 'LESSEE'}}">
-    <!-- 待签署提醒 -->
-    <view wx:if="{{pendingSignCount > 0}}" class="pending-notice interactive" bindtap="goToMyContracts">
-      <van-notice-bar text="您有 {{pendingSignCount}} 份合同待签署" left-icon="warning-o" color="var(--warning-color-dark)" background="var(--warning-color-light)" />
+  <!-- 快捷操作 -->
+  <view class="quick-actions" wx:if="{{userInfo}}">
+    <view class="action-btn primary" bindtap="onCreateContract">
+      <text>＋ 创建合同</text>
     </view>
-
-    <!-- 快捷操作 -->
-    <view class="action-section">
-      <view class="section-header">
-        <text class="section-title">我的合同</text>
-      </view>
-      <van-button type="primary" size="large" round block bind:click="goToMyContracts" class="action-btn-primary">
-        <van-icon name="orders-o" class="btn-icon" />
-        <text class="btn-text">查看我的合同</text>
-      </van-button>
+    <view class="action-btn secondary" bindtap="onViewAll">
+      <text>查看全部</text>
     </view>
+  </view>
 
-    <!-- 最近合同 -->
-    <view class="section">
-      <view class="section-header">
-        <text class="section-title">最近操作</text>
-      </view>
+  <!-- 最近合同标题 -->
+  <view class="section-title-bar" wx:if="{{userInfo}}">
+    <text>最近合同</text>
+  </view>
 
-      <view wx:if="{{recentContracts.length > 0}}" class="contract-list">
-        <view
-          wx:for="{{recentContracts}}"
-          wx:key="id"
-          class="contract-card interactive"
-          bindtap="goToContractDetail"
-          data-id="{{item.id}}"
-        >
-          <view class="contract-status-bar status-color-{{item.status}}"></view>
-          <view class="contract-content">
-            <view class="contract-header">
-              <text class="contract-title text-ellipsis">{{item.title}}</text>
-              <van-tag type="{{item.status === 3 ? 'success' : item.status === 2 ? 'warning' : item.status === 4 ? 'danger' : 'default'}}" size="small">
-                {{item.statusText}}
-              </van-tag>
-            </view>
-            <view class="contract-meta">
-              <van-icon name="clock-o" size="24rpx" class="meta-icon" />
-              <text class="contract-date">{{item.updateTime}}</text>
-            </view>
-          </view>
-          <van-icon name="arrow" class="contract-arrow" size="32rpx" color="var(--text-color-tertiary)" />
-        </view>
-      </view>
+  <!-- 合同列表 - 使用 contract-card 组件 -->
+  <view class="contract-list" wx:if="{{recentContracts.length > 0 && !loading}}">
+    <block wx:for="{{recentContracts}}" wx:key="id">
+      <contract-card
+        id="{{item.id}}"
+        title="{{item.title}}"
+        address="{{item.address}}"
+        status="{{item.status}}"
+        monthlyRent="{{item.monthlyRent}}"
+        partyA="{{item.partyA}}"
+        partyB="{{item.partyB}}"
+        createdAt="{{item.createdAt}}"
+        leaseStart="{{item.leaseStart}}"
+        leaseEnd="{{item.leaseEnd}}"
+        bind:tap="onContractTap"
+      />
+    </block>
+  </view>
 
-      <view wx:else class="empty-state">
-        <van-empty description="暂无合同" image="default" />
-      </view>
+  <!-- 加载更多提示 -->
+  <view class="load-more" wx:if="{{!loading && recentContracts.length > 0}}">
+    <text wx:if="{{hasMore}}" class="text-secondary text-sm">上拉加载更多</text>
+    <text wx:else class="text-secondary text-sm">— 没有更多了 —</text>
+  </view>
+
+  <!-- 空状态 - 使用 empty-state 组件 -->
+  <empty-state
+    wx:if="{{!loading && userInfo && recentContracts.length === 0}}"
+    type="no-data"
+    actionText="创建第一个合同"
+    bind:action="onCreateContract"
+  />
+
+  <!-- 骨架屏 -->
+  <view class="skeleton" wx:if="{{loading}}">
+    <view class="skeleton-card" wx:for="{{3}}" wx:key="*this">
+      <view class="skeleton-line long"></view>
+      <view class="skeleton-line medium"></view>
+      <view class="skeleton-line short"></view>
     </view>
-  </block>
-
-  <!-- 加载状态 -->
-  <view class="loading-overlay" wx:if="{{loading}}">
-    <van-loading type="spinner" size="60rpx" color="var(--primary-color)">加载中...</van-loading>
   </view>
 </view>

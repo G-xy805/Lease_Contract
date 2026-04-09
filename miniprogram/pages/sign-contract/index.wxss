@@ -1,6 +1,6 @@
-/* pages/sign-contract/index.wxss - Optimized */
+/* pages/sign-contract/index.wxss - v2 (signRole参数体系) */
 
-.container {
+.page-container {
   min-height: 100vh;
   background: var(--background-color);
   padding: var(--spacing-md);
@@ -8,176 +8,88 @@
   padding-bottom: 180rpx;
 }
 
-/* ========== Contract Info ========== */
-.contract-info {
-  background: var(--card-background);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-lg);
-  margin-bottom: var(--spacing-md);
-  box-shadow: var(--shadow-sm);
-  border: 1rpx solid var(--border-color);
-}
-
-.info-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-  padding-bottom: var(--spacing-md);
-  border-bottom: 2rpx solid var(--border-color);
-}
-
-.contract-title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  flex: 1;
-}
-
-.contract-icon {
-  color: var(--primary-color);
-  flex-shrink: 0;
-}
-
-.contract-title {
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  color: var(--text-color-primary);
-}
-
-.contract-status {
-  font-size: var(--font-size-xs);
-  padding: 6rpx var(--spacing-md);
-  border-radius: var(--radius-full);
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.contract-status.pending,
-.contract-status.pending_sign {
-  background: var(--warning-color-light);
-  color: var(--warning-color);
-}
-
-.contract-status.signed {
-  background: var(--primary-color-light);
-  color: var(--primary-color);
-}
-
-.contract-status.completed {
-  background: var(--success-color-light);
-  color: var(--success-color);
-}
-
-.contract-status.expired {
-  background: var(--danger-color-light);
-  color: var(--danger-color);
-}
-
-.contract-status.cancelled {
-  background: var(--background-color-light);
-  color: var(--text-color-tertiary);
-}
-
-.contract-status.draft {
-  background: var(--background-color-light);
-  color: var(--text-color-secondary);
-}
-
-.info-detail {
+/* ========== Error Banner (⭐ 新增 - 前置检查失败提示) ========== */
+.error-banner {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-xs) 0;
+  justify-content: center;
+  padding: 120rpx var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
-.info-row.highlight-row {
-  background: var(--primary-color-light);
-  margin: var(--spacing-xs) calc(-1 * var(--spacing-md));
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-md);
-}
-
-.info-label-wrapper {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-
-.row-icon {
-  color: var(--text-color-tertiary);
-  flex-shrink: 0;
-}
-
-.row-icon.highlight-icon {
-  color: var(--primary-color);
-}
-
-.label {
-  font-size: var(--font-size-sm);
-  color: var(--text-color-tertiary);
-}
-
-.value {
-  font-size: var(--font-size-sm);
-  color: var(--text-color-primary);
-  text-align: right;
-  max-width: 380rpx;
-}
-
-.value.address-value {
-  font-size: var(--font-size-xs);
-  max-width: 320rpx;
-}
-
-.value.highlight {
-  color: var(--danger-color);
-  font-weight: 700;
-  font-size: var(--font-size-md);
-}
-
-/* ========== Role Hint ========== */
-.role-hint {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  background: var(--primary-color-light);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--spacing-md);
-  border: 1rpx solid var(--primary-color-light);
-}
-
-.role-icon-wrapper {
-  width: 56rpx;
-  height: 56rpx;
+.error-icon-wrapper {
+  width: 160rpx;
+  height: 160rpx;
   border-radius: 50%;
-  background: var(--primary-color);
+  background: var(--danger-color-light);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--card-background);
-  flex-shrink: 0;
+  margin-bottom: var(--spacing-md);
 }
 
-.role-hint text {
-  font-size: var(--font-size-sm);
-  color: var(--text-color-primary);
+.error-text {
+  font-size: var(--font-size-md);
+  color: var(--danger-color);
+  text-align: center;
+  line-height: 1.6;
 }
 
-.role-hint b {
+.btn-return {
+  margin-top: var(--spacing-md);
+  width: 400rpx;
+  height: 88rpx;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  background: var(--primary-color);
+  color: #fff;
+  border-radius: var(--radius-xl);
+  border: none;
+}
+
+/* ========== Loading Spinner ========== */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 0;
+  gap: var(--spacing-lg);
+}
+
+.loading-text {
+  font-size: var(--font-size-md);
+  color: var(--text-color-secondary);
+}
+
+/* ========== Page Header (⭐ 新增 - 根据signRole动态显示) ========== */
+.page-header {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, var(--primary-color-light) 0%, var(--card-background) 100%);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.page-title {
+  display: block;
+  font-size: var(--font-size-2xl);
   font-weight: 700;
   color: var(--primary-color);
+  margin-bottom: var(--spacing-xs);
 }
 
-/* ========== Sign Section ========== */
-.sign-section {
+.page-subtitle {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
+  font-family: monospace;
+}
+
+/* ========== Contract Summary (合同摘要卡片) ========== */
+.card {
   background: var(--card-background);
   border-radius: var(--radius-xl);
   padding: var(--spacing-lg);
@@ -186,26 +98,55 @@
   border: 1rpx solid var(--border-color);
 }
 
-.section-header {
+.contract-summary {
+  background: linear-gradient(135deg, var(--background-color-light) 0%, var(--card-background) 100%);
+}
+
+.summary-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-tertiary);
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: var(--font-size-md);
+  color: var(--text-color-primary);
+  font-weight: 500;
+}
+
+.summary-value.price {
+  color: var(--danger-color);
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+}
+
+/* ========== Signature Area (签名区域) ========== */
+.signature-area {
+  background: var(--card-background);
+}
+
+.section-title-bar {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--text-color-primary);
   margin-bottom: var(--spacing-md);
   padding-bottom: var(--spacing-sm);
   border-bottom: 2rpx solid var(--border-color);
 }
 
-.section-icon {
-  color: var(--primary-color);
-}
-
-.section-title {
-  font-size: var(--font-size-md);
-  font-weight: 700;
-  color: var(--text-color-primary);
-}
-
-/* ========== Sign Toolbar ========== */
+/* ========== Sign Toolbar (签名工具栏) ========== */
 .sign-toolbar {
   display: flex;
   justify-content: space-between;
@@ -304,7 +245,7 @@
   height: 6rpx;
 }
 
-/* ========== Canvas ========== */
+/* ========== Canvas (签名画布) ========== */
 .canvas-wrapper {
   position: relative;
   width: 100%;
@@ -378,7 +319,24 @@
   font-weight: 500;
 }
 
-/* ========== Submit Section ========== */
+/* ========== Notice (注意事项) ========== */
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--warning-color-light);
+  border-radius: var(--radius-lg);
+  margin-top: var(--spacing-md);
+}
+
+.notice-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+  line-height: 1.6;
+}
+
+/* ========== Submit Section (提交按钮区) ========== */
 .submit-section {
   position: fixed;
   bottom: 0;
@@ -394,100 +352,15 @@
   height: 96rpx;
   font-size: var(--font-size-md);
   font-weight: 600;
-  box-shadow: var(--shadow-md);
-}
-
-.submit-btn .btn-icon {
-  margin-right: var(--spacing-sm);
-  font-size: 36rpx;
-}
-
-/* ========== Confirm Dialog ========== */
-.confirm-footer {
-  padding: var(--spacing-md) var(--spacing-lg);
-}
-
-.confirm-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-sm);
-}
-
-.confirm-label-wrapper {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-
-.confirm-icon {
-  color: var(--text-color-tertiary);
-}
-
-.confirm-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-color-tertiary);
-}
-
-.confirm-value {
-  font-size: var(--font-size-sm);
-  color: var(--text-color-primary);
-  font-weight: 600;
-}
-
-/* ========== Result Popup ========== */
-.result-popup {
-  width: 560rpx;
-  padding: var(--spacing-xl);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-md);
-}
-
-.result-icon-wrapper {
-  width: 140rpx;
-  height: 140rpx;
-  border-radius: 50%;
+  border-radius: var(--radius-xl);
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.result-icon-wrapper.success {
-  background: var(--success-color-light);
-  color: var(--success-color);
-}
-
-.result-icon-wrapper.error {
-  background: var(--danger-color-light);
-  color: var(--danger-color);
-}
-
-.result-title {
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  color: var(--text-color-primary);
-  text-align: center;
-}
-
-.result-message {
-  font-size: var(--font-size-sm);
-  color: var(--text-color-secondary);
-  text-align: center;
-  line-height: 1.6;
-}
-
-.result-buttons {
-  display: flex;
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-sm);
-}
-
-.result-btn {
-  flex: 1;
-}
-
-.result-btn.primary {
-  box-shadow: var(--shadow-sm);
+.btn-primary {
+  background: var(--primary-color);
+  color: #fff;
+  box-shadow: var(--shadow-md);
 }

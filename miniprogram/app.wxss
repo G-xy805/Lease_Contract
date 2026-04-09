@@ -38,16 +38,21 @@ page {
   --text-color-tertiary: #6B7280;
   --text-color-placeholder: #9CA3AF;
   --text-color-inverse: #FFFFFF;
+  --text-link: #1989fa;
 
   /* Background Colors */
   --background-color: #FFFFFF;
   --background-color-light: #F9FAFB;
   --background-color-dark: #F3F4F6;
   --card-background: #FFFFFF;
+  --bg-page: #f7f8fa;
+  --bg-card: #ffffff;
+  --bg-hover: #f2f3f5;
 
   /* Border Colors */
   --border-color: #E5E7EB;
   --border-color-dark: #D1D5DB;
+  --border-color-light: #f5f5f5;
 
   /* Spacing - 适度间距 */
   --spacing-xs: 8rpx;
@@ -65,6 +70,9 @@ page {
   --radius-xl: 24rpx;
   --radius-2xl: 32rpx;
   --radius-full: 9999rpx;
+  --radius-none: 0;
+  --radius-round: 50%;
+  --radius-pill: 999rpx;
 
   /* Shadows - 克制的阴影 */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -104,12 +112,44 @@ page {
   --z-modal-backdrop: 40;
   --z-modal: 50;
   --z-toast: 60;
+
+  /* ===== 新增：完整字体系统 ===== */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ===== 新增：扩展Z-Index层级 ===== */
+  --z-base: 1;
+  --z-popover: 60;
+  --z-tooltip: 70;
 }
 
 /* ========== Base Styles ========== */
+
+/* Reset基础样式 */
+view, text, image, button, input, textarea, scroll-view {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* 移除button默认样式 */
+button {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  line-height: inherit;
+}
+button::after {
+  border: none;
+}
+
 page {
   background-color: var(--background-color);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-family: var(--font-family);
   font-size: var(--font-size-md);
   line-height: var(--line-height-normal);
   color: var(--text-color-primary);
@@ -119,6 +159,40 @@ page {
 }
 
 /* ========== Utility Classes ========== */
+
+/* 文字对齐 */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+/* 文字颜色 */
+.text-primary { color: var(--primary-color); }
+.text-secondary { color: var(--text-color-secondary); }
+.text-success { color: var(--success-color); }
+.text-warning { color: var(--warning-color); }
+.text-danger { color: var(--danger-color); }
+.text-gray { color: var(--text-color-tertiary); }
+.text-link { color: var(--text-link); }
+
+/* 字体粗细 */
+.text-bold { font-weight: 600; }
+.text-semibold { font-weight: 500; }
+
+/* 字体大小 */
+.text-lg { font-size: var(--font-size-lg); font-weight: 500; }
+.text-xl { font-size: var(--font-size-xl); font-weight: 600; }
+.text-sm { font-size: var(--font-size-sm); }
+.text-xs { font-size: var(--font-size-xs); }
+
+/* 省略号 */
+.text-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.text-ellipsis-2 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
 
 .container {
   width: 100%;
@@ -161,6 +235,14 @@ page {
 .flex-1 { flex: 1; }
 .flex-shrink-0 { flex-shrink: 0; }
 
+/* 布局辅助 */
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-around { justify-content: space-around; }
+
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 .text-primary { color: var(--primary-color); }
@@ -177,6 +259,7 @@ page {
 .text-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .text-ellipsis-2 { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
+/* 间距 - 方向性 */
 .mt-xs { margin-top: var(--spacing-xs); }
 .mt-sm { margin-top: var(--spacing-sm); }
 .mt-md { margin-top: var(--spacing-md); }
@@ -199,6 +282,16 @@ page {
 .pb-xs { padding-bottom: var(--spacing-xs); }
 .pb-sm { padding-bottom: var(--spacing-sm); }
 .pb-md { padding-bottom: var(--spacing-md); }
+
+/* 间距 - 通用 */
+.m-xs { margin: var(--spacing-xs); }
+.m-sm { margin: var(--spacing-sm); }
+.m-md { margin: var(--spacing-md); }
+.m-lg { margin: var(--spacing-lg); }
+.p-xs { padding: var(--spacing-xs); }
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
 
 .safe-area-top { padding-top: constant(safe-area-inset-top); padding-top: env(safe-area-inset-top); }
 .safe-area-bottom { padding-bottom: constant(safe-area-inset-bottom); padding-bottom: env(safe-area-inset-bottom); }
@@ -357,4 +450,23 @@ page {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ========== 页面容器通用样式 ========== */
+
+/* 页面通用容器 */
+.page-container {
+  min-height: 100vh;
+  background-color: var(--bg-page);
+  padding: var(--spacing-md);
+}
+
+/* 分组标题 */
+.section-title-bar {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color-primary);
+  margin-bottom: var(--spacing-md);
+  padding-left: var(--spacing-sm);
+  border-left: 6rpx solid var(--primary-color);
 }

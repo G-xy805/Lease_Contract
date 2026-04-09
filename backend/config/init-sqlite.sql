@@ -1,6 +1,11 @@
--- SQLite 数据库初始化脚本
--- 用于本地开发测试
+-- ============================================================================
+-- SQLite 数据库初始化脚本（全面优化版）
+-- 版本: 2.0
+-- 说明: 按照合同模板 lease_contract_template.html 的字段顺序重构数据库架构
+--       消除数据冗余、完善外键约束、优化索引策略
+-- ============================================================================
 
+-- ==================== 1. users 表（保持现状微调）====================
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     openid VARCHAR(64) DEFAULT NULL,
@@ -15,192 +20,202 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ==================== 2. contracts 表（重点重构 - 按模板14个分组顺序）====================
 CREATE TABLE IF NOT EXISTS contracts (
-    -- ========== 1. 基础信息 ==========
+    -- ==================== 分组1 - 基础标识 ====================
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     contract_no VARCHAR(64) NOT NULL UNIQUE,
-    title VARCHAR(200) NOT NULL,
-    status INTEGER DEFAULT 1,
-    total_amount DECIMAL(12,2),
+    title VARCHAR(200) NOT NULL DEFAULT '房屋租赁合同',
+    status INTEGER NOT NULL DEFAULT 1 CHECK(status BETWEEN 1 AND 7),
 
-    -- ========== 2. 用户关联 ==========
-    lessor_user_id INTEGER NOT NULL,
-    created_by INTEGER NOT NULL,
+    -- ==================== 分组2 - 用户关联 ====================
+    lessor_user_id INTEGER NOT NULL,                    -- 甲方用户ID
+    lessee_user_id INTEGER,                             -- 乙方用户ID（可为NULL，乙方注册后补充）
+    created_by INTEGER NOT NULL,                        -- 创建人ID
 
-    -- ========== 3. 甲乙双方信息（第一条 + 签署区） ==========
-    partyA_company VARCHAR(200),
-    partyA_phone VARCHAR(20),
-    partyA_contact VARCHAR(100),
-    partyA_phone2 VARCHAR(20),
-    partyA_account VARCHAR(100),
-    partyA_idcard VARCHAR(18),
-    partyB_name VARCHAR(100),
-    partyB_idCard VARCHAR(18),
-    partyB_phone VARCHAR(20),
-    partyB_contact VARCHAR(100),
+    -- ==================== 分组3 - 甲乙双方信息 ====================
+    partyA_company VARCHAR(200),                        -- 甲方公司/姓名
+    partyA_phone VARCHAR(20),                           -- 甲方联系电话
+    partyA_contact VARCHAR(100),                        -- 甲方委托代理人
+    partyA_phone2 VARCHAR(20),                          -- 甲方代理人联系电话
+    partyA_account VARCHAR(100),                        -- 甲方账户信息
+    partyA_idcard VARCHAR(18),                          -- 甲方身份证号
 
-    -- ========== 4. 房屋基本情况（第一条） ==========
-    house_address VARCHAR(255) NOT NULL,
-    house_area DECIMAL(10,2) DEFAULT NULL,
+    partyB_name VARCHAR(100),                           -- 乙方姓名
+    partyB_idCard VARCHAR(18),                          -- 乙方身份证号
+    partyB_phone VARCHAR(20),                           -- 乙方联系电话
+    partyB_contact VARCHAR(100),                        -- 乙方委托代理人
 
-    -- ========== 5. 租赁期限及用途（第二条） ==========
-    lease_start DATE NOT NULL,
-    lease_end DATE NOT NULL,
-    lease_months INTEGER DEFAULT NULL,
-    rent_purpose VARCHAR(50) DEFAULT NULL,
-    advance_notice_days INTEGER DEFAULT NULL,
+    -- ==================== 分组4 - 房屋基本情况 ====================
+    house_address VARCHAR(255) NOT NULL,                -- 房屋地址
+    house_area DECIMAL(10,2),                           -- 建筑面积（平方米）
 
-    -- ========== 6. 租金和支付方式（第三条） ==========
-    monthly_rent DECIMAL(10,2) NOT NULL,
-    year_rent DECIMAL(10,2) DEFAULT NULL,
-    payment_method INTEGER DEFAULT 1,
-    payment_cycle INTEGER DEFAULT NULL,
-    payment_count INTEGER DEFAULT 1,
-    first_payment_amount DECIMAL(10,2) DEFAULT NULL,
-    first_payment_date DATE DEFAULT NULL,
-    second_payment_amount DECIMAL(10,2) DEFAULT NULL,
-    second_payment_date DATE DEFAULT NULL,
-    third_payment_amount DECIMAL(10,2) DEFAULT NULL,
-    fourth_payment_amount DECIMAL(10,2) DEFAULT NULL,
+    -- ==================== 分组5 - 租赁期限及用途 ====================
+    lease_start_year INTEGER,                           -- 租赁开始年份
+    lease_start_month INTEGER,                          -- 租赁开始月份
+    lease_start_day INTEGER,                            -- 租赁开始日期
+    lease_end_year INTEGER,                             -- 租赁结束年份
+    lease_end_month INTEGER,                            -- 租赁结束月份
+    lease_end_day INTEGER,                              -- 租赁结束日期
+    lease_months INTEGER,                               -- 租赁总月数
+    rent_purpose VARCHAR(50),                           -- 租赁用途
+    advance_notice_days INTEGER,                        -- 提前通知天数
 
-    -- ========== 7. 押金信息（第四条） ==========
-    deposit DECIMAL(10,2) DEFAULT 0,
-    deposit_chinese VARCHAR(100) DEFAULT NULL,
+    -- ==================== 分组6 - 租金和支付方式 ====================
+    monthly_rent DECIMAL(10,2) NOT NULL,                -- 月租金
+    year_rent DECIMAL(10,2),                            -- 年租金/总租金
+    payment_method INTEGER DEFAULT 1 CHECK(payment_method BETWEEN 1 AND 4),  -- 支付方式（1-月付 2-季付 3-半年付 4-年付）
+    payment_cycle INTEGER,                              -- 支付周期（月数）
+    payment_count INTEGER DEFAULT 1,                    -- 支付次数
+    first_payment_amount DECIMAL(10,2),                 -- 第一次支付金额
+    second_payment_amount DECIMAL(10,2),                -- 第二次支付金额
+    third_payment_amount DECIMAL(10,2),                 -- 第三次支付金额
+    fourth_payment_amount DECIMAL(10,2),                -- 第四次支付金额
+    partyA_account_for_rent VARCHAR(100),               -- 第三条第3款收款账户
 
-    -- ========== 8. 费用约定（第五条） ==========
-    fee_water BOOLEAN DEFAULT TRUE,
-    fee_electric BOOLEAN DEFAULT TRUE,
-    fee_gas BOOLEAN DEFAULT TRUE,
-    fee_tv BOOLEAN DEFAULT FALSE,
-    fee_network BOOLEAN DEFAULT FALSE,
-    fee_property BOOLEAN DEFAULT FALSE,
-    fee_heating BOOLEAN DEFAULT FALSE,
-    fee_items TEXT,
+    -- ==================== 分组7 - 押金信息 ====================
+    deposit DECIMAL(10,2) DEFAULT 0,                    -- 押金金额
+    deposit_chinese VARCHAR(100),                       -- 押金大写
 
-    -- ========== 9. 居间服务（第六条） ==========
-    intermediary_name VARCHAR(100),
-    partyA_commission DECIMAL(10,2) DEFAULT NULL,
-    partyA_commission_chinese VARCHAR(100) DEFAULT NULL,
-    partyB_commission DECIMAL(10,2) DEFAULT NULL,
-    partyB_commission_chinese VARCHAR(100) DEFAULT NULL,
+    -- ==================== 分组8 - 费用约定（JSON格式）====================
+    fee_items TEXT,                                     -- 费用项目JSON（替代原来的7个BOOLEAN字段）
 
-    -- ========== 10. 水电表读数（物品清单区） ==========
-    electricity_meter VARCHAR(50) DEFAULT NULL,
-    water_meter VARCHAR(50) DEFAULT NULL,
-    gas_meter VARCHAR(50) DEFAULT NULL,
+    -- ==================== 分组9 - 居间服务 ====================
+    intermediary_name VARCHAR(100),                     -- 中介方名称
+    partyA_commission DECIMAL(10,2),                    -- 甲方佣金
+    partyA_commission_chinese VARCHAR(100),             -- 甲方佣金大写
+    partyB_commission DECIMAL(10,2),                    -- 乙方佣金
+    partyB_commission_chinese VARCHAR(100),             -- 乙方佣金大写
 
-    -- ========== 11. 物品清单（JSON格式） ==========
-    inventory_items TEXT,
+    -- ==================== 分组10 - 物品清单及水电表 ====================
+    inventory_items TEXT,                               -- 物品清单JSON
+    electricity_meter VARCHAR(50),                      -- 电表读数
+    water_meter VARCHAR(50),                            -- 水表读数
+    gas_meter VARCHAR(50),                              -- 燃气表读数
 
-    -- ========== 12. 备注及其他约定（第十四条） ==========
-    remark TEXT DEFAULT NULL,
+    -- ==================== 分组11 - 备注及其他约定 ====================
+    remark TEXT,                                        -- 备注及其他约定
 
-    -- ========== 13. 签署状态和时间戳 ==========
-    partyA_sign_status INTEGER DEFAULT 0,
-    partyB_sign_status INTEGER DEFAULT 0,
-    partyA_signed_at DATETIME DEFAULT NULL,
-    partyB_signed_at DATETIME DEFAULT NULL,
-    partyA_signature TEXT DEFAULT NULL,
-    partyB_signature TEXT DEFAULT NULL,
-    sign_date DATE DEFAULT NULL,
+    -- ==================== 分组12 - 合同文档 ====================
+    contract_pdf_path VARCHAR(255),                     -- 合同PDF路径
 
-    -- ========== 14. 邀请码相关 ==========
-    invite_code VARCHAR(64) DEFAULT NULL,
-    invite_expires_at DATETIME DEFAULT NULL,
+    -- ==================== 分组13 - 状态和时间戳 ====================
+    effective_at DATETIME,                              -- 生效时间
+    expires_at DATETIME,                                -- 过期时间
+    reject_reason VARCHAR(255),                         -- 拒绝原因
+    sign_date DATE,                                     -- 签约日期
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,      -- 创建时间
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,      -- 更新时间
 
-    -- ========== 15. 其他状态字段 ==========
-    reject_reason VARCHAR(255) DEFAULT NULL,
-    effective_at DATETIME DEFAULT NULL,
-    expires_at DATETIME DEFAULT NULL,
-    contract_pdf_path VARCHAR(255) DEFAULT NULL,
-
-    -- ========== 16. 时间戳 ==========
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    -- ========== 外键约束 ==========
+    -- ==================== 外键约束 ====================
     FOREIGN KEY (lessor_user_id) REFERENCES users(id),
+    FOREIGN KEY (lessee_user_id) REFERENCES users(id),
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
-CREATE INDEX IF NOT EXISTS idx_users_openid ON users(openid);
-CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
-CREATE INDEX IF NOT EXISTS idx_contracts_no ON contracts(contract_no);
-CREATE INDEX IF NOT EXISTS idx_contracts_status ON contracts(status);
-CREATE INDEX IF NOT EXISTS idx_contracts_created_by ON contracts(created_by);
-CREATE INDEX IF NOT EXISTS idx_contracts_lessor_user_id ON contracts(lessor_user_id);
-CREATE INDEX IF NOT EXISTS idx_contracts_partyB_phone ON contracts(partyB_phone);
-CREATE INDEX IF NOT EXISTS idx_contracts_invite_code ON contracts(invite_code);
-CREATE INDEX IF NOT EXISTS idx_contracts_effective ON contracts(effective_at);
-CREATE INDEX IF NOT EXISTS idx_contracts_expires ON contracts(expires_at);
-
--- 签署邀请表
-CREATE TABLE IF NOT EXISTS sign_invitations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    contract_id INTEGER NOT NULL,
-    invitation_no VARCHAR(64) NOT NULL UNIQUE,
-    invite_type INTEGER NOT NULL,
-    invite_name VARCHAR(100) NOT NULL,
-    invite_phone VARCHAR(20) NOT NULL,
-    invite_email VARCHAR(100),
-    receiver_type INTEGER NOT NULL,
-    receiver_name VARCHAR(100) NOT NULL,
-    receiver_phone VARCHAR(20) NOT NULL,
-    receiver_email VARCHAR(100),
-    status INTEGER DEFAULT 1,
-    expires_at DATETIME NOT NULL,
-    accepted_at DATETIME,
-    refused_reason VARCHAR(255),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (contract_id) REFERENCES contracts(id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_sign_invitations_contract_id ON sign_invitations(contract_id);
-CREATE INDEX IF NOT EXISTS idx_sign_invitations_invitation_no ON sign_invitations(invitation_no);
-CREATE INDEX IF NOT EXISTS idx_sign_invitations_receiver_phone ON sign_invitations(receiver_phone);
-CREATE INDEX IF NOT EXISTS idx_sign_invitations_status ON sign_invitations(status);
-
--- 合同模板表
-CREATE TABLE IF NOT EXISTS contract_templates (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(200) NOT NULL,
-    code VARCHAR(64) NOT NULL UNIQUE,
-    description TEXT DEFAULT NULL,
-    html_content TEXT DEFAULT NULL,
-    field_mapping TEXT DEFAULT NULL,
-    category VARCHAR(50) DEFAULT 'standard',
-    status INTEGER DEFAULT 1,
-    version VARCHAR(20) DEFAULT '1.0',
-    created_by INTEGER DEFAULT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (created_by) REFERENCES users(id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_contract_templates_code ON contract_templates(code);
-CREATE INDEX IF NOT EXISTS idx_contract_templates_status ON contract_templates(status);
-CREATE INDEX IF NOT EXISTS idx_contract_templates_category ON contract_templates(category);
-
--- 签署记录表
+-- ==================== 3. signatures 表（优化版）====================
 CREATE TABLE IF NOT EXISTS signatures (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    contract_id INTEGER NOT NULL,
-    user_id INTEGER DEFAULT NULL,
-    sign_type VARCHAR(20) NOT NULL,
-    sign_name VARCHAR(100) NOT NULL,
-    sign_phone VARCHAR(20) DEFAULT NULL,
-    signature_data TEXT NOT NULL,
-    ip_address VARCHAR(50) DEFAULT NULL,
-    device_info VARCHAR(255) DEFAULT NULL,
-    sign_location VARCHAR(255) DEFAULT NULL,
-    signed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    contract_id INTEGER NOT NULL,                       -- 关联合同ID
+    user_id INTEGER,                                    -- 签署用户ID
+    sign_role VARCHAR(10) NOT NULL CHECK(sign_role IN ('LESSOR', 'LESSEE')),  -- 签署角色（甲方/乙方）
+    sign_name VARCHAR(100) NOT NULL,                    -- 签署人姓名
+    sign_phone VARCHAR(20),                             -- 签署人电话
+    signature_data TEXT NOT NULL,                       -- 签名图片数据（Base64或路径）
+    sign_status INTEGER DEFAULT 1 CHECK(sign_status BETWEEN 0 AND 2),  -- 签署状态（0:待确认 1:已确认 2:已撤销）
+    ip_address VARCHAR(50),                             -- 签署时IP地址
+    device_info VARCHAR(255),                           -- 设备信息
+    sign_location VARCHAR(255),                         -- 签署位置
+    signed_at DATETIME DEFAULT CURRENT_TIMESTAMP,       -- 签署时间
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,      -- 创建时间
+
+    -- ==================== 外键约束 ====================
     FOREIGN KEY (contract_id) REFERENCES contracts(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+-- ==================== 4. sign_invitations 表（简化为18个字段）====================
+CREATE TABLE IF NOT EXISTS sign_invitations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contract_id INTEGER NOT NULL,                       -- 关联合同ID
+    invitation_no VARCHAR(64) NOT NULL UNIQUE,          -- 邀请编号（唯一）
+    invite_code VARCHAR(64) NOT NULL UNIQUE,            -- 邀请码（唯一，用于分享链接）
+    inviter_id INTEGER NOT NULL,                        -- 邀请人ID
+    invitee_name VARCHAR(100) NOT NULL,                 -- 被邀请人姓名
+    invitee_phone VARCHAR(20) NOT NULL,                 -- 被邀请人手机号
+    invitee_role VARCHAR(10) NOT NULL CHECK(invitee_role IN ('LESSOR', 'LESSEE')),  -- 被邀请人角色
+    status INTEGER DEFAULT 0 CHECK(status BETWEEN 0 AND 3),  -- 邀请状态（0:待发送 1:已发送 2:已接受 3:已拒绝）
+    expires_at DATETIME NOT NULL,                       -- 过期时间
+    accepted_at DATETIME,                               -- 接受时间
+    refused_reason VARCHAR(255),                        -- 拒绝原因
+    view_count INTEGER DEFAULT 0,                       -- 查看次数
+    last_viewed_at DATETIME,                            -- 最后查看时间
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,      -- 创建时间
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,      -- 更新时间
+
+    -- ==================== 外键约束 ====================
+    FOREIGN KEY (contract_id) REFERENCES contracts(id),
+    FOREIGN KEY (inviter_id) REFERENCES users(id)
+);
+
+-- ==================== 5. contract_templates 表（保持不变）====================
+CREATE TABLE IF NOT EXISTS contract_templates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(200) NOT NULL,                         -- 模板名称
+    code VARCHAR(64) NOT NULL UNIQUE,                   -- 模板编码（唯一）
+    description TEXT DEFAULT NULL,                      -- 模板描述
+    html_content TEXT DEFAULT NULL,                     -- HTML内容
+    field_mapping TEXT DEFAULT NULL,                    -- 字段映射配置（JSON格式）
+    category VARCHAR(50) DEFAULT 'standard',            -- 模板分类
+    status INTEGER DEFAULT 1,                           -- 状态（1:启用 0:禁用）
+    version VARCHAR(20) DEFAULT '1.0',                  -- 版本号
+    created_by INTEGER DEFAULT NULL,                    -- 创建人ID
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,      -- 创建时间
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,      -- 更新时间
+
+    -- ==================== 外键约束 ====================
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+-- ============================================================================
+-- 索引创建（包括复合索引 - 性能优化）
+-- ============================================================================
+
+-- ==================== users 表索引 ====================
+CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+CREATE INDEX IF NOT EXISTS idx_users_openid ON users(openid);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
+-- ==================== contracts 表索引（优化后）====================
+-- 单列索引
+CREATE INDEX IF NOT EXISTS idx_contracts_no ON contracts(contract_no);
+CREATE INDEX IF NOT EXISTS idx_contracts_status ON contracts(status);
+CREATE INDEX IF NOT EXISTS idx_contracts_created_by ON contracts(created_by);
+CREATE INDEX IF NOT EXISTS idx_contracts_lessor_user_id ON contracts(lessor_user_id);
+CREATE INDEX IF NOT EXISTS idx_contracts_lessee_user_id ON contracts(lessee_user_id);
+CREATE INDEX IF NOT EXISTS idx_contracts_partyB_phone ON contracts(partyB_phone);
+CREATE INDEX IF NOT EXISTS idx_contracts_effective ON contracts(effective_at);
+CREATE INDEX IF NOT EXISTS idx_contracts_expires ON contracts(expires_at);
+
+-- 复合索引（性能优化 - 常用查询场景）
+CREATE INDEX IF NOT EXISTS idx_contracts_status_created_by ON contracts(status, created_by);
+CREATE INDEX IF NOT EXISTS idx_contracts_status_lessor ON contracts(status, lessor_user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_contracts_status_expires ON contracts(status, expires_at);
+
+-- ==================== signatures 表索引 ====================
 CREATE INDEX IF NOT EXISTS idx_signatures_contract_id ON signatures(contract_id);
 CREATE INDEX IF NOT EXISTS idx_signatures_user_id ON signatures(user_id);
 CREATE INDEX IF NOT EXISTS idx_signatures_signed_at ON signatures(signed_at);
+CREATE INDEX IF NOT EXISTS idx_signatures_contract_role ON signatures(contract_id, sign_role);
+
+-- ==================== sign_invitations 表索引 ====================
+CREATE INDEX IF NOT EXISTS idx_invite_contract_id ON sign_invitations(contract_id);
+CREATE INDEX IF NOT EXISTS idx_invite_invitation_no ON sign_invitations(invitation_no);
+CREATE INDEX IF NOT EXISTS idx_invite_code ON sign_invitations(invite_code);
+CREATE INDEX IF NOT EXISTS idx_invite_invitee_phone ON sign_invitations(invitee_phone);
+CREATE INDEX IF NOT EXISTS idx_invite_status ON sign_invitations(status);
+CREATE INDEX IF NOT EXISTS idx_invite_contract_status ON sign_invitations(contract_id, status);
+
+-- ==================== contract_templates 表索引 ====================
+CREATE INDEX IF NOT EXISTS idx_templates_code ON contract_templates(code);
+CREATE INDEX IF NOT EXISTS idx_templates_status ON contract_templates(status);
