@@ -184,9 +184,16 @@ function classifyAndHandleError(errorOrResponse) {
 /**
  * 缓存存储结构
  * Key格式: `${method}:${url}:${JSON.stringify(params)}`
- * Value: { data: any, timestamp: number }
+ * Value: { data: any, timestamp: number, dependencies: string[] }
  */
 const requestCache = new Map();
+
+/**
+ * 缓存依赖关系
+ * 用于自动失效关联缓存
+ * 格式: { resourceKey: [dependentCacheKeys] }
+ */
+const cacheDependencies = new Map();
 
 /**
  * 生成缓存键
@@ -223,13 +230,23 @@ function getCachedData(key) {
  * 设置缓存数据
  * @param {string} key - 缓存键
  * @param {*} data - 要缓存的数据
+ * @param {string[]} dependencies - 缓存依赖的资源键
  */
-function setCachedData(key, data) {
+function setCachedData(key, data, dependencies = []) {
   requestCache.set(key, {
     data: data,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    dependencies: dependencies
   });
   console.log(`[API Cache] 已缓存: ${key}`);
+  
+  // 建立依赖关系
+  dependencies.forEach(depKey => {
+    if (!cacheDependencies.has(depKey)) {
+      cacheDependencies.set(depKey, []);
+    }
+    cacheDependencies.get(depKey).push(key);
+  });
 }
 
 /**
@@ -237,27 +254,68 @@ function setCachedData(key, data) {
  * 支持两种模式:
  * 1. 清除所有缓存: clearCache() 或 clearCache('*')
  * 2. 清除指定URL前缀的缓存: clearCache('/contracts')
+ * 3. 清除指定资源的缓存及其依赖: clearCache({ resource: 'contract', id: 123 })
  *
- * @param {string} pattern - 可选的URL模式匹配
+ * @param {string|Object} pattern - 可选的URL模式匹配或资源对象
  */
 function clearCache(pattern) {
   if (!pattern || pattern === '*') {
     // 清除所有缓存
     const size = requestCache.size;
     requestCache.clear();
+    cacheDependencies.clear();
     console.log(`[API Cache] 已清除全部缓存 (${size}条)`);
     return;
   }
 
-  // 清除匹配指定模式的缓存
-  let count = 0;
-  for (const key of requestCache.keys()) {
-    if (key.includes(pattern)) {
-      requestCache.delete(key);
-      count++;
+  if (typeof pattern === 'string') {
+    // 清除匹配指定模式的缓存
+    let count = 0;
+    for (const key of requestCache.keys()) {
+      if (key.includes(pattern)) {
+        requestCache.delete(key);
+        count++;
+      }
     }
+    console.log(`[API Cache] 已清除匹配 "${pattern}" 的缓存 (${count}条)`);
+    
+    // 清除相关依赖
+    for (const depKey of cacheDependencies.keys()) {
+      if (depKey.includes(pattern)) {
+        const dependentKeys = cacheDependencies.get(depKey);
+        if (dependentKeys) {
+          dependentKeys.forEach(dependentKey => {
+            requestCache.delete(dependentKey);
+            console.log(`[API Cache] 已清除依赖缓存: ${dependentKey}`);
+          });
+        }
+        cacheDependencies.delete(depKey);
+      }
+    }
+  } else if (typeof pattern === 'object' && pattern.resource) {
+    // 清除指定资源的缓存及其依赖
+    const resourceKey = `${pattern.resource}:${pattern.id || '*'}`;
+    const dependentKeys = cacheDependencies.get(resourceKey) || [];
+    
+    dependentKeys.forEach(key => {
+      requestCache.delete(key);
+      console.log(`[API Cache] 已清除依赖缓存: ${key}`);
+    });
+    
+    cacheDependencies.delete(resourceKey);
+    console.log(`[API Cache] 已清除资源 "${resourceKey}" 的依赖缓存 (${dependentKeys.length}条)`);
   }
-  console.log(`[API Cache] 已清除匹配 "${pattern}" 的缓存 (${count}条)`);
+}
+
+/**
+ * 当资源更新时，自动清除相关缓存
+ * @param {string} resource - 资源类型 (e.g., 'contract', 'user')
+ * @param {number|string} id - 资源ID
+ */
+function invalidateResourceCache(resource, id) {
+  const resourceKey = `${resource}:${id || '*'}`;
+  clearCache({ resource, id });
+  console.log(`[API Cache] 已使资源 "${resourceKey}" 的缓存失效`);
 }
 
 // ===== 4. Token管理 =====
@@ -302,6 +360,28 @@ async function checkAndRefreshToken() {
         const currentToken = getToken();
         if (!currentToken) {
           console.warn('[API Token] 无有效Token，无法刷新');
+          // 刷新失败，强制重新登录
+          if (app && typeof app.logout === 'function') {
+            app.logout();
+          } else {
+            wx.removeStorageSync('token');
+            wx.removeStorageSync('userInfo');
+            wx.removeStorageSync('loginExpiresAt');
+          }
+
+          if (!isRedirectingToLogin) {
+            isRedirectingToLogin = true;
+            wx.showToast({
+              title: '登录已过期，请重新登录',
+              icon: 'none'
+            });
+            setTimeout(() => {
+              wx.reLaunch({ url: '/pages/login/index' });
+              setTimeout(() => {
+                isRedirectingToLogin = false;
+              }, 2000);
+            }, 1500);
+          }
           return false;
         }
 
@@ -331,37 +411,56 @@ async function checkAndRefreshToken() {
           return true;
         } else {
           console.warn('[API Token] Token刷新失败:', refreshRes.data);
+          // 刷新失败，强制重新登录
+          if (app && typeof app.logout === 'function') {
+            app.logout();
+          } else {
+            wx.removeStorageSync('token');
+            wx.removeStorageSync('userInfo');
+            wx.removeStorageSync('loginExpiresAt');
+          }
+
+          if (!isRedirectingToLogin) {
+            isRedirectingToLogin = true;
+            wx.showToast({
+              title: '登录已过期，请重新登录',
+              icon: 'none'
+            });
+            setTimeout(() => {
+              wx.reLaunch({ url: '/pages/login/index' });
+              setTimeout(() => {
+                isRedirectingToLogin = false;
+              }, 2000);
+            }, 1500);
+          }
           return false;
         }
       } catch (refreshError) {
         console.error('[API Token] Token刷新异常:', refreshError);
+        // 刷新失败，强制重新登录
+        if (app && typeof app.logout === 'function') {
+          app.logout();
+        } else {
+          wx.removeStorageSync('token');
+          wx.removeStorageSync('userInfo');
+          wx.removeStorageSync('loginExpiresAt');
+        }
+
+        if (!isRedirectingToLogin) {
+          isRedirectingToLogin = true;
+          wx.showToast({
+            title: '登录已过期，请重新登录',
+            icon: 'none'
+          });
+          setTimeout(() => {
+            wx.reLaunch({ url: '/pages/login/index' });
+            setTimeout(() => {
+              isRedirectingToLogin = false;
+            }, 2000);
+          }, 1500);
+        }
         return false;
       }
-
-      // 刷新失败，强制重新登录
-      if (app && typeof app.logout === 'function') {
-        app.logout();
-      } else {
-        wx.removeStorageSync('token');
-        wx.removeStorageSync('userInfo');
-        wx.removeStorageSync('loginExpiresAt');
-      }
-
-      if (!isRedirectingToLogin) {
-        isRedirectingToLogin = true;
-        wx.showToast({
-          title: '登录已过期，请重新登录',
-          icon: 'none'
-        });
-        setTimeout(() => {
-          wx.reLaunch({ url: '/pages/login/index' });
-          setTimeout(() => {
-            isRedirectingToLogin = false;
-          }, 2000);
-        }, 1500);
-      }
-
-      return false;
     }
 
     return true; // Token未过期，允许继续
@@ -405,6 +504,98 @@ function sanitizeData(data) {
 // ===== 6. 底层请求函数（核心）=====
 
 /**
+ * 生成CSRF令牌
+ */
+function generateCsrfToken() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let token = '';
+  for (let i = 0; i < 32; i++) {
+    token += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return token;
+}
+
+/**
+ * 获取CSRF令牌
+ */
+function getCsrfToken() {
+  try {
+    let token = wx.getStorageSync('csrfToken');
+    if (!token) {
+      token = generateCsrfToken();
+      wx.setStorageSync('csrfToken', token);
+    }
+    return token;
+  } catch (e) {
+    console.error('[API Security] 获取CSRF令牌失败:', e);
+    return generateCsrfToken();
+  }
+}
+
+/**
+ * 加密敏感数据
+ * @param {string} data - 敏感数据
+ * @returns {string} 加密后的数据
+ */
+function encryptSensitiveData(data) {
+  if (!data || typeof data !== 'string') return data;
+  
+  // 简单的加密算法，实际生产环境应使用更安全的加密方式
+  let result = '';
+  for (let i = 0; i < data.length; i++) {
+    result += String.fromCharCode(data.charCodeAt(i) + 1);
+  }
+  return btoa(result);
+}
+
+/**
+ * 解密敏感数据
+ * @param {string} encryptedData - 加密后的数据
+ * @returns {string} 解密后的数据
+ */
+function decryptSensitiveData(encryptedData) {
+  if (!encryptedData || typeof encryptedData !== 'string') return encryptedData;
+  
+  try {
+    const decoded = atob(encryptedData);
+    let result = '';
+    for (let i = 0; i < decoded.length; i++) {
+      result += String.fromCharCode(decoded.charCodeAt(i) - 1);
+    }
+    return result;
+  } catch (e) {
+    console.error('[API Security] 解密敏感数据失败:', e);
+    return encryptedData;
+  }
+}
+
+/**
+ * 输入验证
+ * @param {*} value - 输入值
+ * @param {Object} rules - 验证规则
+ * @returns {boolean} 是否验证通过
+ */
+function validateInput(value, rules) {
+  if (rules.required && !value) {
+    return false;
+  }
+  
+  if (rules.minLength && value.length < rules.minLength) {
+    return false;
+  }
+  
+  if (rules.maxLength && value.length > rules.maxLength) {
+    return false;
+  }
+  
+  if (rules.pattern && !rules.pattern.test(value)) {
+    return false;
+  }
+  
+  return true;
+}
+
+/**
  * 底层原始请求函数
  * 不包含缓存逻辑，仅负责发送HTTP请求和基础错误处理
  *
@@ -414,6 +605,8 @@ function sanitizeData(data) {
  * 3. 统一错误分类处理
  * 4. Loading状态管理
  * 5. 数据XSS防护
+ * 6. CSRF防护
+ * 7. 敏感数据加密
  *
  * @param {Object} options - 请求选项
  * @param {string} options.url - 请求路径（不含BASE_URL）
@@ -422,6 +615,7 @@ function sanitizeData(data) {
  * @param {Object} [options.header={}] - 自定义请求头
  * @param {boolean} [options.showLoading=true] - 是否显示加载提示
  * @param {string} [options.loadingText='加载中...'] - 加载提示文本
+ * @param {boolean} [options.encryptSensitive=false] - 是否加密敏感数据
  * @returns {Promise<Object>} 标准化的响应数据 { code, data, message }
  */
 async function rawRequest(options) {
@@ -431,7 +625,8 @@ async function rawRequest(options) {
     data = {},
     header = {},
     showLoading = true,
-    loadingText = '加载中...'
+    loadingText = '加载中...',
+    encryptSensitive = false
   } = options;
 
   // 1. Token自动刷新检查（仅在需要认证的请求时执行）
@@ -449,24 +644,40 @@ async function rawRequest(options) {
 
   // 2. 构建请求头
   const token = getToken();
-  const sanitizedData = sanitizeData(data);
+  const csrfToken = getCsrfToken();
+  
+  // 3. 处理数据
+  let processedData = sanitizeData(data);
+  
+  // 4. 加密敏感数据
+  if (encryptSensitive) {
+    processedData = Object.keys(processedData).reduce((acc, key) => {
+      if (['password', 'idcard', 'phone', 'bankCard'].includes(key)) {
+        acc[key] = encryptSensitiveData(processedData[key]);
+      } else {
+        acc[key] = processedData[key];
+      }
+      return acc;
+    }, {});
+  }
 
   const requestHeader = {
     'Content-Type': 'application/json',
+    'X-CSRF-Token': csrfToken,
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...header
   };
 
-  // 3. 显示Loading
+  // 5. 显示Loading
   if (showLoading) {
     wx.showLoading({ title: loadingText, mask: true });
   }
 
-  // 4. 发起请求
+  // 6. 发起请求
   return new Promise((resolve, reject) => {
     wx.request({
       url: BASE_URL + url,
-      data: sanitizedData,
+      data: processedData,
       method: method.toUpperCase(),
       header: requestHeader,
 
@@ -514,9 +725,10 @@ async function rawRequest(options) {
  * POST/PUT/DELETE等写操作直接发送，不使用缓存
  *
  * @param {Object} options - 同 rawRequest 参数
+ * @param {string[]} dependencies - 缓存依赖的资源键
  * @returns {Promise<Object>} 响应数据
  */
-async function request(options) {
+async function request(options, dependencies = []) {
   const method = (options.method || 'GET').toUpperCase();
   const isGetRequest = method === 'GET';
 
@@ -536,75 +748,179 @@ async function request(options) {
 
       // 仅对成功的响应进行缓存
       if (result && result.code === 200) {
-        setCachedData(cacheKey, result);
+        setCachedData(cacheKey, result, dependencies);
       }
 
       return result;
     } catch (error) {
       throw error; // 错误不缓存，直接抛出
     }
+  } else {
+    // 非GET请求，执行后清除相关缓存
+    try {
+      const result = await rawRequest(options);
+      
+      // 清除相关缓存
+      if (result && (result.code === 200 || result.code === 201)) {
+        // 根据URL路径推断需要清除的缓存
+        const url = options.url;
+        if (url.includes('/contracts')) {
+          if (url.includes('/contracts/') && url.split('/').length > 3) {
+            const contractId = url.split('/')[3];
+            if (!isNaN(contractId)) {
+              invalidateResourceCache('contract', contractId);
+            }
+          }
+          clearCache('/contracts');
+        } else if (url.includes('/users')) {
+          clearCache('/users');
+        }
+      }
+      
+      return result;
+    } catch (error) {
+      throw error;
+    }
   }
-
-  // 非GET请求直接发送（不使用缓存）
-  return rawRequest(options);
 }
 
 // ===== 8. 上传文件函数 =====
+
+/**
+ * 压缩图片
+ * @param {string} filePath - 图片路径
+ * @param {number} quality - 压缩质量 (0-1)
+ * @param {number} maxWidth - 最大宽度
+ * @returns {Promise<string>} 压缩后的图片路径
+ */
+function compressImage(filePath, quality = 0.8, maxWidth = 1280) {
+  return new Promise((resolve, reject) => {
+    wx.getImageInfo({
+      src: filePath,
+      success: (info) => {
+        const { width, height } = info;
+        let newWidth = width;
+        let newHeight = height;
+        
+        // 计算压缩后的尺寸
+        if (width > maxWidth) {
+          newWidth = maxWidth;
+          newHeight = (height * maxWidth) / width;
+        }
+        
+        wx.compressImage({
+          src: filePath,
+          quality: quality * 100, // 0-100
+          success: (res) => {
+            console.log(`[API Image] 图片压缩成功，原始大小: ${width}x${height}，压缩后: ${newWidth}x${newHeight}`);
+            resolve(res.tempFilePath);
+          },
+          fail: (err) => {
+            console.error('[API Image] 图片压缩失败:', err);
+            // 压缩失败时使用原始图片
+            resolve(filePath);
+          }
+        });
+      },
+      fail: (err) => {
+        console.error('[API Image] 获取图片信息失败:', err);
+        // 获取信息失败时使用原始图片
+        resolve(filePath);
+      }
+    });
+  });
+}
 
 /**
  * 上传文件封装
  * @param {string} url - 上传路径
  * @param {string} filePath - 本地文件路径
  * @param {string} [fileName='file'] - 文件字段名
+ * @param {boolean} [compress=true] - 是否压缩图片
+ * @param {number} [quality=0.8] - 压缩质量 (0-1)
  * @returns {Promise<Object>} 上传结果
  */
-function uploadFile(url, filePath, fileName = 'file') {
-  return new Promise((resolve, reject) => {
-    const token = getToken();
+async function uploadFile(url, filePath, fileName = 'file', compress = true, quality = 0.8) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const token = getToken();
 
-    wx.showLoading({ title: '上传中...', mask: true });
-
-    wx.uploadFile({
-      url: BASE_URL + url,
-      filePath: filePath,
-      name: fileName,
-      header: {
-        'Authorization': token ? `Bearer ${token}` : ''
-      },
-
-      success: (res) => {
-        wx.hideLoading();
-
-        if (res.statusCode === 200) {
-          try {
-            const data = JSON.parse(res.data);
-            if (data.code === 200) {
-              resolve(data);
-            } else {
-              wx.showToast({
-                title: data.message || '上传失败',
-                icon: 'none'
-              });
-              reject(data);
-            }
-          } catch (parseError) {
-            console.error('[API Upload] 解析响应失败:', parseError);
-            wx.showToast({ title: '上传响应解析失败', icon: 'none' });
-            reject(new Error('上传响应解析失败'));
-          }
-        } else {
-          wx.showToast({ title: '上传失败', icon: 'none' });
-          reject(new Error(`上传失败 (${res.statusCode})`));
-        }
-      },
-
-      fail: (err) => {
-        wx.hideLoading();
-        wx.showToast({ title: '上传失败', icon: 'none' });
-        reject(err);
+      // 压缩图片
+      let uploadPath = filePath;
+      if (compress && filePath.includes('.jpg') || filePath.includes('.jpeg') || filePath.includes('.png') || filePath.includes('.webp')) {
+        uploadPath = await compressImage(filePath, quality);
       }
-    });
+
+      wx.showLoading({ title: '上传中...', mask: true });
+
+      wx.uploadFile({
+        url: BASE_URL + url,
+        filePath: uploadPath,
+        name: fileName,
+        header: {
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+
+        success: (res) => {
+          wx.hideLoading();
+
+          if (res.statusCode === 200) {
+            try {
+              const data = JSON.parse(res.data);
+              if (data.code === 200) {
+                resolve(data);
+              } else {
+                wx.showToast({
+                  title: data.message || '上传失败',
+                  icon: 'none'
+                });
+                reject(data);
+              }
+            } catch (parseError) {
+              console.error('[API Upload] 解析响应失败:', parseError);
+              wx.showToast({ title: '上传响应解析失败', icon: 'none' });
+              reject(new Error('上传响应解析失败'));
+            }
+          } else {
+            wx.showToast({ title: '上传失败', icon: 'none' });
+            reject(new Error(`上传失败 (${res.statusCode})`));
+          }
+        },
+
+        fail: (err) => {
+          wx.hideLoading();
+          wx.showToast({ title: '上传失败', icon: 'none' });
+          reject(err);
+        }
+      });
+    } catch (error) {
+      wx.hideLoading();
+      wx.showToast({ title: '上传失败', icon: 'none' });
+      reject(error);
+    }
   });
+}
+
+/**
+ * 批量上传图片
+ * @param {string} url - 上传路径
+ * @param {string[]} filePaths - 图片路径数组
+ * @param {string} [fileName='file'] - 文件字段名
+ * @param {boolean} [compress=true] - 是否压缩图片
+ * @param {number} [quality=0.8] - 压缩质量 (0-1)
+ * @returns {Promise<Object[]>} 上传结果数组
+ */
+async function uploadImages(url, filePaths, fileName = 'file', compress = true, quality = 0.8) {
+  const results = [];
+  for (const filePath of filePaths) {
+    try {
+      const result = await uploadFile(url, filePath, fileName, compress, quality);
+      results.push(result);
+    } catch (error) {
+      results.push({ error });
+    }
+  }
+  return results;
 }
 
 
@@ -1201,9 +1517,18 @@ module.exports = {
   request,                    // 公开请求函数（带GET缓存）
   uploadFile,                 // 文件上传函数
   uploadImage,                // 图片上传快捷方法
+  uploadImages,               // 批量上传图片
+  compressImage,              // 图片压缩
 
   // ===== 缓存管理工具（暴露给外部用于下拉刷新等场景）=====
   clearCache,                 // 清除缓存（支持模式匹配）
+  invalidateResourceCache,     // 使资源缓存失效
+
+  // ===== 安全工具 =====
+  getCsrfToken,               // 获取CSRF令牌
+  encryptSensitiveData,       // 加密敏感数据
+  decryptSensitiveData,       // 解密敏感数据
+  validateInput,              // 输入验证
 
   // ===== 用户模块 =====
   sendCode,

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth';
+import { validationMiddleware, combineValidations } from '../middleware/validation';
 import {
   getLandlordContracts,
   getTenantContracts,
@@ -23,50 +24,63 @@ const router = Router();
  * GET /api/contracts/landlord
  * 获取甲方创建的合同列表（需认证）
  */
-router.get('/landlord', authMiddleware, getLandlordContracts);
+router.get('/landlord', authMiddleware, validationMiddleware.preventSqlInjection, getLandlordContracts);
 
 /**
  * GET /api/contracts/tenant
  * 获取乙方签署的合同列表（需认证）
  */
-router.get('/tenant', authMiddleware, getTenantContracts);
+router.get('/tenant', authMiddleware, validationMiddleware.preventSqlInjection, getTenantContracts);
 
 /**
  * GET /api/contracts/verify/:code
  * 验证合同真伪（无需认证）
  */
-router.get('/verify/:code', verifyContract);
+router.get('/verify/:code', validationMiddleware.preventSqlInjection, verifyContract);
 
 /**
  * GET /api/contracts/invite-verify/:code
  * 验证邀请码（无需认证）
  */
-router.get('/invite-verify/:code', verifyInviteCode);
+router.get('/invite-verify/:code', validationMiddleware.preventSqlInjection, verifyInviteCode);
 
 /**
  * GET /api/contracts/:id
  * 获取合同详情（需认证）
  */
-router.get('/:id', authMiddleware, getContractById);
+router.get('/:id', authMiddleware, combineValidations(
+  validationMiddleware.validateContractId,
+  validationMiddleware.preventSqlInjection
+), getContractById);
 
 /**
  * POST /api/contracts
  * 创建合同（甲方，需认证）
  * 状态默认为 PENDING_LESSOR_SIGN (1)
  */
-router.post('/', authMiddleware, createContract);
+router.post('/', authMiddleware, combineValidations(
+  validationMiddleware.validateBody,
+  validationMiddleware.preventSqlInjection
+), createContract);
 
 /**
  * PUT /api/contracts/:id
  * 更新合同（待签署状态，需认证）
  */
-router.put('/:id', authMiddleware, updateContract);
+router.put('/:id', authMiddleware, combineValidations(
+  validationMiddleware.validateContractId,
+  validationMiddleware.validateBody,
+  validationMiddleware.preventSqlInjection
+), updateContract);
 
 /**
  * DELETE /api/contracts/:id
  * 删除合同（待签署状态，需认证）
  */
-router.delete('/:id', authMiddleware, deleteContract);
+router.delete('/:id', authMiddleware, combineValidations(
+  validationMiddleware.validateContractId,
+  validationMiddleware.preventSqlInjection
+), deleteContract);
 
 /**
  * POST /api/contracts/:id/sign
@@ -77,7 +91,11 @@ router.delete('/:id', authMiddleware, deleteContract);
  * - 生成 invite_code 和 invite_expires_at
  * - 状态改为 PENDING_LESSEE_SIGN (2)
  */
-router.post('/:id/sign', authMiddleware, lessorSign);
+router.post('/:id/sign', authMiddleware, combineValidations(
+  validationMiddleware.validateContractId,
+  validationMiddleware.validateBody,
+  validationMiddleware.preventSqlInjection
+), lessorSign);
 
 /**
  * POST /api/contracts/:id/share
@@ -85,7 +103,10 @@ router.post('/:id/sign', authMiddleware, lessorSign);
  * - 验证合同状态为 PENDING_LESSEE_SIGN (2)
  * - 返回 invite_code, share_url, qr_code, expires_at
  */
-router.post('/:id/share', authMiddleware, shareContract);
+router.post('/:id/share', authMiddleware, combineValidations(
+  validationMiddleware.validateContractId,
+  validationMiddleware.preventSqlInjection
+), shareContract);
 
 /**
  * POST /api/contracts/:id/tenant-sign
@@ -97,24 +118,38 @@ router.post('/:id/share', authMiddleware, shareContract);
  * - 状态改为 SIGNED (3)
  * - 设置 effective_at
  */
-router.post('/:id/tenant-sign', authMiddleware, tenantSign);
+router.post('/:id/tenant-sign', authMiddleware, combineValidations(
+  validationMiddleware.validateContractId,
+  validationMiddleware.validateBody,
+  validationMiddleware.preventSqlInjection
+), tenantSign);
 
 /**
  * POST /api/contracts/:id/reject
  * 拒绝签署（乙方，需认证）
  */
-router.post('/:id/reject', authMiddleware, rejectContract);
+router.post('/:id/reject', authMiddleware, combineValidations(
+  validationMiddleware.validateContractId,
+  validationMiddleware.validateBody,
+  validationMiddleware.preventSqlInjection
+), rejectContract);
 
 /**
  * POST /api/contracts/:id/cancel
  * 取消合同（需认证）
  */
-router.post('/:id/cancel', authMiddleware, cancelContract);
+router.post('/:id/cancel', authMiddleware, combineValidations(
+  validationMiddleware.validateContractId,
+  validationMiddleware.preventSqlInjection
+), cancelContract);
 
 /**
  * GET /api/contracts/:id/pdf
  * 生成合同PDF（需认证）
  */
-router.get('/:id/pdf', authMiddleware, generateContractPdf);
+router.get('/:id/pdf', authMiddleware, combineValidations(
+  validationMiddleware.validateContractId,
+  validationMiddleware.preventSqlInjection
+), generateContractPdf);
 
 export default router;

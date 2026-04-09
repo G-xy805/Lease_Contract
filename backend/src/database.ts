@@ -421,15 +421,31 @@ function migrateMissingColumns() {
 export const testConnection = async (): Promise<void> => {
   try {
     if (DB_TYPE === 'sqlite') {
-      if (sqliteDb) {
+      if (!sqliteDb) {
+        throw new Error('SQLite数据库未初始化');
+      }
+      try {
+        // 执行一个简单的查询来测试连接
         sqliteDb.exec('SELECT 1');
         console.log('SQLite数据库连接成功');
+      } catch (err) {
+        console.error('SQLite数据库连接测试失败:', err);
+        throw new Error('SQLite数据库连接失败');
       }
     } else {
-      if (mysqlPool) {
+      if (!mysqlPool) {
+        throw new Error('MySQL数据库未初始化');
+      }
+      try {
+        // 获取连接来测试
         const connection = await mysqlPool.getConnection();
+        // 执行一个简单的查询
+        await connection.execute('SELECT 1');
         connection.release();
         console.log('MySQL数据库连接成功');
+      } catch (err) {
+        console.error('MySQL数据库连接测试失败:', err);
+        throw new Error('MySQL数据库连接失败');
       }
     }
   } catch (error) {

@@ -89,31 +89,6 @@ app.use('/api/notifications', notificationsRouter);
 app.use('/api/signatures', signaturesRouter);
 app.use('/api/test-data', testDataRouter);
 
-// 二维码生成服务 - 使用外部API生成二维码图片
-app.get('/api/contracts/invite-qrcode/:code', (req: Request, res: Response) => {
-  try {
-    const { code } = req.params;
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-    const url = `${baseUrl}/sign/${code}`;
-    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
-
-    https.get(qrApiUrl, (qrRes) => {
-      if (qrRes.statusCode === 200) {
-        res.setHeader('Content-Type', 'image/png');
-        qrRes.pipe(res);
-      } else {
-        res.status(qrRes.statusCode || 500).json({ code: 500, message: '生成二维码失败' });
-      }
-    }).on('error', (err) => {
-      console.error('获取二维码错误:', err);
-      res.status(500).json({ code: 500, message: '生成二维码失败' });
-    });
-  } catch (error) {
-    console.error('生成二维码错误:', error);
-    res.status(500).json({ code: 500, message: '生成二维码失败' });
-  }
-});
-
 app.use(errorHandler);
 
 app.use((req: Request, res: Response) => {
